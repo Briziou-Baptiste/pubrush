@@ -104,6 +104,8 @@ export default function DateTimeModalField({
                 value={tempValue}
                 mode={mode}
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  themeVariant={Platform.OS === 'ios' ? 'light' : undefined}
+                  textColor={Platform.OS === 'ios' ? '#111827' : undefined}
                 is24Hour
                 onChange={(_, selectedDate) => {
                   if (selectedDate) {
