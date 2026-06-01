@@ -11,7 +11,8 @@ import { styles } from '../styles/activeBarathon.styles';
 import ActiveBarathonHeader from '../components/ActiveBarathonHeader';
 import ActiveBarathonMap from '../components/ActiveBarathonMap';
 import ActiveBarathonBottomPanel from '../components/ActiveBarathonBottomPanel';
-import ActiveBarathonTimerCard from '../components/ActiveBarathonTimerCard';
+import { fetchMyRoleInBarathon } from '../../../lib/api';
+import { getAccessToken } from '../../../lib/authStorage';
 
 export default function ActiveBarathonScreen() {
   const params = useLocalSearchParams<{ barathonId?: string }>();
@@ -19,11 +20,13 @@ export default function ActiveBarathonScreen() {
   const [loading, setLoading] = useState(true);
     const [stopModalVisible, setStopModalVisible] = useState(false);
     const [stopping, setStopping] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
     
   useEffect(() => {
     void loadBarathon();
   }, [params.barathonId]);
 
+  // Loads the active barathon details and the user's role from the backend
   async function loadBarathon() {
     try {
       setLoading(true);
@@ -39,6 +42,15 @@ export default function ActiveBarathonScreen() {
       }
 
       setBarathon(data);
+
+      if (data?.id) {
+        const token = await getAccessToken();
+        if (token) {
+          // Fetch the user's specific role to enable/disable certain features like expenses
+          const roleRes = await fetchMyRoleInBarathon(data.id, token);
+          setUserRole(roleRes.role);
+        }
+      }
     } catch (error) {
       Alert.alert(
         'Erreur',
@@ -49,6 +61,7 @@ export default function ActiveBarathonScreen() {
     }
   }
 
+  // Custom hook that handles GPS tracking, geofencing, and timers for the active barathon
   const tracking = useActiveBarathonTracking({
     barathon: barathon ?? {
       id: 0,
@@ -93,16 +106,28 @@ export default function ActiveBarathonScreen() {
     }
   }, [tracking.state.phase]);
     
-    const visibleStops = useMemo(() => {
-      if (!barathon) {
-        return [];
-      }
 
-      return barathon.stops.slice(
-        tracking.state.activeStopIndex,
-        tracking.state.activeStopIndex + 2
-      );
-    }, [barathon, tracking.state.activeStopIndex]);
+
+  // Determines if the user is currently at the final stop of the barathon
+  const isLastStop = useMemo(() => {
+    if (!barathon) return false;
+    return tracking.state.activeStopIndex === barathon.stops.length - 1;
+  }, [barathon, tracking.state.activeStopIndex]);
+
+  // Checks if the user has the "Maître des comptes" role to access the expenses feature
+  const isMaitreDesComptes = useMemo(() => {
+    const roleLower = userRole?.toLowerCase() ?? '';
+    return roleLower === 'maître des comptes' || roleLower === 'maitre des comptes';
+  }, [userRole]);
+
+  // Handles the "Next Step" button press. Either completes the barathon or advances to the next stop
+  function handleNextStep() {
+    if (isLastStop) {
+      setStopModalVisible(true);
+    } else {
+      tracking.goToNextStop();
+    }
+  }
     
   if (loading || !barathon) {
     return (
@@ -113,6 +138,7 @@ export default function ActiveBarathonScreen() {
       </SafeAreaView>
     );
   }
+    // Completes the barathon, stops GPS tracking, and navigates to the summary screen
     async function handleConfirmStopBarathon() {
       if (!barathon) {
         return;
@@ -122,7 +148,8 @@ export default function ActiveBarathonScreen() {
         setStopping(true);
 
         await stopBarathon(barathon.id);
-
+          await tracking.stopTracking();
+          
         const totalStops = barathon.stops.length;
         const completedStops = tracking.state.activeStopIndex;
 
@@ -155,13 +182,9 @@ export default function ActiveBarathonScreen() {
           <ActiveBarathonMap
             initialRegion={initialRegion}
             currentLocation={tracking.state.currentLocation}
-            activeStop={tracking.activeStop}
-            visibleStops={visibleStops}
-            routeCoordinates={visibleStops.map((stop) => ({
-              latitude: stop.latitude,
-              longitude: stop.longitude,
-            }))}
             visitedPath={tracking.state.visitedPath}
+            allStops={barathon.stops}
+            activeStopIndex={tracking.state.activeStopIndex}
           />
 
         <View style={styles.topOverlay}>
@@ -171,6 +194,18 @@ export default function ActiveBarathonScreen() {
             phaseLabel={phaseLabel}
             remainingSeconds={tracking.state.remainingSeconds}
             onStopPress={() => setStopModalVisible(true)}
+            onExpensesPress={
+              isMaitreDesComptes
+                ? () =>
+                    router.push({
+                      pathname: '/barathon-expenses',
+                      params: {
+                        barathonId: String(barathon.id),
+                        currentStopName: tracking.activeStop?.name ?? '',
+                      },
+                    })
+                : undefined
+            }
           />
         </View>
 
@@ -183,6 +218,9 @@ export default function ActiveBarathonScreen() {
                 : '--'
             }
             onOpenGoogleMaps={tracking.openInGoogleMaps}
+            onNextStep={handleNextStep}
+            isLastStop={isLastStop}
+            isInsideStop={tracking.state.phase !== 'en_route'}
           />
         </View>
       </View>

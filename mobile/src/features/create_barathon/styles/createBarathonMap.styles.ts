@@ -253,6 +253,10 @@ export const createBarathonMapStyles = StyleSheet.create({
       backgroundColor: '#111111',
     },
 
+    stopTypeButtonSpacing: {
+      marginRight: 0,
+    },
+
     stopTypeButtonText: {
       fontSize: 14,
       fontWeight: '600',

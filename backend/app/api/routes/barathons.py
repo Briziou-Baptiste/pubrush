@@ -639,9 +639,17 @@ async def assign_roles_and_start_barathon(
                 role_id=assignment.role_id,
             )
         )
-        now = datetime.utcnow()
+    
+    now = datetime.utcnow()
     if not barathon:
         raise HTTPException(status_code=404, detail="Barathon introuvable après démarrage.")
+
+    barathon.status = "started"
+    barathon.has_started = True
+    barathon.started_at = now
+    barathon.updated_at = now
+
+    db.commit()
 
     await websocket_service.notify_barathon_started(
         barathon_id=barathon.id,
@@ -649,13 +657,6 @@ async def assign_roles_and_start_barathon(
         started_by_user_id=current_user.id,
         started_at=barathon.started_at.isoformat() if barathon.started_at else now.isoformat(),
     )
-    
-    barathon.status = "started"
-    barathon.has_started = True
-    barathon.started_at = now
-    barathon.updated_at = now
-
-    db.commit()
 
     return {"success": True, "barathon_id": barathon.id}
 

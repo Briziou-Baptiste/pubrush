@@ -113,4 +113,11 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
   },
+  forgotPasswordLink: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
 });

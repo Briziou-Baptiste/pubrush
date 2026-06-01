@@ -10,6 +10,26 @@ import * as SecureStore from 'expo-secure-store';
 const ACCESS_TOKEN_KEY = 'access_token';
 const CURRENT_USER_ID_KEY = 'current_user_id';
 
+type AuthListener = (token: string | null) => void;
+const listeners = new Set<AuthListener>();
+
+export function subscribeToAuthChanges(listener: AuthListener) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function notifyListeners(token: string | null) {
+  listeners.forEach((listener) => {
+    try {
+      listener(token);
+    } catch (e) {
+      console.error('[authStorage] Failed to notify listener', e);
+    }
+  });
+}
+
 type JwtPayload = {
   sub?: string;
   email?: string;
@@ -49,6 +69,7 @@ export async function saveSession(accessToken: string) {
 
   await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
   await SecureStore.setItemAsync(CURRENT_USER_ID_KEY, payload.sub);
+  notifyListeners(accessToken);
 }
 
 export async function getAccessToken() {
@@ -69,6 +90,7 @@ export async function getCurrentUserId() {
 export async function clearSession() {
   await SecureStore.deleteItemAsync('access_token');
   await SecureStore.deleteItemAsync('current_user_id');
+  notifyListeners(null);
 }
 
 export async function getCurrentUser() {

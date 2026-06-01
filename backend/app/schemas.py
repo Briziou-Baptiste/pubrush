@@ -213,3 +213,51 @@ class BarathonParticipantRoleRead(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetConfirm(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=6)
+    new_password: str = Field(min_length=8, max_length=128)
+
+class ExpenseCreate(BaseModel):
+    payer_user_id: int
+    amount: float = Field(gt=0)
+    description: Optional[str] = Field(default=None, max_length=255)
+    beneficiary_user_ids: list[int] = Field(min_length=1)
+
+class ExpenseRead(BaseModel):
+    id: int
+    payer_user_id: int
+    payer_username: str
+    amount: float
+    description: Optional[str]
+    beneficiary_user_ids: list[int]
+    created_at: datetime
+
+    model_config = {
+        "from_attributes": True
+    }
+
+class UserBalanceRead(BaseModel):
+    user_id: int
+    username: str
+    paid_amount: float
+    debt_amount: float
+    balance: float
+
+class BarathonExpensesReport(BaseModel):
+    expenses: list[ExpenseRead]
+    balances: list[UserBalanceRead]
+
+class BarSearchResult(BaseModel):
+    name: str
+    street: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
+    latitude: float
+    longitude: float
+    stop_type: str
+    estimated_minutes: Optional[int] = None

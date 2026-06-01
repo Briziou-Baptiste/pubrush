@@ -91,6 +91,11 @@ class Barathon(Base):
         order_by="BarathonStop.stop_order",
     )
 
+    expenses: Mapped[list["BarathonExpense"]] = relationship(
+        back_populates="barathon",
+        cascade="all, delete-orphan",
+    )
+
 
 class BarathonParticipant(Base):
     __tablename__ = "barathon_participants"
@@ -224,3 +229,36 @@ class BarathonParticipantRole(Base):
     barathon: Mapped["Barathon"] = relationship()
     user: Mapped["User"] = relationship()
     role: Mapped["Role"] = relationship(back_populates="participant_assignments")
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    token: Mapped[str] = mapped_column(String(6), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+class BarathonExpense(Base):
+    __tablename__ = "barathon_expenses"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    barathon_id: Mapped[int] = mapped_column(ForeignKey("barathons.id", ondelete="CASCADE"), nullable=False, index=True)
+    payer_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    barathon: Mapped["Barathon"] = relationship(back_populates="expenses")
+    payer: Mapped["User"] = relationship()
+    beneficiaries: Mapped[list["BarathonExpenseBeneficiary"]] = relationship(back_populates="expense", cascade="all, delete-orphan")
+
+class BarathonExpenseBeneficiary(Base):
+    __tablename__ = "barathon_expense_beneficiaries"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    expense_id: Mapped[int] = mapped_column(ForeignKey("barathon_expenses.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    expense: Mapped["BarathonExpense"] = relationship(back_populates="beneficiaries")
+    user: Mapped["User"] = relationship()

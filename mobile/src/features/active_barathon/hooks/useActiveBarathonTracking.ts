@@ -8,7 +8,7 @@ import {
   LatLng,
 } from '../types/activeBarathon.types';
 import { completeBarathonStop } from '../services/activeBarathon.service';
-import { getDistanceMeters, isWithinStopRadius } from '../utils/activeBarathon.distance';
+import { getDistanceMeters } from '../utils/activeBarathon.distance';
 import { secondsFromMinutes } from '../utils/activeBarathon.timer';
 import {
   cancelStopNotifications,
@@ -28,6 +28,9 @@ export function useActiveBarathonTracking({ barathon }: Params) {
     [barathon.max_time_in_bar_minutes]
   );
 
+    const ENTER_RADIUS_METERS = 15;
+    const EXIT_RADIUS_METERS = 25;
+    
   const [state, setState] = useState<ActiveBarathonState>({
     activeStopIndex: 0,
     phase: 'en_route',
@@ -56,7 +59,7 @@ export function useActiveBarathonTracking({ barathon }: Params) {
 
   const nextStop: ActiveBarathonStop | null =
     barathon.stops[state.activeStopIndex + 1] ?? null;
-
+    const stopDeadlineRef = useRef<number | null>(null);
   const activeStopLocation: LatLng | null = activeStop
     ? {
         latitude: activeStop.latitude,
@@ -132,31 +135,41 @@ export function useActiveBarathonTracking({ barathon }: Params) {
     }
   }, [activeStop?.id, maxBarSeconds]);
 
-  useEffect(() => {
-    if (!activeStop) {
-      return;
-    }
+    useEffect(() => {
+      if (!activeStop || !state.currentLocation || !activeStopLocation) {
+        return;
+      }
 
-    const isInside = isWithinStopRadius(
+      const distance = getDistanceMeters(state.currentLocation, activeStopLocation);
+
+      const hasStarted = hasStartedTimerForCurrentStopRef.current;
+      const isOvertime = state.phase === 'overtime';
+
+      console.log('STOP ZONE CHECK', {
+        stopId: activeStop.id,
+        stopName: activeStop.name,
+        distance: Math.round(distance),
+        hasStarted,
+        phase: state.phase,
+      });
+
+      // Entrée dans la zone du bar : on démarre uniquement si le timer n'a pas déjà été lancé
+      if (!hasStarted && distance <= ENTER_RADIUS_METERS) {
+        void startStopTimer();
+        return;
+      }
+
+      // Sortie de la zone du bar : on reset uniquement si le timer a déjà commencé
+      // et qu'on n'est pas en overtime
+      if (hasStarted && !isOvertime && distance >= EXIT_RADIUS_METERS) {
+        void resetStopTimerAndGoBackToRoute();
+      }
+    }, [
       state.currentLocation,
       activeStopLocation,
-      10
-    );
-
-    if (isInside && !state.isInsideStopRadius && !hasStartedTimerForCurrentStopRef.current) {
-      void startStopTimer();
-      return;
-    }
-
-    if (!isInside && hasStartedTimerForCurrentStopRef.current) {
-      void resetStopTimerAndGoBackToRoute();
-    }
-  }, [
-    state.currentLocation,
-    activeStopLocation,
-    state.isInsideStopRadius,
-    activeStop?.id,
-  ]);
+      activeStop,
+      state.phase,
+    ]);
 
   async function startLocationTracking() {
     if (locationSubscriptionRef.current) {
@@ -210,78 +223,113 @@ export function useActiveBarathonTracking({ barathon }: Params) {
     );
   }
 
-  async function startStopTimer() {
-    if (!activeStop) {
-      return;
-    }
-      await completeBarathonStop(barathon.id, activeStop.id);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    async function startStopTimer() {
+      if (!activeStop) {
+        return;
+      }
 
-    hasStartedTimerForCurrentStopRef.current = true;
+      if (hasStartedTimerForCurrentStopRef.current) {
+        return;
+      }
 
-    let fiveMinId: string | null = null;
-    let overtimeId: string | null = null;
+      hasStartedTimerForCurrentStopRef.current = true;
 
-    if (maxBarSeconds > 300) {
-      fiveMinId = await scheduleFiveMinutesLeftNotification(
-        activeStop.name,
-        maxBarSeconds - 300
-      );
-    }
+      try {
+        await completeBarathonStop(barathon.id, activeStop.id);
 
-    overtimeId = await scheduleOvertimeNotification(
-      activeStop.name,
-      maxBarSeconds
-    );
-      
-      
-    notificationIdsRef.current = {
-      fiveMin: fiveMinId,
-      overtime: overtimeId,
-    };
-
-    setState((prev) => ({
-      ...prev,
-      phase: 'in_stop',
-      isInsideStopRadius: true,
-      remainingSeconds: maxBarSeconds,
-      fiveMinNotificationId: fiveMinId,
-      overtimeNotificationId: overtimeId,
-    }));
-
-    timerRef.current = setInterval(() => {
-      setState((prev) => {
-        const nextRemaining = prev.remainingSeconds - 1;
-
-        if (nextRemaining <= 0) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-
-          void moveToNextStopAutomatically();
-
-          return {
-            ...prev,
-            remainingSeconds: 0,
-            phase: 'overtime',
-            isInsideStopRadius: true,
-          };
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
         }
 
-        return {
+        await cancelStopNotifications(notificationIdsRef.current);
+
+        let fiveMinId: string | null = null;
+        let overtimeId: string | null = null;
+
+        if (maxBarSeconds >= 300) {
+          const secondsUntilFiveMinutesLeft = maxBarSeconds - 300;
+
+          fiveMinId = await scheduleFiveMinutesLeftNotification(
+            activeStop.name,
+            Math.max(1, secondsUntilFiveMinutesLeft)
+          );
+        }
+
+        overtimeId = await scheduleOvertimeNotification(
+          activeStop.name,
+          maxBarSeconds
+        );
+
+        notificationIdsRef.current = {
+          fiveMin: fiveMinId,
+          overtime: overtimeId,
+        };
+
+        const now = Date.now();
+        stopDeadlineRef.current = now + maxBarSeconds * 1000;
+
+        setState((prev) => ({
           ...prev,
-          remainingSeconds: nextRemaining,
           phase: 'in_stop',
           isInsideStopRadius: true,
-        };
-      });
-    }, 1000);
-  }
+          remainingSeconds: maxBarSeconds,
+          fiveMinNotificationId: fiveMinId,
+          overtimeNotificationId: overtimeId,
+        }));
 
+        timerRef.current = setInterval(() => {
+          const deadline = stopDeadlineRef.current;
+
+          if (!deadline) {
+            return;
+          }
+
+          const secondsLeft = Math.max(
+            0,
+            Math.ceil((deadline - Date.now()) / 1000)
+          );
+
+          if (secondsLeft <= 0) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+
+            stopDeadlineRef.current = null;
+
+            void cancelStopNotifications(notificationIdsRef.current);
+
+            notificationIdsRef.current = {
+              fiveMin: null,
+              overtime: null,
+            };
+              
+            setState((prev) => ({
+              ...prev,
+              remainingSeconds: 0,
+              phase: 'overtime',
+              isInsideStopRadius: true,
+              fiveMinNotificationId: null,
+              overtimeNotificationId: null,
+            }));
+
+            return;
+          }
+
+          setState((prev) => ({
+            ...prev,
+            remainingSeconds: secondsLeft,
+            phase: 'in_stop',
+            isInsideStopRadius: true,
+          }));
+        }, 1000);
+      } catch (error) {
+        hasStartedTimerForCurrentStopRef.current = false;
+        stopDeadlineRef.current = null;
+        throw error;
+      }
+    }
   async function resetStopTimerAndGoBackToRoute() {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -307,7 +355,7 @@ export function useActiveBarathonTracking({ barathon }: Params) {
     }));
   }
 
-  async function moveToNextStopAutomatically() {
+  async function goToNextStop() {
     await cancelStopNotifications(notificationIdsRef.current);
 
     notificationIdsRef.current = {
@@ -375,5 +423,6 @@ export function useActiveBarathonTracking({ barathon }: Params) {
     distanceToActiveStopMeters,
     openInGoogleMaps,
     stopTracking,
+    goToNextStop,
   };
 }

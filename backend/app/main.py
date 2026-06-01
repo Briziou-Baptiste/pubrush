@@ -1,16 +1,25 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import delete, select
+from sqlalchemy.orm import Session, selectinload
+from datetime import datetime, timedelta
+import random
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement
+load_dotenv()
 
 from app.api.routes.barathons import router as barathons_router
 from app.api.routes.ws import router as ws_router
+from app.api.routes.expenses import router as expenses_router
+from app.api.routes.bars import router as bars_router
 from app.core.lifespan import lifespan
 from app.db import get_db
-from app.models import Role, User
-from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead
+from app.models import Role, User, PasswordResetToken, BarathonParticipantRole
+from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm
 from app.security import create_access_token, decode_access_token, hash_password, verify_password
+from app.services.email_service import send_reset_code_email
 
 app = FastAPI(
     title="Pubrush API",
@@ -30,6 +39,8 @@ app.add_middleware(
 
 app.include_router(barathons_router)
 app.include_router(ws_router)
+app.include_router(expenses_router)
+app.include_router(bars_router)
 
 @app.get("/health")
 def health():
@@ -134,3 +145,96 @@ def get_roles(
 ):
     roles = db.scalars(select(Role).order_by(Role.name.asc())).all()
     return list(roles)
+
+
+@app.post("/forgot-password/request")
+def request_password_reset(payload: PasswordResetRequest, db: Session = Depends(get_db)):
+    user = db.scalar(select(User).where(User.email == payload.email))
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Aucun compte n'est associé à cette adresse email."
+        )
+
+    db.execute(
+        delete(PasswordResetToken).where(PasswordResetToken.email == payload.email)
+    )
+
+    code = f"{random.randint(100000, 999999)}"
+
+    expiration = datetime.utcnow() + timedelta(minutes=15)
+    token_entry = PasswordResetToken(
+        email=payload.email,
+        token=code,
+        expires_at=expiration
+    )
+    db.add(token_entry)
+    db.commit()
+
+    # Envoi du mail réel
+    send_reset_code_email(payload.email, code)
+
+    return {"message": "Un code de réinitialisation a été envoyé par email."}
+
+
+@app.post("/forgot-password/reset")
+def confirm_password_reset(payload: PasswordResetConfirm, db: Session = Depends(get_db)):
+    token_entry = db.scalar(
+        select(PasswordResetToken).where(
+            PasswordResetToken.email == payload.email,
+            PasswordResetToken.token == payload.code
+        )
+    )
+
+    if not token_entry:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le code de réinitialisation est incorrect."
+        )
+
+    if token_entry.expires_at < datetime.utcnow():
+        db.delete(token_entry)
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le code de réinitialisation a expiré."
+        )
+
+    user = db.scalar(select(User).where(User.email == payload.email))
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Utilisateur introuvable."
+        )
+
+    if verify_password(payload.new_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le nouveau mot de passe doit être différent du mot de passe actuel."
+        )
+
+    user.password_hash = hash_password(payload.new_password)
+    
+    db.delete(token_entry)
+    db.commit()
+
+    return {"message": "Votre mot de passe a été réinitialisé avec succès."}
+
+
+@app.get("/barathons/{barathon_id}/my-role")
+def get_my_role_in_barathon(
+    barathon_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    role_link = db.scalar(
+        select(BarathonParticipantRole)
+        .options(selectinload(BarathonParticipantRole.role))
+        .where(
+            BarathonParticipantRole.barathon_id == barathon_id,
+            BarathonParticipantRole.user_id == current_user.id,
+        )
+    )
+    if not role_link:
+        return {"role": None}
+    return {"role": role_link.role.name}

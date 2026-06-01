@@ -84,6 +84,17 @@ export const styles = StyleSheet.create({
     color: '#6B7280',
   },
 
+  input: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+    color: '#1F2937',
+    marginTop: 6,
+    backgroundColor: '#F9FAFB',
+  },
+
   value: {
     fontSize: 15,
     fontWeight: '700',
@@ -91,7 +102,7 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  timerValue: {
+  timerCardValue: {
     fontSize: 30,
     fontWeight: '900',
     textAlign: 'center',
@@ -119,6 +130,26 @@ export const styles = StyleSheet.create({
   },
 
   googleMapsButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+
+  nextStepButton: {
+    marginTop: 12,
+    backgroundColor: '#2563EB',
+    borderRadius: 16,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#2563EB',
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+
+  nextStepButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
@@ -252,5 +283,108 @@ export const styles = StyleSheet.create({
       color: '#FFFFFF',
       fontSize: 14,
       fontWeight: '800',
+    },
+
+    expensesButton: {
+      marginTop: 12,
+      backgroundColor: '#10B981',
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#10B981',
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 3 },
+      elevation: 2,
+    },
+
+    expensesButtonText: {
+      color: '#FFFFFF',
+      fontWeight: '800',
+      fontSize: 13,
+    },
+
+    expenseCard: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      padding: 14,
+      marginBottom: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 1,
+    },
+
+    expenseInfo: {
+      flex: 1,
+    },
+
+    expenseTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: '#1F2937',
+    },
+
+    expenseSub: {
+      fontSize: 12,
+      color: '#6B7280',
+      marginTop: 2,
+    },
+
+    expenseAmountText: {
+      fontSize: 16,
+      fontWeight: '800',
+      color: '#10B981',
+    },
+
+    balanceCard: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 20,
+      padding: 16,
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 2,
+    },
+
+    balanceRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6',
+    },
+
+    balanceName: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: '#374151',
+    },
+
+    balancePositive: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: '#10B981',
+    },
+
+    balanceNegative: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: '#EF4444',
+    },
+
+    balanceNeutral: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: '#6B7280',
     },
 });

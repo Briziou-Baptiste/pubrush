@@ -1,6 +1,7 @@
 let userSocket: WebSocket | null = null;
 let activeBarathonSocket: WebSocket | null = null;
-import { WSMessage } from '../types/websocket';
+import { WSMessage } from '../types/webSocker.types';
+export { WSMessage };
 
 function buildWsUrl(path: string, token: string, apiBaseUrl: string) {
   const wsBaseUrl = apiBaseUrl

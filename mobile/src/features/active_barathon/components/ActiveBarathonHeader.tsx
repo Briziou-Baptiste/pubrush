@@ -8,7 +8,8 @@ type Props = {
   stepLabel: string;
   phaseLabel: string;
   remainingSeconds: number;
-    onStopPress?: () => void;
+  onStopPress?: () => void;
+  onExpensesPress?: () => void;
 };
 
 export default function ActiveBarathonHeader({
@@ -17,6 +18,7 @@ export default function ActiveBarathonHeader({
   phaseLabel,
   remainingSeconds,
   onStopPress,
+  onExpensesPress,
 }: Props) {
   const tone = getTimerTone(remainingSeconds);
 
@@ -30,13 +32,27 @@ export default function ActiveBarathonHeader({
           <Text style={styles.phaseText}>{phaseLabel}</Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.stopButton}
-          activeOpacity={0.85}
-          onPress={onStopPress}
-        >
-          <Text style={styles.stopButtonText}>Arrêter</Text>
-        </TouchableOpacity>
+        <View style={{ alignItems: 'stretch', gap: 6 }}>
+          {onStopPress && (
+            <TouchableOpacity
+              style={styles.stopButton}
+              activeOpacity={0.85}
+              onPress={onStopPress}
+            >
+              <Text style={styles.stopButtonText}>Arrêter</Text>
+            </TouchableOpacity>
+          )}
+
+          {onExpensesPress && (
+            <TouchableOpacity
+              style={[styles.expensesButton, { marginTop: 0 }]}
+              activeOpacity={0.85}
+              onPress={onExpensesPress}
+            >
+              <Text style={styles.expensesButtonText}>💰 Comptes</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Chrono */}

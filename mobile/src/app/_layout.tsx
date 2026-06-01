@@ -1,4 +1,4 @@
-import { getAccessToken } from '../lib/authStorage'
+import { getAccessToken, subscribeToAuthChanges } from '../lib/authStorage';
 import { Stack, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 
@@ -29,11 +29,15 @@ export default function RootLayout() {
 
     loadToken();
 
-    const intervalId = setInterval(loadToken, 1500);
+    const unsubscribe = subscribeToAuthChanges((newToken) => {
+      if (isMounted) {
+        setToken(newToken);
+      }
+    });
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
+      unsubscribe();
     };
   }, []);
 
@@ -48,10 +52,13 @@ export default function RootLayout() {
       apiBaseUrl: API_BASE_URL,
       token,
       onMessage: (message: WSMessage) => {
-        if (message.type === 'BARATHON_STARTED') {
-          router.replace('/active-barathon');
-          return;
-        }
+          if (message.type === 'BARATHON_STARTED' && message.barathon_id) {
+            router.replace({
+              pathname: '/active-barathon',
+              params: { barathonId: String(message.barathon_id) },
+            });
+            return;
+          }
 
         if (message.type === 'BARATHON_STOPPED' || message.type === 'BARATHON_FINISHED') {
           router.replace('/planned');

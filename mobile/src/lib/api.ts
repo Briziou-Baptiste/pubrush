@@ -97,3 +97,114 @@ export async function fetchMe(token: string) {
 
   return handleResponse<MeResponse>(response);
 }
+
+export async function requestPasswordReset(email: string): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/forgot-password/request`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  return handleResponse<{ message: string }>(response);
+}
+
+export async function resetPassword(payload: {
+  email: string;
+  code: string;
+  new_password: string;
+}): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/forgot-password/reset`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<{ message: string }>(response);
+}
+
+export async function fetchMyRoleInBarathon(barathonId: number, token: string): Promise<{ role: string | null }> {
+  const response = await fetch(`${API_BASE_URL}/barathons/${barathonId}/my-role`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<{ role: string | null }>(response);
+}
+
+export async function fetchBarathonExpenses(barathonId: number, token: string): Promise<{ expenses: any[], balances: any[] }> {
+  const response = await fetch(`${API_BASE_URL}/barathons/${barathonId}/expenses`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<{ expenses: any[], balances: any[] }>(response);
+}
+
+export async function createBarathonExpense(
+  barathonId: number,
+  payload: {
+    payer_user_id: number;
+    amount: number;
+    description?: string;
+    beneficiary_user_ids: number[];
+  },
+  token: string
+): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/barathons/${barathonId}/expenses`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<any>(response);
+}
+
+export async function fetchBarsSearch(
+  query: string,
+  lat: number | undefined,
+  lon: number | undefined,
+  token: string
+): Promise<any[]> {
+  let url = `${API_BASE_URL}/bars/search?q=${encodeURIComponent(query)}`;
+  if (lat !== undefined && lon !== undefined) {
+    url += `&lat=${lat}&lon=${lon}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<any[]>(response);
+}
+
+export async function fetchNearbyBars(
+  lat: number,
+  lon: number,
+  maxTravelTimeMinutes: number,
+  token: string
+): Promise<any[]> {
+  const url = `${API_BASE_URL}/bars/nearby?lat=${lat}&lon=${lon}&max_travel_time_minutes=${maxTravelTimeMinutes}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<any[]>(response);
+}

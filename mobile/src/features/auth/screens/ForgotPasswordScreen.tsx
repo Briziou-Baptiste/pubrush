@@ -1,16 +1,6 @@
-//
-//  HomeScreen.tsx
-//  
-//
-//  Created by Baptiste Briziou on 31/03/2026.
-//
-
-import * as SecureStore from 'expo-secure-store';
-import { Link, router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -19,46 +9,46 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { router } from 'expo-router';
 
-import { loginUser } from '../../../lib/api';
+import { requestPasswordReset } from '../../../lib/api';
 import { isValidEmail } from '../../../lib/validators';
 import { styles } from '../styles/login.styles';
-import { saveSession } from '../../../lib/authStorage';
 
-export default function LoginScreen() {
+export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
   const emailTouched = email.length > 0;
   const emailIsValid = isValidEmail(normalizedEmail);
 
-  async function handleLogin() {
+  async function handleSendCode() {
     if (!emailIsValid) {
       Alert.alert('Email invalide', 'Entre une adresse email valide.');
-      return;
-    }
-
-    if (!password.trim()) {
-      Alert.alert('Mot de passe requis', 'Entre ton mot de passe.');
       return;
     }
 
     try {
       setLoading(true);
 
-      const result = await loginUser({
-        email: normalizedEmail,
-        password,
-      });
+      const result = await requestPasswordReset(normalizedEmail);
 
-        await saveSession(result.access_token);
-      router.replace('/home');
+      Alert.alert('Succès', result.message, [
+        {
+          text: 'Continuer',
+          onPress: () => {
+            router.push({
+              pathname: '/reset-password',
+              params: { email: normalizedEmail },
+            });
+          },
+        },
+      ]);
     } catch (error) {
       Alert.alert(
-        'Connexion impossible',
-        error instanceof Error ? error.message : 'Erreur inconnue'
+        'Erreur',
+        error instanceof Error ? error.message : 'Une erreur est survenue.'
       );
     } finally {
       setLoading(false);
@@ -72,21 +62,20 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.container}>
+          <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#6B7280' }}>← Retour</Text>
+          </TouchableOpacity>
+
           <View style={styles.header}>
-            <Image
-              source={require('../../../../assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.brand}>PubRush</Text>
+            <Text style={styles.brand}>Mot de passe oublié ?</Text>
             <Text style={styles.subtitle}>
-              Connecte-toi pour retrouver tes tournées
+              Saisis ton adresse email pour recevoir un code de réinitialisation unique à 6 chiffres.
             </Text>
           </View>
 
           <View style={styles.card}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>Email du compte</Text>
               <TextInput
                 placeholder="ton@email.com"
                 placeholderTextColor="#9CA3AF"
@@ -107,27 +96,8 @@ export default function LoginScreen() {
               ) : null}
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Mot de passe</Text>
-              <TextInput
-                placeholder="Ton mot de passe"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                textContentType="password"
-                autoComplete="password"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-              />
-              <Link href="/forgot-password" style={styles.forgotPasswordLink}>
-                Mot de passe oublié ?
-              </Link>
-            </View>
-
             <TouchableOpacity
-              onPress={handleLogin}
+              onPress={handleSendCode}
               disabled={loading}
               style={[
                 styles.primaryButton,
@@ -135,16 +105,9 @@ export default function LoginScreen() {
               ]}
             >
               <Text style={styles.primaryButtonText}>
-                {loading ? 'Connexion...' : 'Se connecter'}
+                {loading ? 'Envoi du code...' : 'Envoyer le code'}
               </Text>
             </TouchableOpacity>
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Pas encore de compte ? </Text>
-              <Link href="/register" style={styles.footerLink}>
-                Créer un compte
-              </Link>
-            </View>
           </View>
         </View>
       </KeyboardAvoidingView>
