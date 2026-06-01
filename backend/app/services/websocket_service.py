@@ -62,7 +62,6 @@ class WebSocketService:
             "payload": {},
         }
 
-        # Pour tous les participants connectés au canal global /ws/me
         for user_id in participant_ids:
             await ws_manager.send_to_user(user_id, refresh_event)
             await ws_manager.send_to_user(user_id, event)
