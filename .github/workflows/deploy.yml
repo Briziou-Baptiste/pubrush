@@ -22,7 +22,8 @@ jobs:
       - name: Build et Push de l'image Docker
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
           tags: baptistebriziou/pubrush-backend:latest
 
