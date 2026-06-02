@@ -32,25 +32,31 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     steps:
-      - name: Checkout du code (pour récupérer tes fichiers YAML au besoin)
+      - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Mettre en place le tunnel SSH
-        uses: nschloe/action-cached-ssh@v1 # Outil pour maintenir le tunnel ouvert
-        with:
-          # On ouvre un pont entre le port 6443 de GitHub et le port 6443 du VPS
-          remote: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          L: 6443:localhost:6443
-
-      - name: Configuration de kubectl
-        uses: azure/k8s-set-context@v3
-        with:
-          method: kubeconfig
-          # On utilise ton KUBECONFIG_DATA. Comme le tunnel simule un "localhost",
-          # GitHub va réussir à communiquer avec le cluster sans que le port soit ouvert sur le web !
-          kubeconfig: ${{ secrets.KUBECONFIG_DATA }}
-
-      - name: Relancer le déploiement sur K3s
+      - name: Configurer la clé SSH locale
         run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Ajoute le VPS aux hôtes connus pour éviter le blocage "untrusted host"
+          ssh-keyscan -p 22 ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Ouvrir le tunnel SSH et lancer le Déploiement
+        run: |
+          # Crée le tunnel en arrière-plan (-f -N). 
+          # Il écoute sur le port 6443 de GitHub et transfert vers le 6443 du VPS
+          ssh -f -N -L 6443:127.0.0.1:6443 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i ~/.ssh/id_ed25519
+          
+          # Installer kubectl sur le runner GitHub
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          
+          # Décoder le kubeconfig et l'appliquer
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
+          
+          # Forcer le redémarrage du backend à travers le tunnel
           kubectl rollout restart deployment/pubrush-backend
