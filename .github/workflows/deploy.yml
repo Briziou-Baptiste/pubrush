@@ -25,7 +25,7 @@ jobs:
 
       - name: Exécuter les tests avec pytest
         env:
-          DATABASE_URL: sqlite:///:memory:
+          DATABASE_URL: 'sqlite:///:memory:'
         run: |
           cd backend
           python -m pytest -v
