@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db import engine
-from app.models import Barathon
+from app.db import engine, SessionLocal
+from app.models import Barathon, BarathonParticipant
 
 logger = logging.getLogger(__name__)
 
