@@ -43,20 +43,25 @@ jobs:
           # Ajoute le VPS aux hôtes connus pour éviter le blocage "untrusted host"
           ssh-keyscan -p 22 ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Ouvrir le tunnel SSH et lancer le Déploiement
+     - name: Ouvrir le tunnel SSH et lancer le Déploiement
         run: |
-          # Crée le tunnel en arrière-plan (-f -N). 
-          # Il écoute sur le port 6443 de GitHub et transfert vers le 6443 du VPS
-          ssh -f -N -L 6443:127.0.0.1:6443 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i ~/.ssh/id_ed25519
+          # 1. Ouverture du tunnel
+          ssh -f -N -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -L 6443:127.0.0.1:6443 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i ~/.ssh/id_ed25519
           
-          # Installer kubectl sur le runner GitHub
+          # 2. Installation de kubectl
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
           
-          # Décoder le kubeconfig et l'appliquer
+          # 3. Décodage du kubeconfig
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 --decode > ~/.kube/config
           
-          # Forcer le redémarrage du backend à travers le tunnel
+          # LIGNE MAGIQUE CORRIGÉE : On force kubectl à utiliser le tunnel (localhost) au lieu de l'IP publique !
+          kubectl config set-cluster default --server=https://127.0.0.1:6443 --insecure-skip-tls-verify=true
+          
+          # 4. Test de connexion réseau interne (Passera à travers le tunnel)
+          kubectl cluster-info
+          
+          # 5. Forcer le redémarrage du backend
           kubectl rollout restart deployment/pubrush-backend
