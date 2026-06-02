@@ -18,6 +18,17 @@ SEARCH_CACHE = {}
 
 router = APIRouter(prefix="/bars", tags=["bars"])
 
+def _http_get_json(url: str, data_encoded: bytes = None, headers: dict = None, timeout: int = 5) -> dict:
+    req_headers = {"User-Agent": "PubRush-FastAPI/1.0"}
+    if headers:
+        req_headers.update(headers)
+
+    req = urllib.request.Request(url, data=data_encoded, headers=req_headers)
+    ssl_context = ssl._create_unverified_context()
+    
+    with urllib.request.urlopen(req, timeout=timeout, context=ssl_context) as response:
+        return json.loads(response.read().decode("utf-8"))
+
 @router.get("/search", response_model=list[BarSearchResult])
 def search_bars(
     q: str,
@@ -69,15 +80,7 @@ def search_photon(q: str, lat: Optional[float], lon: Optional[float]):
     url = f"https://photon.komoot.io/api/?{urllib.parse.urlencode(query_params)}"
     
     try:
-        req = urllib.request.Request(
-            url, 
-            headers={"User-Agent": "PubRush-FastAPI/1.0"}
-        )
-        # MITIGATION: Use unverified context to bypass local SSL handshake failures
-        # (e.g. SSLV3_ALERT_HANDSHAKE_FAILURE) commonly encountered in dev environments.
-        ssl_context = ssl._create_unverified_context()
-        with urllib.request.urlopen(req, timeout=5, context=ssl_context) as response:
-            data = json.loads(response.read().decode())
+        data = _http_get_json(url, timeout=5)
             
         results = []
         for feature in data.get("features", []):
@@ -121,11 +124,7 @@ def search_google_places(q: str, lat: Optional[float], lon: Optional[float], key
     url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?{urllib.parse.urlencode(query_params)}"
     
     try:
-        req = urllib.request.Request(url)
-        # Bypass potential local SSL verification issues in dev
-        ssl_context = ssl._create_unverified_context()
-        with urllib.request.urlopen(req, timeout=5, context=ssl_context) as response:
-            data = json.loads(response.read().decode())
+        data = _http_get_json(url, timeout=5)
             
         status_google = data.get("status")
         if status_google not in ["OK", "ZERO_RESULTS"]:
@@ -213,11 +212,7 @@ def compute_real_walking_times(lat: float, lon: float, candidates: list[BarSearc
     url = f"https://router.project-osrm.org/table/v1/foot/{coords_str}?sources=0"
 
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "PubRush-FastAPI/1.0"})
-        # Bypass potential local SSL verification issues in dev
-        ssl_context = ssl._create_unverified_context()
-        with urllib.request.urlopen(req, timeout=5, context=ssl_context) as response:
-            res_data = json.loads(response.read().decode("utf-8"))
+        res_data = _http_get_json(url, timeout=5)
 
         durations = res_data.get("durations", [])
         if not durations or len(durations[0]) < len(osrm_candidates) + 1:
@@ -315,25 +310,18 @@ def search_overpass_nearby(lat: float, lon: float, radius: int):
     data_encoded = urllib.parse.urlencode({"data": overpass_query}).encode("utf-8")
     
     import ssl
-    ssl_context = ssl._create_unverified_context()
-    
     res_data = None
     
     for server_url in servers:
         try:
-            req = urllib.request.Request(
+            res_data = _http_get_json(
                 server_url, 
-                data=data_encoded,
-                headers={
-                    "User-Agent": "PubRush-FastAPI/1.0", 
-                    "Content-Type": "application/x-www-form-urlencoded"
-                }
+                data_encoded=data_encoded,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=6
             )
-            # Timeout set to 6s to absorb normal peak congestion on public servers (avoiding early failover)
-            with urllib.request.urlopen(req, timeout=6, context=ssl_context) as response:
-                res_data = json.loads(response.read().decode("utf-8"))
-                if res_data:
-                    break
+            if res_data:
+                break
         except Exception:
             continue
             
@@ -392,10 +380,7 @@ def search_google_nearby(lat: float, lon: float, radius: int, key: str):
     url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?{urllib.parse.urlencode(query_params)}"
     
     try:
-        req = urllib.request.Request(url)
-        ssl_context = ssl._create_unverified_context()
-        with urllib.request.urlopen(req, timeout=5, context=ssl_context) as response:
-            data = json.loads(response.read().decode())
+        data = _http_get_json(url, timeout=5)
             
         status_google = data.get("status")
         if status_google not in ["OK", "ZERO_RESULTS"]:

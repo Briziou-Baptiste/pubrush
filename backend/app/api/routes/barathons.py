@@ -16,6 +16,7 @@ from app.models import (
 )
 from app.services.websocket_service import websocket_service
 from app.api.deps.auth import get_current_user
+from app.api.deps.barathons import get_barathon_with_access
 from app.schemas import (
     ActiveBarathonRead,
     AssignBarathonRolesPayload,
@@ -27,6 +28,41 @@ from app.schemas import (
 
 
 router = APIRouter(prefix="/barathons", tags=["barathons"])
+
+
+def serialize_barathon_summary(barathon: Barathon, current_user_id: int) -> dict:
+    return {
+        "id": barathon.id,
+        "name": barathon.name,
+        "start_datetime": barathon.start_datetime,
+        "end_datetime": barathon.end_datetime,
+        "has_started": barathon.has_started,
+        "status": barathon.status,
+        "travel_time_between_bars_minutes": barathon.travel_time_between_bars_minutes,
+        "max_time_in_bar_minutes": barathon.max_time_in_bar_minutes,
+        "created_by_user_id": barathon.created_by_user_id,
+        "started_at": barathon.started_at,
+        "ended_at": barathon.ended_at,
+        "current_user_role": (
+            "creator"
+            if barathon.created_by_user_id == current_user_id
+            else "participant"
+        ),
+        "participants_count": len(barathon.participants),
+        "stops": [
+            {
+                "id": stop.id,
+                "name": stop.name,
+                "stop_type": stop.stop_type,
+                "latitude": float(stop.latitude),
+                "longitude": float(stop.longitude),
+                "stop_order": stop.stop_order,
+                "is_completed": stop.is_completed,
+                "completed_at": stop.completed_at,
+            }
+            for stop in barathon.stops
+        ],
+    }
 
 
 @router.post("", response_model=BarathonRead, status_code=status.HTTP_201_CREATED)
@@ -132,42 +168,7 @@ def get_my_upcoming_barathons(
 
     barathons = list(db.scalars(query).unique().all())
 
-    result = []
-    for barathon in barathons:
-        result.append(
-            {
-                "id": barathon.id,
-                "name": barathon.name,
-                "start_datetime": barathon.start_datetime,
-                "end_datetime": barathon.end_datetime,
-                "has_started": barathon.has_started,
-                "status": barathon.status,
-                "travel_time_between_bars_minutes": barathon.travel_time_between_bars_minutes,
-                "max_time_in_bar_minutes": barathon.max_time_in_bar_minutes,
-                "created_by_user_id": barathon.created_by_user_id,
-                "started_at": barathon.started_at,
-                "ended_at": barathon.ended_at,
-                "current_user_role": (
-                    "creator"
-                    if barathon.created_by_user_id == current_user.id
-                    else "participant"
-                ),
-                "participants_count": len(barathon.participants),
-                "stops": [
-                    {
-                        "id": stop.id,
-                        "name": stop.name,
-                        "stop_type": stop.stop_type,
-                        "latitude": float(stop.latitude),
-                        "longitude": float(stop.longitude),
-                        "stop_order": stop.stop_order,
-                    }
-                    for stop in barathon.stops
-                ],
-            }
-        )
-
-    return result
+    return [serialize_barathon_summary(b, current_user.id) for b in barathons]
 
 
 @router.get("/my/past")
@@ -193,44 +194,7 @@ def get_my_past_barathons(
 
     barathons = list(db.scalars(query).unique().all())
 
-    result = []
-    for barathon in barathons:
-        result.append(
-            {
-                "id": barathon.id,
-                "name": barathon.name,
-                "start_datetime": barathon.start_datetime,
-                "end_datetime": barathon.end_datetime,
-                "has_started": barathon.has_started,
-                "status": barathon.status,
-                "travel_time_between_bars_minutes": barathon.travel_time_between_bars_minutes,
-                "max_time_in_bar_minutes": barathon.max_time_in_bar_minutes,
-                "created_by_user_id": barathon.created_by_user_id,
-                "started_at": barathon.started_at,
-                "ended_at": barathon.ended_at,
-                "current_user_role": (
-                    "creator"
-                    if barathon.created_by_user_id == current_user.id
-                    else "participant"
-                ),
-                "participants_count": len(barathon.participants),
-                "stops": [
-                    {
-                        "id": stop.id,
-                        "name": stop.name,
-                        "stop_type": stop.stop_type,
-                        "latitude": float(stop.latitude),
-                        "longitude": float(stop.longitude),
-                        "stop_order": stop.stop_order,
-                        "is_completed": stop.is_completed,
-                        "completed_at": stop.completed_at,
-                    }
-                    for stop in barathon.stops
-                ],
-            }
-        )
-
-    return result
+    return [serialize_barathon_summary(b, current_user.id) for b in barathons]
 
 
 @router.get("/my/active", response_model=Optional[ActiveBarathonRead])
@@ -257,26 +221,8 @@ def get_my_active_barathon(
 
 @router.get("/{barathon_id}", response_model=BarathonRead)
 def get_barathon(
-    barathon_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    barathon: Barathon = Depends(get_barathon_with_access),
 ):
-    query = (
-        select(Barathon)
-        .options(selectinload(Barathon.stops), selectinload(Barathon.participants))
-        .where(Barathon.id == barathon_id)
-    )
-    barathon = db.scalar(query)
-
-    if not barathon:
-        raise HTTPException(status_code=404, detail="Barathon introuvable")
-
-    is_creator = barathon.created_by_user_id == current_user.id
-    is_participant = any(link.user_id == current_user.id for link in barathon.participants)
-
-    if not is_creator and not is_participant:
-        raise HTTPException(status_code=403, detail="Accès interdit")
-
     return barathon
 
 
@@ -450,29 +396,8 @@ async def start_barathon(
 
 @router.get("/{barathon_id}/active-view", response_model=ActiveBarathonRead)
 def get_active_barathon_by_id(
-    barathon_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    barathon: Barathon = Depends(get_barathon_with_access),
 ):
-    barathon = db.scalar(
-        select(Barathon)
-        .options(
-            selectinload(Barathon.stops),
-            selectinload(Barathon.participants),
-        )
-        .where(Barathon.id == barathon_id)
-    )
-
-    if not barathon:
-        raise HTTPException(status_code=404, detail="Barathon introuvable.")
-
-    participant_user_ids = {participant.user_id for participant in barathon.participants}
-    is_creator = barathon.created_by_user_id == current_user.id
-    is_participant = current_user.id in participant_user_ids
-
-    if not is_creator and not is_participant and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Accès interdit.")
-
     if barathon.status != "started":
         raise HTTPException(
             status_code=400,
@@ -663,29 +588,10 @@ async def assign_roles_and_start_barathon(
 
 @router.post("/{barathon_id}/stop")
 async def stop_barathon(
-    barathon_id: int,
-    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    barathon: Barathon = Depends(get_barathon_with_access),
+    db: Session = Depends(get_db),
 ):
-    barathon = db.scalar(
-        select(Barathon)
-        .options(
-            selectinload(Barathon.stops),
-            selectinload(Barathon.participants),
-        )
-        .where(Barathon.id == barathon_id)
-    )
-
-    if not barathon:
-        raise HTTPException(status_code=404, detail="Barathon introuvable.")
-
-    participant_user_ids = {participant.user_id for participant in barathon.participants}
-    is_creator = barathon.created_by_user_id == current_user.id
-    is_participant = current_user.id in participant_user_ids
-
-    if not is_creator and not is_participant and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Accès interdit.")
-
     if barathon.status != "started":
         raise HTTPException(
             status_code=400,
@@ -703,6 +609,8 @@ async def stop_barathon(
     if not barathon:
         raise HTTPException(status_code=404, detail="Barathon introuvable après arrêt.")
 
+    participant_user_ids = {participant.user_id for participant in barathon.participants}
+
     await websocket_service.notify_barathon_stopped(
         barathon_id=barathon.id,
         participant_ids=participant_user_ids,
@@ -719,34 +627,17 @@ async def stop_barathon(
 
 @router.post("/{barathon_id}/stops/{stop_id}/complete")
 def complete_barathon_stop(
-    barathon_id: int,
     stop_id: int,
+    barathon: Barathon = Depends(get_barathon_with_access),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    barathon = db.scalar(
-        select(Barathon)
-        .options(selectinload(Barathon.participants))
-        .where(Barathon.id == barathon_id)
-    )
-
-    if not barathon:
-        raise HTTPException(status_code=404, detail="Barathon introuvable.")
-
-    participant_user_ids = {participant.user_id for participant in barathon.participants}
-    is_creator = barathon.created_by_user_id == current_user.id
-    is_participant = current_user.id in participant_user_ids
-
-    if not is_creator and not is_participant and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Accès interdit.")
-
     if barathon.status != "started":
         raise HTTPException(status_code=400, detail="Le barathon n'est pas en cours.")
 
     stop = db.scalar(
         select(BarathonStop).where(
             BarathonStop.id == stop_id,
-            BarathonStop.barathon_id == barathon_id,
+            BarathonStop.barathon_id == barathon.id,
         )
     )
 

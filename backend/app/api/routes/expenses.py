@@ -5,38 +5,25 @@ from sqlalchemy.orm import Session, selectinload
 from app.db import get_db
 from app.models import Barathon, BarathonParticipant, BarathonExpense, BarathonExpenseBeneficiary, User
 from app.api.deps.auth import get_current_user
+from app.api.deps.barathons import get_barathon_with_access
 from app.schemas import ExpenseCreate, BarathonExpensesReport, ExpenseRead, UserBalanceRead
 
 router = APIRouter(prefix="/barathons/{barathon_id}/expenses", tags=["expenses"])
 
 @router.post("", response_model=ExpenseRead, status_code=status.HTTP_201_CREATED)
 def create_expense(
-    barathon_id: int,
     payload: ExpenseCreate,
+    barathon: Barathon = Depends(get_barathon_with_access),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    # 1. Vérifier si le barathon existe
-    barathon = db.scalar(
-        select(Barathon)
-        .options(selectinload(Barathon.participants))
-        .where(Barathon.id == barathon_id)
-    )
-
-    if not barathon:
-        raise HTTPException(status_code=404, detail="Barathon introuvable.")
-
-    # 2. Vérifier si le barathon est en cours
+    # 1. Vérifier si le barathon est en cours
     if barathon.status != "started":
         raise HTTPException(
             status_code=400,
             detail="Les dépenses ne peuvent être ajoutées que dans un barathon en cours."
         )
 
-    # 3. Vérifier que l'utilisateur connecté fait partie des participants ou est admin
     participant_ids = {p.user_id for p in barathon.participants}
-    if current_user.id not in participant_ids and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Accès interdit.")
 
     # 4. Vérifier que le payeur fait partie des participants
     if payload.payer_user_id not in participant_ids:
@@ -55,7 +42,7 @@ def create_expense(
 
     # 6. Créer la dépense
     expense = BarathonExpense(
-        barathon_id=barathon_id,
+        barathon_id=barathon.id,
         payer_user_id=payload.payer_user_id,
         amount=payload.amount,
         description=payload.description
@@ -97,28 +84,18 @@ def create_expense(
 
 @router.get("", response_model=BarathonExpensesReport)
 def get_expenses_and_balances(
-    barathon_id: int,
+    barathon: Barathon = Depends(get_barathon_with_access),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    # 1. Vérifier si le barathon existe
-    barathon = db.scalar(
-        select(Barathon)
+    # Charger toutes les dépenses associées au barathon
+    expenses = db.scalars(
+        select(BarathonExpense)
         .options(
-            selectinload(Barathon.participants).selectinload(BarathonParticipant.user),
-            selectinload(Barathon.expenses).selectinload(BarathonExpense.payer),
-            selectinload(Barathon.expenses).selectinload(BarathonExpense.beneficiaries)
+            selectinload(BarathonExpense.payer),
+            selectinload(BarathonExpense.beneficiaries)
         )
-        .where(Barathon.id == barathon_id)
-    )
-
-    if not barathon:
-        raise HTTPException(status_code=404, detail="Barathon introuvable.")
-
-    # 2. Vérifier l'accès
-    participant_ids = {p.user_id for p in barathon.participants}
-    if current_user.id not in participant_ids and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Accès interdit.")
+        .where(BarathonExpense.barathon_id == barathon.id)
+    ).all()
 
     # 3. Préparer le dictionnaire des balances pour tous les participants
     balances_dict = {}
@@ -132,7 +109,7 @@ def get_expenses_and_balances(
 
     # 4. Parcourir toutes les dépenses pour calculer les soldes de chacun
     formatted_expenses = []
-    for exp in barathon.expenses:
+    for exp in expenses:
         payer_id = exp.payer_user_id
         amount = float(exp.amount)
         beneficiaries_ids = [b.user_id for b in exp.beneficiaries]
