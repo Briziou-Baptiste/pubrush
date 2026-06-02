@@ -43,7 +43,7 @@ jobs:
           # Ajoute le VPS aux hôtes connus pour éviter le blocage "untrusted host"
           ssh-keyscan -p 22 ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-     - name: Ouvrir le tunnel SSH et lancer le Déploiement
+      - name: Ouvrir le tunnel SSH et lancer le Déploiement
         run: |
           # 1. Ouverture du tunnel
           ssh -f -N -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -L 6443:127.0.0.1:6443 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i ~/.ssh/id_ed25519
