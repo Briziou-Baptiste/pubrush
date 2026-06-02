@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Mettre en place le tunnel SSH
-        uses: nschloe/action-cached-lsh@v1 # Outil pour maintenir le tunnel ouvert
+        uses: nschloe/action-cached-ssh@v1 # Outil pour maintenir le tunnel ouvert
         with:
           # On ouvre un pont entre le port 6443 de GitHub et le port 6443 du VPS
           remote: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
