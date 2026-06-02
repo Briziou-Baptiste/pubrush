@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
 
   topOverlay: {
     position: 'absolute',
-    top: 12,
+    top: 60,
     left: 12,
     right: 12,
   },

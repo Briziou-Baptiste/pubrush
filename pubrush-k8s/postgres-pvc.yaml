@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce # Signifie que le volume est monté en lecture/écriture par un seul nœud à la fois
+  resources:
+    requests:
+      storage: 5Gi # Taille allouée sur le disque VPS

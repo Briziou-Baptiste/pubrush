@@ -284,12 +284,13 @@ def get_nearby_bars(
                 filtered_results.append(c)
 
     filtered_results.sort(key=lambda x: x.estimated_minutes or 999)
-    res = filtered_results[:30]  # Propose up to 30 sorted recommendations to the frontend
+    res = filtered_results[:50]  # Propose up to 50 sorted recommendations to the frontend
 
-    # Prevent memory leaks in the nearby cache
-    if len(NEARBY_CACHE) > 200:
-        NEARBY_CACHE.clear()
-    NEARBY_CACHE[cache_key] = res
+    # Prevent memory leaks in the nearby cache, and only cache if we got successful recommendations (res is not empty)
+    if len(res) > 0:
+        if len(NEARBY_CACHE) > 200:
+            NEARBY_CACHE.clear()
+        NEARBY_CACHE[cache_key] = res
 
     return res
 
@@ -328,8 +329,8 @@ def search_overpass_nearby(lat: float, lon: float, radius: int):
                     "Content-Type": "application/x-www-form-urlencoded"
                 }
             )
-            # Timeout set to 5s to absorb potential peak congestion periods
-            with urllib.request.urlopen(req, timeout=5, context=ssl_context) as response:
+            # Timeout set to 6s to absorb normal peak congestion on public servers (avoiding early failover)
+            with urllib.request.urlopen(req, timeout=6, context=ssl_context) as response:
                 res_data = json.loads(response.read().decode("utf-8"))
                 if res_data:
                     break

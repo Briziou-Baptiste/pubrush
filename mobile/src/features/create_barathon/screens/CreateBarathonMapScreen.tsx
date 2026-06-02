@@ -47,9 +47,7 @@ export default function CreateBarathonMapScreen() {
   const mapRef = useRef<MapView | null>(null);
   const [hasCenteredInitially, setHasCenteredInitially] = useState(false);
 
-  const [routeGeometries, setRouteGeometries] = useState<
-    Record<string, { latitude: number; longitude: number }[]>
-  >({});
+
 
   const params = useLocalSearchParams<{
     name?: string;
@@ -163,75 +161,119 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
   }, [params.travelTime]);
 
   useEffect(() => {
+    let active = true;
+    let didTimeout = false;
+
+    // Set a client-side timeout of 12 seconds to prevent hanging the loader
+    // in case of slow or blocked VPS/Overpass server responses
+    const timeoutId = setTimeout(() => {
+      if (active) {
+        didTimeout = true;
+        setLoadingSuggestions(false);
+        console.warn('[suggestions] La requête suggestions a expiré (timeout client de 12s).');
+      }
+    }, 12000);
+
+    async function loadSuggestions() {
+      if (points.length === 0) {
+        setSuggestions([]);
+        return;
+      }
+
+      const lastPoint = points[points.length - 1];
+
+      try {
+        setLoadingSuggestions(true);
+        const token = await getAccessToken();
+        if (!token) return;
+        if (!active) return;
+
+        // Calls our backend API which queries Overpass/OSM for bars around the given location
+        const data = await fetchNearbyBars(
+          lastPoint.latitude,
+          lastPoint.longitude,
+          allowedTravelTimeMinutes,
+          token
+        );
+
+        // If the query took too long and already timed out, or if this effect was cleaned up, ignore results
+        if (!active) return;
+        if (didTimeout) return;
+
+        const filtered = (data || [])
+          .map((item: any) => {
+            const dist = typeof item.estimated_minutes === 'number'
+              ? item.estimated_minutes
+              : getEstimatedWalkingTimeMinutes(
+                  lastPoint,
+                  { latitude: item.latitude, longitude: item.longitude } as any
+                );
+
+            return {
+              name: item.name || 'Lieu inconnu',
+              street: item.street || '',
+              city: item.city || '',
+              country: item.country || '',
+              latitude: item.latitude,
+              longitude: item.longitude,
+              stopType: (item.stop_type || 'bar') as StopType,
+              estimatedMinutes: dist,
+            };
+          })
+          .filter((item: any) => {
+            // Strict travel time constraint check to prevent far outliers
+            if (item.estimatedMinutes > allowedTravelTimeMinutes) {
+              return false;
+            }
+
+            // Robust normalize function handling potentially missing or malformed names safely
+            const normalize = (str: any) => {
+              if (typeof str !== 'string') return '';
+              return str
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") // remove accents
+                .replace(/^(le|la|les|the|l')\s+/, "") // remove articles
+                .trim();
+            };
+
+            const normalizedItemName = normalize(item.name);
+
+            // Avoid duplicate points
+            return !points.some((p) => {
+              const normalizedPointName = normalize(p.name);
+              const isSameName = normalizedPointName.includes(normalizedItemName) || normalizedItemName.includes(normalizedPointName);
+              const isSameCoords =
+                Math.abs(Number(p.latitude) - Number(item.latitude)) < 0.0005 &&
+                Math.abs(Number(p.longitude) - Number(item.longitude)) < 0.0005;
+
+              return isSameName || isSameCoords;
+            });
+          })
+          .sort((a, b) => a.estimatedMinutes - b.estimatedMinutes)
+          .slice(0, 50);
+
+        setSuggestions(filtered);
+      } catch (error: any) {
+        console.error('Failed to load suggestions:', error);
+      } finally {
+        clearTimeout(timeoutId);
+        if (active && !didTimeout) {
+          setLoadingSuggestions(false);
+        }
+      }
+    }
+
+    // Synchronously clear suggestions immediately when points change to prevent stale rendering state
+    // and eliminate dynamic native MapKit subview index-shifting crashes
+    setSuggestions([]);
     void loadSuggestions();
+
+    return () => {
+      active = false;
+      clearTimeout(timeoutId);
+    };
   }, [points, allowedTravelTimeMinutes]);
-
-  // Loads nearby bar suggestions based on the last added point
-  async function loadSuggestions() {
-    if (points.length === 0) {
-      setSuggestions([]);
-      return;
-    }
-
-    const lastPoint = points[points.length - 1];
-
-    try {
-      setLoadingSuggestions(true);
-      const token = await getAccessToken();
-      if (!token) return;
-
-      // Calls our backend API which queries Overpass/OSM for bars around the given location
-      const data = await fetchNearbyBars(
-        lastPoint.latitude,
-        lastPoint.longitude,
-        allowedTravelTimeMinutes,
-        token
-      );
-
-
-      const filtered = data
-        .map((item: any) => {
-          const dist = typeof item.estimated_minutes === 'number'
-            ? item.estimated_minutes
-            : getEstimatedWalkingTimeMinutes(
-                lastPoint,
-                { latitude: item.latitude, longitude: item.longitude } as any
-              );
-
-          return {
-            name: item.name,
-            street: item.street || '',
-            city: item.city || '',
-            country: item.country || '',
-            latitude: item.latitude,
-            longitude: item.longitude,
-            stopType: item.stop_type as StopType,
-            estimatedMinutes: dist,
-          };
-        })
-        .filter((item: any) => {
-          // Strict travel time constraint check to prevent far outliers
-          if (item.estimatedMinutes > allowedTravelTimeMinutes) {
-            return false;
-          }
-          // Avoid duplicate points
-          return !points.some(
-            (p) =>
-              p.name.toLowerCase() === item.name.toLowerCase() ||
-              (Math.abs(p.latitude - item.latitude) < 0.0001 &&
-                Math.abs(p.longitude - item.longitude) < 0.0001)
-          );
-        })
-        .sort((a, b) => a.estimatedMinutes - b.estimatedMinutes)
-        .slice(0, 15);
-
-      setSuggestions(filtered);
-    } catch (error) {
-      console.error('[suggestions] Erreur lors du chargement des suggestions :', error);
-    } finally {
-      setLoadingSuggestions(false);
-    }
-  }
 
   function handleAddSuggestedPoint(item: any) {
     setPoints((prev) => [
@@ -270,50 +312,6 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
     );
   }
 
-  useEffect(() => {
-    void loadRouteGeometries();
-  }, [points]);
-
-  // Fetches walking directions from OSRM between consecutive points
-  async function loadRouteGeometries() {
-    if (points.length < 2) {
-      setRouteGeometries({});
-      return;
-    }
-
-    const newGeometries = { ...routeGeometries };
-    let hasNewChange = false;
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const from = points[i];
-      const to = points[i + 1];
-      const key = `${from.id}-${to.id}`;
-
-      if (!newGeometries[key]) {
-        try {
-          const url = `https://router.project-osrm.org/route/v1/foot/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?geometries=geojson&overview=full`;
-          const res = await fetch(url);
-          const data = await res.json();
-          if (data.routes && data.routes.length > 0) {
-            const coords = data.routes[0].geometry.coordinates.map(
-              ([lon, lat]: [number, number]) => ({
-                latitude: lat,
-                longitude: lon,
-              })
-            );
-            newGeometries[key] = coords;
-            hasNewChange = true;
-          }
-        } catch (error) {
-          console.error(`Failed to fetch OSRM route for ${key}:`, error);
-        }
-      }
-    }
-
-    if (hasNewChange) {
-      setRouteGeometries(newGeometries);
-    }
-  }
 
   const startDateTime = useMemo(() => {
     if (!params.startDateTimeIso) return null;
@@ -443,8 +441,95 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
     return { color: '#22C55E' };
   }
 
+  const allPolylines = useMemo(() => {
+    return points.slice(0, -1).map((point, index) => {
+      const nextPoint = points[index + 1];
+      const key = `polyline-${point.id}-${nextPoint.id}`;
+
+      const lat1 = Number(point.latitude);
+      const lng1 = Number(point.longitude);
+      const lat2 = Number(nextPoint.latitude);
+      const lng2 = Number(nextPoint.longitude);
+
+      if (Number.isNaN(lat1) || Number.isNaN(lng1) || Number.isNaN(lat2) || Number.isNaN(lng2)) {
+        return null;
+      }
+
+      return (
+        <Polyline
+          key={key}
+          coordinates={[
+            { latitude: lat1, longitude: lng1 },
+            { latitude: lat2, longitude: lng2 },
+          ]}
+          strokeColor="#22C55E" // Solid direct green line, 100% native
+          strokeWidth={4}
+        />
+      );
+    }).filter(Boolean);
+  }, [points]);
+
+  const allMarkers = useMemo(() => {
+    const list: React.ReactElement[] = [];
+
+    // 1. Confirmed step markers (Red)
+    points.forEach((p, index) => {
+      const lat = Number(p.latitude);
+      const lng = Number(p.longitude);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+        list.push(
+          <Marker
+            key={`step-marker-${p.id}`}
+            coordinate={{ latitude: lat, longitude: lng }}
+            pinColor="red" // Explicitly red, 100% iOS/Android compatible under Fabric
+            title={`Étape ${index + 1} - ${p.name}`}
+            description={`${p.stopType === 'bar' ? '🍻 Bar' : '🍔 Restaurant'} • ${lat.toFixed(5)} / ${lng.toFixed(5)}`}
+          />
+        );
+      }
+    });
+
+    // 2. Pending selection marker (Green)
+    if (pendingPoint) {
+      const lat = Number(pendingPoint.latitude);
+      const lng = Number(pendingPoint.longitude);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+        list.push(
+          <Marker
+            key="pending-point-marker"
+            coordinate={{ latitude: lat, longitude: lng }}
+            pinColor="green" // Explicitly green, 100% iOS/Android compatible under Fabric
+            title="Point sélectionné"
+          />
+        );
+      }
+    }
+
+    // 3. Suggestions markers (Purple) - Only display if we have at least one point
+    if (points.length > 0) {
+      suggestions.forEach((item) => {
+        const lat = Number(item.latitude);
+        const lng = Number(item.longitude);
+        if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+          list.push(
+            <Marker
+              key={`suggestion-marker-${item.name}-${lat}-${lng}`}
+              coordinate={{ latitude: lat, longitude: lng }}
+              pinColor="purple" // Explicitly purple, 100% iOS/Android compatible under Fabric
+              title={item.name}
+              description={`🚶 ${item.estimatedMinutes} min • ${item.stopType === 'bar' ? '🍻 Bar' : '🍔 Restaurant'} • Appuyer pour ajouter`}
+              onCalloutPress={() => handleConfirmAddSuggestedPoint(item)}
+            />
+          );
+        }
+      });
+    }
+
+    return list;
+  }, [points, pendingPoint, suggestions]);
+
   return (
-    <SafeAreaView style={homeStyles.safeArea}>
+    <View style={homeStyles.safeArea}>
       <MapView
         ref={mapRef}
         style={homeStyles.map}
@@ -452,82 +537,24 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
         showsUserLocation={permissionGranted}
         showsMyLocationButton={false}
       >
-        {/* Draw a radius circle around the last point indicating the allowed travel distance */}
-        {points.length > 0 && (
-          <Circle
-            key={`circle-${points.length}-${points[points.length - 1].id}`}
-            center={{
-              latitude: points[points.length - 1].latitude,
-              longitude: points[points.length - 1].longitude,
-            }}
-            // Radius calculation: 4 km/h = ~66.67 meters per minute
-            radius={allowedTravelTimeMinutes * 66.67}
-            fillColor="rgba(59, 130, 246, 0.15)"
-            strokeColor="rgba(59, 130, 246, 0.4)"
-            strokeWidth={2}
-          />
-        )}
-
-        {points.length > 0 && suggestions.map((item, idx) => (
-          <Marker
-            key={`suggestion-${points.length}-${item.name}-${item.latitude}-${item.longitude}`}
-            coordinate={{
-              latitude: item.latitude,
-              longitude: item.longitude,
-            }}
-            pinColor="blue"
-            title={item.name}
-            description={`🚶 ${item.estimatedMinutes} min • ${item.stopType === 'bar' ? '🍻 Bar' : '🍔 Restaurant'} • Appuyer pour ajouter`}
-            onCalloutPress={() => handleConfirmAddSuggestedPoint(item)}
-          />
-        ))}
-
-        {points.map((point, index) => {
-          const nextPoint = points[index + 1];
-          if (!nextPoint) return null;
-          const key = `${point.id}-${nextPoint.id}`;
-          const path = routeGeometries[key];
-          if (path && path.length > 0) {
-            return (
-              <Polyline
-                key={key}
-                coordinates={path}
-                strokeColor="#22C55E"
-                strokeWidth={4}
-              />
-            );
-          } else {
-            // Smooth gray dashed fallback line while OSRM streets are loading
-            return (
-              <Polyline
-                key={key}
-                coordinates={[
-                  { latitude: point.latitude, longitude: point.longitude },
-                  { latitude: nextPoint.latitude, longitude: nextPoint.longitude },
-                ]}
-                strokeColor="#9CA3AF"
-                strokeWidth={3}
-                lineDashPattern={[5, 5]}
-              />
-            );
-          }
-        })}
-
-        {points.map((p, index) => (
-          <Marker
-            key={p.id}
-            coordinate={{
-              latitude: p.latitude,
-              longitude: p.longitude,
-            }}
-            title={`Étape ${index + 1} - ${p.name}`}
-            description={`${p.stopType === 'bar' ? '🍻 Bar' : '🍔 Restaurant'} • ${p.latitude.toFixed(5)} / ${p.longitude.toFixed(5)}`}
-          />
-        ))}
-
-        {pendingPoint && (
-          <Marker coordinate={pendingPoint} title="Point sélectionné" />
-        )}
+        {[
+          ...(points.length > 0 ? [
+            <Circle
+              key="allowed-travel-radius"
+              center={{
+                latitude: Number(points[points.length - 1].latitude),
+                longitude: Number(points[points.length - 1].longitude),
+              }}
+              // Radius calculation: 4 km/h = ~66.67 meters per minute
+              radius={allowedTravelTimeMinutes * 66.67}
+              fillColor="rgba(59, 130, 246, 0.15)"
+              strokeColor="rgba(59, 130, 246, 0.4)"
+              strokeWidth={2}
+            />
+          ] : []),
+          ...allPolylines,
+          ...allMarkers,
+        ]}
       </MapView>
 
       {/* Floating suggestions loading loader */}
@@ -820,6 +847,6 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

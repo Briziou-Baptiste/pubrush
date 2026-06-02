@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pubrush-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pubrush-backend
+  template:
+    metadata:
+      labels:
+        app: pubrush-backend
+    spec:
+      initContainers:
+      - name: migration
+        image: baptistebriziou/pubrush-backend:latest
+        command: ["sh", "-c", "alembic upgrade head"]
+        env: &backend-env
+        # 1. On récupère d'abord les briques unitaires
+        - name: _DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: DB_USER
+        - name: _DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: DB_NAME
+        - name: _DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pubrush-secrets
+              key: DB_PASSWORD
+        # 2. On reconstruit l'URL dynamiquement comme dans ton compose
+        - name: DATABASE_URL
+          value: "postgresql+psycopg://$(_DB_USER):$(_DB_PASSWORD)@db:5432/$(_DB_NAME)"
+        # 3. Récupération des variables SMTP
+        - name: SMTP_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: SMTP_HOST
+        - name: SMTP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: SMTP_PORT
+        - name: SMTP_FROM
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: SMTP_FROM
+        - name: SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: pubrush-secrets
+              key: SMTP_USER
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pubrush-secrets
+              key: SMTP_PASSWORD
+      containers:
+      - name: backend
+        image: baptistebriziou/pubrush-backend:latest
+        command: ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+        ports:
+        - containerPort: 8000
+        env: *backend-env
+        env: *backend-env
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service # C'est le nom exact attendu par ton fichier ingress.yaml
+spec:
+  selector:
+    app: pubrush-backend # Dit au service de cibler ton conteneur FastAPI
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

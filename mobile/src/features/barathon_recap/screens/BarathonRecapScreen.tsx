@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -131,6 +131,8 @@ export default function BarathonRecapScreen() {
     travelTime?: string;
     stopsJson?: string;
   }>();
+
+  const mapRef = useRef<MapView | null>(null);
 
   const isDetailsMode = typeof params.barathonId === 'string' && !!params.barathonId;
 
@@ -367,6 +369,18 @@ export default function BarathonRecapScreen() {
         longitude: stop.longitude,
       }));
   }, [stops]);
+
+  useEffect(() => {
+    if (routeCoordinates.length > 0) {
+      const t = setTimeout(() => {
+        mapRef.current?.fitToCoordinates(routeCoordinates, {
+          edgePadding: { top: 60, right: 60, bottom: 60, left: 60 },
+          animated: true,
+        });
+      }, 600);
+      return () => clearTimeout(t);
+    }
+  }, [routeCoordinates]);
 
   const initialRegion: Region = useMemo(() => {
     if (stops.length === 0) {
@@ -782,6 +796,7 @@ export default function BarathonRecapScreen() {
 
           <View style={styles.mapWrapper}>
             <MapView
+              ref={mapRef}
               style={styles.mapPreview}
               initialRegion={initialRegion}
               scrollEnabled={false}
@@ -792,6 +807,7 @@ export default function BarathonRecapScreen() {
             >
               {routeCoordinates.length >= 2 ? (
                 <Polyline
+                  key="recap-polyline"
                   coordinates={routeCoordinates}
                   strokeWidth={4}
                   strokeColor="#22C55E"

@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-const API_BASE_URL = 'http://192.168.1.14:8000';
+const API_BASE_URL = 'https://api.pubrush.com';
 
 async function getAccessTokenOrThrow() {
   const token = await SecureStore.getItemAsync('access_token');

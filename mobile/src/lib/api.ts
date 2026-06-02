@@ -5,7 +5,7 @@
 //  Created by Baptiste Briziou on 30/03/2026.
 //
 
-const API_BASE_URL = 'http://192.168.1.14:8000';
+const API_BASE_URL = 'https://api.pubrush.com';
 
 export type RegisterPayload = {
   email: string;

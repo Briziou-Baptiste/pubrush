@@ -145,7 +145,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -188,6 +188,6 @@ export default function HomeScreen() {
         onNavigate={navigateTo}
         onLogout={handleLogout}
       />
-    </SafeAreaView>
+    </View>
   );
 }

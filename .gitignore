@@ -4,16 +4,23 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Virtual env
+# Virtual env & local envs
 venv/
+.venv/
 .env
+.env*
+.env.*
 
 # Alembic
 alembic/versions/*.pyc
 
-# OS
+# OS / IDEs
 .DS_Store
+.vscode/
+.idea/
 
 # Logs
 *.log
 
+# Fichiers accidentels lies a des serveurs
+root@*

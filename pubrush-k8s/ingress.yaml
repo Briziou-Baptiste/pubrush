@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pubrush-ingress
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    # Règle magique Traefik : Redirection automatique HTTP -> HTTPS
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # On lie cet Ingress à notre résolveur Let's Encrypt
+    traefik.ingress.kubernetes.io/router.tls.certresolver: "le"
+spec:
+  rules:
+  - host: api.pubrush.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 80
+  tls: # Déclaration du certificat TLS
+  - hosts:
+    - api.pubrush.com
+    secretName: pubrush-api-tls # K3s va créer et stocker le certificat dans ce Secret tout seul

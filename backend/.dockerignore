@@ -1,0 +1,32 @@
+# Git
+.git
+.gitignore
+
+# Python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.toast
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Local configuration & environment variables
+.env
+.env.*
+
+# Local databases
+*.db
+*.sqlite3
+
+# Project documentation & other folders not needed for backend execution
+docs/
+mobile/

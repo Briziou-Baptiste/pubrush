@@ -177,7 +177,7 @@ export default function ActiveBarathonScreen() {
       }
     }
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
           <ActiveBarathonMap
             initialRegion={initialRegion}
@@ -259,6 +259,6 @@ export default function ActiveBarathonScreen() {
               </View>
             </View>
           </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

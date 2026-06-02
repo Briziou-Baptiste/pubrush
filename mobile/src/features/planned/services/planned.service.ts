@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { BarathonListItem } from '../../barathon_past_planned/types/barathon.types';
 import { authenticatedJsonRequest } from '../../../lib/apiClient';
-const API_BASE_URL = 'http://192.168.1.14:8000';
+const API_BASE_URL = 'https://api.pubrush.com';
 
 export async function getMyUpcomingBarathons(): Promise<BarathonListItem[]> {
   const token = await SecureStore.getItemAsync('access_token');
