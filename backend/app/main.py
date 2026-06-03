@@ -16,8 +16,8 @@ from app.api.routes.expenses import router as expenses_router
 from app.api.routes.bars import router as bars_router
 from app.core.lifespan import lifespan
 from app.db import get_db
-from app.models import Role, User, PasswordResetToken, BarathonParticipantRole
-from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest
+from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant
+from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload
 from app.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.services.email_service import send_reset_code_email
 
@@ -262,3 +262,101 @@ def change_password(
     db.commit()
 
     return {"message": "Votre mot de passe a été modifié avec succès."}
+
+
+@app.put("/me", response_model=UserRead)
+def update_profile(
+    payload: UserUpdatePayload,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if payload.username != current_user.username:
+        # Check uniqueness of username
+        existing_user = db.scalar(
+            select(User).where(User.username == payload.username)
+        )
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ce nom d'utilisateur est déjà pris."
+            )
+        current_user.username = payload.username
+
+    db.commit()
+    return current_user
+
+
+@app.delete("/me")
+def delete_my_account(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # 1. Process barathons created by the user
+    created_barathons = db.scalars(
+        select(Barathon).where(Barathon.created_by_user_id == current_user.id)
+    ).all()
+
+    for barathon in created_barathons:
+        # Find all participant links for this barathon
+        participants = db.scalars(
+            select(BarathonParticipant).where(BarathonParticipant.barathon_id == barathon.id)
+        ).all()
+        
+        # Filter out current user
+        other_participants = [p for p in participants if p.user_id != current_user.id]
+
+        if not other_participants:
+            # User is the only participant, delete the barathon entirely
+            db.delete(barathon)
+        else:
+            # Reassign creator role to the first other participant
+            new_creator_participant = other_participants[0]
+            new_creator_user = db.get(User, new_creator_participant.user_id)
+            barathon.creator = new_creator_user
+            new_creator_participant.role = "creator"
+            
+            # Delete current user's participation links for this barathon
+            current_link = db.scalar(
+                select(BarathonParticipant).where(
+                    BarathonParticipant.barathon_id == barathon.id,
+                    BarathonParticipant.user_id == current_user.id
+                )
+            )
+            if current_link:
+                db.delete(current_link)
+
+            # Delete current user's assigned role in BarathonParticipantRole
+            current_role_entry = db.scalar(
+                select(BarathonParticipantRole).where(
+                    BarathonParticipantRole.barathon_id == barathon.id,
+                    BarathonParticipantRole.user_id == current_user.id
+                )
+            )
+            if current_role_entry:
+                db.delete(current_role_entry)
+
+    # 2. Process other barathons joined by the user (where they are not creator)
+    joined_links = db.scalars(
+        select(BarathonParticipant).where(
+            BarathonParticipant.user_id == current_user.id,
+            BarathonParticipant.role != "creator"
+        )
+    ).all()
+
+    for link in joined_links:
+        db.delete(link)
+        
+        role_entry = db.scalar(
+            select(BarathonParticipantRole).where(
+                BarathonParticipantRole.barathon_id == link.barathon_id,
+                BarathonParticipantRole.user_id == current_user.id
+            )
+        )
+        if role_entry:
+            db.delete(role_entry)
+
+    # 3. Delete the user
+    db.delete(current_user)
+    db.commit()
+
+    return {"message": "Votre compte et toutes vos données associées ont été supprimés conformément au RGPD."}

@@ -265,3 +265,6 @@ class BarSearchResult(BaseModel):
     longitude: float
     stop_type: str
     estimated_minutes: Optional[int] = None
+
+class UserUpdatePayload(BaseModel):
+    username: str = Field(min_length=3, max_length=50)

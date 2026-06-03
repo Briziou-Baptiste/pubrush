@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timedelta
 
 def test_register_success(client):
     payload = {
@@ -112,3 +113,87 @@ def test_change_password_unauthorized(client):
     }
     response = client.post("/change-password", json=payload)
     assert response.status_code == 401
+
+
+def test_update_username_success(client, user_auth_headers, test_user):
+    payload = {"username": "newusername"}
+    response = client.put("/me", json=payload, headers=user_auth_headers)
+    assert response.status_code == 200
+    assert response.json()["username"] == "newusername"
+
+
+def test_update_username_duplicate(client, user_auth_headers, test_user_2):
+    payload = {"username": test_user_2.username}
+    response = client.put("/me", json=payload, headers=user_auth_headers)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Ce nom d'utilisateur est déjà pris."
+
+
+def test_delete_account_solo_barathon(client, user_auth_headers, test_user, db_session):
+    from app.models import Barathon
+    # Create a barathon where test_user is the creator and ONLY participant
+    payload = {
+        "name": "Solo Barathon",
+        "start_datetime": (datetime.utcnow() + timedelta(days=1)).isoformat(),
+        "end_datetime": (datetime.utcnow() + timedelta(days=1, hours=4)).isoformat(),
+        "travel_time_between_bars_minutes": 10,
+        "max_time_in_bar_minutes": 30,
+        "participant_user_ids": [],
+        "stops": []
+    }
+    res = client.post("/barathons", json=payload, headers=user_auth_headers)
+    assert res.status_code == 201
+    barathon_id = res.json()["id"]
+
+    # Delete User account
+    del_res = client.delete("/me", headers=user_auth_headers)
+    assert del_res.status_code == 200
+
+    # Verify user is deleted
+    login_payload = {
+        "email": test_user.email,
+        "password": "password123"
+    }
+    login_res = client.post("/login", json=login_payload)
+    assert login_res.status_code == 404
+
+    # Verify barathon is deleted as well (since they were the only participant)
+    db_session.expire_all()
+    barathon_db = db_session.get(Barathon, barathon_id)
+    assert barathon_db is None
+
+
+def test_delete_account_shared_barathon(client, user_auth_headers, test_user, test_user_2, db_session):
+    from app.models import Barathon
+    # Create a barathon where test_user is the creator, and test_user_2 is a participant
+    payload = {
+        "name": "Shared Barathon",
+        "start_datetime": (datetime.utcnow() + timedelta(days=1)).isoformat(),
+        "end_datetime": (datetime.utcnow() + timedelta(days=1, hours=4)).isoformat(),
+        "travel_time_between_bars_minutes": 10,
+        "max_time_in_bar_minutes": 30,
+        "participant_user_ids": [test_user_2.id],
+        "stops": []
+    }
+    res = client.post("/barathons", json=payload, headers=user_auth_headers)
+    assert res.status_code == 201
+    barathon_id = res.json()["id"]
+
+    # Delete User account
+    del_res = client.delete("/me", headers=user_auth_headers)
+    assert del_res.status_code == 200
+
+    # Verify user is deleted
+    login_payload = {
+        "email": test_user.email,
+        "password": "password123"
+    }
+    login_res = client.post("/login", json=login_payload)
+    assert login_res.status_code == 404
+
+    # Verify barathon is NOT deleted (since test_user_2 was also a participant)
+    db_session.expire_all()
+    barathon_db = db_session.get(Barathon, barathon_id)
+    assert barathon_db is not None
+    # Verify creator has been reassigned to test_user_2
+    assert barathon_db.created_by_user_id == test_user_2.id

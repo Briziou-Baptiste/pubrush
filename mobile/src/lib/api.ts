@@ -224,3 +224,27 @@ export async function fetchNearbyBars(
 
   return handleResponse<any[]>(response);
 }
+
+export async function updateUsername(username: string, token: string): Promise<MeResponse> {
+  const response = await fetch(`${API_BASE_URL}/me`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ username }),
+  });
+
+  return handleResponse<MeResponse>(response);
+}
+
+export async function deleteAccount(token: string): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/me`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<{ message: string }>(response);
+}
