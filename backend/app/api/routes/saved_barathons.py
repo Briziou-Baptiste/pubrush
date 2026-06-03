@@ -30,23 +30,18 @@ def save_past_barathon(
         name=payload.name,
         travel_time_between_bars_minutes=barathon.travel_time_between_bars_minutes,
         max_time_in_bar_minutes=barathon.max_time_in_bar_minutes,
-    )
-    db.add(saved)
-    db.flush()  # Récupérer l'ID pour les stops
-
-    # Copier les stops
-    for stop in barathon.stops:
-        db.add(
+        stops=[
             SavedBarathonStop(
-                saved_barathon_id=saved.id,
                 name=stop.name,
                 stop_type=stop.stop_type,
                 latitude=stop.latitude,
                 longitude=stop.longitude,
                 stop_order=stop.stop_order,
             )
-        )
-
+            for stop in barathon.stops
+        ]
+    )
+    db.add(saved)
     db.commit()
     db.refresh(saved)
 

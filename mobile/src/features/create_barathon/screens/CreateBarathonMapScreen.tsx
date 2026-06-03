@@ -54,9 +54,28 @@ export default function CreateBarathonMapScreen() {
     startDateTimeIso?: string;
     travelTime?: string;
     maxTimeInBar?: string;
+    initialStopsJson?: string;
   }>();
 
-  const [points, setPoints] = useState<SelectedPoint[]>([]);
+  const [points, setPoints] = useState<SelectedPoint[]>(() => {
+    if (params.initialStopsJson) {
+      try {
+        const parsed = JSON.parse(params.initialStopsJson);
+        if (Array.isArray(parsed)) {
+          return parsed.map((s: any) => ({
+            id: s.id || `${Date.now()}-${Math.random()}`,
+            name: s.name,
+            stopType: s.stop_type || s.stopType || 'bar',
+            latitude: Number(s.latitude),
+            longitude: Number(s.longitude),
+          }));
+        }
+      } catch (e) {
+        console.error('[CreateMap] Failed to parse initialStopsJson:', e);
+      }
+    }
+    return [];
+  });
   const [pendingPoint, setPendingPoint] = useState<{
     latitude: number;
     longitude: number;

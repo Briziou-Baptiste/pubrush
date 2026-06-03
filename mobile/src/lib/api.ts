@@ -171,6 +171,7 @@ export async function createBarathonExpense(
     amount: number;
     description?: string;
     beneficiary_user_ids: number[];
+    is_refund?: boolean;
   },
   token: string
 ): Promise<any> {

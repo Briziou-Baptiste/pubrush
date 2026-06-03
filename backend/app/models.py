@@ -253,6 +253,7 @@ class BarathonExpense(Base):
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    is_refund: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
 
     barathon: Mapped["Barathon"] = relationship(back_populates="expenses")
     payer: Mapped["User"] = relationship()

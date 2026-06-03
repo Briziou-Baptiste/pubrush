@@ -229,7 +229,6 @@ def get_my_barathon_balances(
     query = (
         select(Barathon)
         .options(
-            selectinload(Barathon.participants),
             selectinload(Barathon.expenses).selectinload(BarathonExpense.beneficiaries),
         )
         .join(BarathonParticipant, BarathonParticipant.barathon_id == Barathon.id)

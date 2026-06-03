@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -17,11 +17,24 @@ import { styles } from '../styles/createBarathon.styles';
 import { mergeDateAndTime } from '../utils/createBarathon.validators';
 
 export default function CreateBarathonScreen() {
-  const [name, setName] = useState('');
+  const params = useLocalSearchParams<{
+    initialName?: string;
+    initialTravelTime?: string;
+    initialMaxTimeInBar?: string;
+    initialStopsJson?: string;
+  }>();
+
+  const [name, setName] = useState(params.initialName ?? '');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [startTime, setStartTime] = useState<Date | null>(null);
-  const [travelTime, setTravelTime] = useState('');
-  const [maxTimeInBar, setMaxTimeInBar] = useState('');
+  const [travelTime, setTravelTime] = useState(params.initialTravelTime ?? '');
+  const [maxTimeInBar, setMaxTimeInBar] = useState(params.initialMaxTimeInBar ?? '');
+
+  useEffect(() => {
+    if (params.initialName) setName(params.initialName);
+    if (params.initialTravelTime) setTravelTime(params.initialTravelTime);
+    if (params.initialMaxTimeInBar) setMaxTimeInBar(params.initialMaxTimeInBar);
+  }, [params.initialName, params.initialTravelTime, params.initialMaxTimeInBar]);
 
   function validateBeforeContinue() {
     if (!name.trim()) {
@@ -78,6 +91,7 @@ export default function CreateBarathonScreen() {
         startDateTimeIso: computedStart.toISOString(),
         travelTime: travelTime.trim(),
         maxTimeInBar: maxTimeInBar.trim(),
+        initialStopsJson: params.initialStopsJson || '',
       },
     });
   }

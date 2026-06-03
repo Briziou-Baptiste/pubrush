@@ -231,6 +231,7 @@ class ExpenseCreate(BaseModel):
     amount: float = Field(gt=0)
     description: Optional[str] = Field(default=None, max_length=255)
     beneficiary_user_ids: list[int] = Field(min_length=1)
+    is_refund: bool = False
 
 class ExpenseRead(BaseModel):
     id: int
@@ -240,6 +241,7 @@ class ExpenseRead(BaseModel):
     description: Optional[str]
     beneficiary_user_ids: list[int]
     created_at: datetime
+    is_refund: bool
 
     model_config = {
         "from_attributes": True

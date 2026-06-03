@@ -13,7 +13,7 @@ type HomeMenuProps = {
   visible: boolean;
   onClose: () => void;
   onLogout: () => void;
-  onNavigate: (path: '/planned' | '/past' | '/create-barathon' | '/profile') => void;
+  onNavigate: (path: '/planned' | '/past' | '/create-barathon' | '/profile' | '/saved-barathons') => void;
 };
 
 export default function HomeMenu({
@@ -57,6 +57,17 @@ export default function HomeMenu({
             <Text style={styles.menuItemTitle}>Barathons passés</Text>
             <Text style={styles.menuItemSubtitle}>
               Consulte ton historique
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => onNavigate('/saved-barathons')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.menuItemTitle}>Barathons enregistrés</Text>
+            <Text style={styles.menuItemSubtitle}>
+              Accède à tes tournées favorites
             </Text>
           </TouchableOpacity>
 

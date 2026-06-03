@@ -16,11 +16,11 @@ def create_expense(
     barathon: Barathon = Depends(get_barathon_with_access),
     db: Session = Depends(get_db),
 ):
-    # 1. Vérifier si le barathon est en cours
-    if barathon.status != "started":
+    # 1. Vérifier si le barathon est actif ou passé
+    if barathon.status not in ["started", "completed", "stopped"]:
         raise HTTPException(
             status_code=400,
-            detail="Les dépenses ne peuvent être ajoutées que dans un barathon en cours."
+            detail="Les dépenses ou remboursements ne peuvent être ajoutés que sur un barathon en cours, terminé ou arrêté."
         )
 
     participant_ids = {p.user_id for p in barathon.participants}
@@ -45,7 +45,8 @@ def create_expense(
         barathon_id=barathon.id,
         payer_user_id=payload.payer_user_id,
         amount=payload.amount,
-        description=payload.description
+        description=payload.description,
+        is_refund=payload.is_refund,
     )
     db.add(expense)
     db.flush() # Récupérer l'id de la dépense
@@ -78,7 +79,8 @@ def create_expense(
         "amount": float(created_expense.amount),
         "description": created_expense.description,
         "beneficiary_user_ids": [b.user_id for b in created_expense.beneficiaries],
-        "created_at": created_expense.created_at
+        "created_at": created_expense.created_at,
+        "is_refund": created_expense.is_refund,
     }
 
 
@@ -133,7 +135,8 @@ def get_expenses_and_balances(
             "amount": amount,
             "description": exp.description,
             "beneficiary_user_ids": beneficiaries_ids,
-            "created_at": exp.created_at
+            "created_at": exp.created_at,
+            "is_refund": exp.is_refund,
         })
 
     # 5. Formater la liste des balances finales

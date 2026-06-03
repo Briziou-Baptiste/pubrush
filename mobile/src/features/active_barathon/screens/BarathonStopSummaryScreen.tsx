@@ -13,7 +13,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { styles } from '../styles/barathonStopSummary.styles';
-import { fetchBarathonExpenses, savePastBarathon } from '../../../lib/api';
+import { fetchBarathonExpenses, savePastBarathon, createBarathonExpense } from '../../../lib/api';
 import { getAccessToken, getCurrentUser } from '../../../lib/authStorage';
 
 type DebtSettlement = {
@@ -125,6 +125,43 @@ export default function BarathonStopSummaryScreen() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  async function handleSettleDebt(debt: DebtSettlement) {
+    Alert.alert(
+      'Enregistrer le remboursement',
+      `Confirmez-vous avoir remboursé ${debt.amount.toFixed(2)} € à ${debt.creditorName} ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Confirmer',
+          style: 'default',
+          onPress: async () => {
+            try {
+              const token = await getAccessToken();
+              if (!token || !params.barathonId) return;
+
+              await createBarathonExpense(
+                Number(params.barathonId),
+                {
+                  payer_user_id: debt.debtorId,
+                  amount: debt.amount,
+                  description: `Remboursement à ${debt.creditorName}`,
+                  beneficiary_user_ids: [debt.creditorId],
+                  is_refund: true,
+                },
+                token
+              );
+
+              Alert.alert('Succès', 'Le remboursement a bien été enregistré.');
+              void loadUserDataAndExpenses();
+            } catch (err) {
+              Alert.alert('Erreur', "Impossible d'enregistrer le remboursement.");
+            }
+          },
+        },
+      ]
+    );
   }
 
   useEffect(() => {
@@ -272,12 +309,28 @@ export default function BarathonStopSummaryScreen() {
                   if (isMeDebtor) {
                     return (
                       <View key={index} style={styles.debtorCard}>
-                        <Text style={styles.debtorText}>
-                          ⚠️ Tu dois à {debt.creditorName}
-                        </Text>
-                        <Text style={styles.debtorAmount}>
-                          {debt.amount.toFixed(2)} €
-                        </Text>
+                        <View style={{ flex: 1, marginRight: 8 }}>
+                          <Text style={styles.debtorText}>
+                            ⚠️ Tu dois à {debt.creditorName}
+                          </Text>
+                          <Text style={styles.debtorAmount}>
+                            {debt.amount.toFixed(2)} €
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={{
+                            backgroundColor: '#B91C1C',
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 10,
+                          }}
+                          onPress={() => handleSettleDebt(debt)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
+                            Rembourser
+                          </Text>
+                        </TouchableOpacity>
                       </View>
                     );
                   }
@@ -316,21 +369,32 @@ export default function BarathonStopSummaryScreen() {
               Historique des dépenses ({expenses.length})
             </Text>
             <View style={{ gap: 8 }}>
-              {expenses.map((exp) => (
-                <View key={exp.id} style={styles.neutralCard}>
-                  <View style={styles.expenseTextContainer}>
-                    <Text style={styles.expenseTitle}>
-                      {exp.description || 'Dépense partagée'}
-                    </Text>
-                    <Text style={styles.expenseSub}>
-                      Payé par {exp.payer_username} • {exp.beneficiary_user_ids.length} pers.
+              {expenses.map((exp) => {
+                const isRefund = exp.is_refund;
+                return (
+                  <View
+                    key={exp.id}
+                    style={[
+                      styles.neutralCard,
+                      isRefund && { backgroundColor: '#F0FDF4', borderColor: '#86EFAC' }
+                    ]}
+                  >
+                    <View style={styles.expenseTextContainer}>
+                      <Text style={[styles.expenseTitle, isRefund && { color: '#15803D' }]}>
+                        {exp.description || (isRefund ? 'Remboursement' : 'Dépense partagée')}
+                      </Text>
+                      <Text style={styles.expenseSub}>
+                        {isRefund
+                          ? `Remboursement de ${exp.payer_username}`
+                          : `Payé par ${exp.payer_username} • ${exp.beneficiary_user_ids.length} pers.`}
+                      </Text>
+                    </View>
+                    <Text style={[styles.expenseAmount, isRefund && { color: '#15803D' }]}>
+                      {isRefund ? `✓ ${exp.amount.toFixed(2)} €` : `${exp.amount.toFixed(2)} €`}
                     </Text>
                   </View>
-                  <Text style={styles.expenseAmount}>
-                    {exp.amount.toFixed(2)} €
-                  </Text>
-                </View>
-              ))}
+                );
+              })}
             </View>
           </View>
         )}

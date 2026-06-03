@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { fetchMySavedBarathons, deleteSavedBarathon, SavedBarathon } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
@@ -70,6 +71,18 @@ export default function SavedBarathonsScreen() {
     );
   }
 
+  function handleReusePress(item: SavedBarathon) {
+    router.push({
+      pathname: '/create-barathon',
+      params: {
+        initialName: item.name,
+        initialTravelTime: String(item.travel_time_between_bars_minutes),
+        initialMaxTimeInBar: String(item.max_time_in_bar_minutes),
+        initialStopsJson: JSON.stringify(item.stops),
+      },
+    });
+  }
+
   function renderSavedBarathonCard({ item }: { item: SavedBarathon }) {
     const stopsList = item.stops.map(s => s.name).join(' ➔ ');
 
@@ -82,13 +95,23 @@ export default function SavedBarathonsScreen() {
               ⏱️ {item.max_time_in_bar_minutes}m par bar • 🚶‍♂️ {item.travel_time_between_bars_minutes}m trajet
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeletePress(item)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.deleteIcon}>🗑️</Text>
-          </TouchableOpacity>
+          <View style={styles.actionButtonsRow}>
+            <TouchableOpacity
+              style={styles.reuseButton}
+              onPress={() => handleReusePress(item)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="refresh-outline" size={18} color="#2563EB" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeletePress(item)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="trash-outline" size={18} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.stopsContainer}>
@@ -224,8 +247,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FEE2E2',
   },
-  deleteIcon: {
-    fontSize: 16,
+  actionButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  reuseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF', // soft blue
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#DBEAFE', // light blue border
   },
   stopsContainer: {
     borderTopWidth: 1,
