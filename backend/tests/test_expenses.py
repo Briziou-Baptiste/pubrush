@@ -77,3 +77,24 @@ def test_expense_lifecycle(client, user_auth_headers, user_2_auth_headers, test_
     assert balances_map[test_user_2.id]["paid_amount"] == 10.0
     assert balances_map[test_user_2.id]["debt_amount"] == 25.0
     assert balances_map[test_user_2.id]["balance"] == -15.0
+
+    # 8. Test /barathons/my/balances for test_user
+    bal_res_1 = client.get("/barathons/my/balances", headers=user_auth_headers)
+    assert bal_res_1.status_code == 200
+    bal_data_1 = bal_res_1.json()
+    assert len(bal_data_1) == 1
+    assert bal_data_1[0]["barathon_id"] == barathon_id
+    assert bal_data_1[0]["barathon_name"] == "Financial Barathon"
+    assert bal_data_1[0]["balance"] == 15.0
+    assert bal_data_1[0]["status"] == "started"
+
+    # 9. Test /barathons/my/balances for test_user_2
+    bal_res_2 = client.get("/barathons/my/balances", headers=user_2_auth_headers)
+    assert bal_res_2.status_code == 200
+    bal_data_2 = bal_res_2.json()
+    assert len(bal_data_2) == 1
+    assert bal_data_2[0]["barathon_id"] == barathon_id
+    assert bal_data_2[0]["barathon_name"] == "Financial Barathon"
+    assert bal_data_2[0]["balance"] == -15.0
+    assert bal_data_2[0]["status"] == "started"
+

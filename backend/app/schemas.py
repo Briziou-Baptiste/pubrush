@@ -273,3 +273,10 @@ class UserStatsResponse(BaseModel):
     barathons_created: int
     barathons_completed: int
     bars_visited: int
+
+class MyBarathonBalanceRead(BaseModel):
+    barathon_id: int
+    barathon_name: str
+    balance: float
+    status: str
+

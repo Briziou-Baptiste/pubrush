@@ -265,3 +265,22 @@ export async function fetchUserStats(token: string): Promise<UserStats> {
 
   return handleResponse<UserStats>(response);
 }
+
+export type BarathonBalance = {
+  barathon_id: number;
+  barathon_name: string;
+  balance: number;
+  status: string;
+};
+
+export async function fetchMyBarathonBalances(token: string): Promise<BarathonBalance[]> {
+  const response = await fetch(`${API_BASE_URL}/barathons/my/balances`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<BarathonBalance[]>(response);
+}
+

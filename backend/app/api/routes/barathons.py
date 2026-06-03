@@ -13,6 +13,7 @@ from app.models import (
     BarathonStop,
     Role,
     User,
+    BarathonExpense,
 )
 from app.services.websocket_service import websocket_service
 from app.api.deps.auth import get_current_user
@@ -24,6 +25,7 @@ from app.schemas import (
     BarathonParticipantsUpdate,
     BarathonRead,
     UpdateBarathonStartDatetime,
+    MyBarathonBalanceRead,
 )
 
 
@@ -217,6 +219,52 @@ def get_my_active_barathon(
         return None
 
     return barathon
+
+
+@router.get("/my/balances", response_model=list[MyBarathonBalanceRead])
+def get_my_barathon_balances(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    query = (
+        select(Barathon)
+        .options(
+            selectinload(Barathon.participants),
+            selectinload(Barathon.expenses).selectinload(BarathonExpense.beneficiaries),
+        )
+        .join(BarathonParticipant, BarathonParticipant.barathon_id == Barathon.id)
+        .where(BarathonParticipant.user_id == current_user.id)
+    )
+    barathons = db.scalars(query).unique().all()
+
+    balances = []
+    for b in barathons:
+        paid_amount = 0.0
+        debt_amount = 0.0
+
+        for exp in b.expenses:
+            amount = float(exp.amount)
+            if exp.payer_user_id == current_user.id:
+                paid_amount += amount
+
+            beneficiaries = [ben.user_id for ben in exp.beneficiaries]
+            if current_user.id in beneficiaries:
+                num_beneficiaries = len(beneficiaries)
+                if num_beneficiaries > 0:
+                    debt_amount += amount / num_beneficiaries
+
+        net_balance = round(paid_amount - debt_amount, 2)
+        if net_balance != 0:
+            balances.append({
+                "barathon_id": b.id,
+                "barathon_name": b.name,
+                "balance": net_balance,
+                "status": b.status,
+            })
+
+    # Sort by barathon_id descending (most recent first)
+    balances.sort(key=lambda x: x["barathon_id"], reverse=True)
+    return balances
 
 
 @router.get("/{barathon_id}", response_model=BarathonRead)

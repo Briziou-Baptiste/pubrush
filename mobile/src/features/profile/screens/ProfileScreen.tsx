@@ -53,10 +53,7 @@ export default function ProfileScreen() {
   }
 
   function handleExpensesPress() {
-    Alert.alert(
-      'Dépenses',
-      'Cette fonctionnalité sera disponible prochainement et vous permettra de voir les barathons où vous devez de l\'argent ou si on vous en doit.'
-    );
+    router.push('/expenses');
   }
 
   const initialLetter = username ? username.charAt(0).toUpperCase() : '?';
