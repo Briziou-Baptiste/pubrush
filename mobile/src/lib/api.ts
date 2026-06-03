@@ -5,7 +5,7 @@
 //  Created by Baptiste Briziou on 30/03/2026.
 //
 
-const API_BASE_URL = 'https://api.pubrush.com';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.pubrush.com';
 
 export type RegisterPayload = {
   email: string;
@@ -96,6 +96,22 @@ export async function fetchMe(token: string) {
   });
 
   return handleResponse<MeResponse>(response);
+}
+
+export async function changePassword(
+  payload: { old_password: string; new_password: string },
+  token: string
+): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/change-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<{ message: string }>(response);
 }
 
 export async function requestPasswordReset(email: string): Promise<{ message: string }> {

@@ -74,3 +74,41 @@ def test_me_success(client, user_auth_headers, test_user):
 def test_me_unauthorized(client):
     response = client.get("/me")
     assert response.status_code == 401
+
+
+def test_change_password_success(client, user_auth_headers, test_user):
+    payload = {
+        "old_password": "password123",
+        "new_password": "newpassword123"
+    }
+    response = client.post("/change-password", json=payload, headers=user_auth_headers)
+    assert response.status_code == 200
+    assert response.json()["message"] == "Votre mot de passe a été modifié avec succès."
+
+    # Now verify login with new password works
+    login_payload = {
+        "email": test_user.email,
+        "password": "newpassword123"
+    }
+    response = client.post("/login", json=login_payload)
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+
+
+def test_change_password_wrong_old(client, user_auth_headers):
+    payload = {
+        "old_password": "wrongpassword",
+        "new_password": "newpassword123"
+    }
+    response = client.post("/change-password", json=payload, headers=user_auth_headers)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "L'ancien mot de passe est incorrect."
+
+
+def test_change_password_unauthorized(client):
+    payload = {
+        "old_password": "password123",
+        "new_password": "newpassword123"
+    }
+    response = client.post("/change-password", json=payload)
+    assert response.status_code == 401

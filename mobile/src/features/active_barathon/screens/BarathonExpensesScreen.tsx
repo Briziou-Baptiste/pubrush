@@ -159,10 +159,10 @@ export default function BarathonExpensesScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={{ flex: 1, padding: 16 }}>
+      <View style={styles.screenPadding}>
         {/* Back and Header */}
-        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 16, fontWeight: '700', color: '#6B7280' }}>← Retour</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backButtonText}>← Retour</Text>
         </TouchableOpacity>
 
         <Text style={[styles.title, { fontSize: 24, marginBottom: 16 }]}>💰 Dépenses du Barathon</Text>
@@ -183,7 +183,7 @@ export default function BarathonExpensesScreen() {
               <View key={item.user_id} style={styles.balanceRow}>
                 <View>
                   <Text style={styles.balanceName}>{item.username}</Text>
-                  <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>
+                  <Text style={styles.balanceDetails}>
                     Payé : {item.paid_amount.toFixed(2)} €  |  Part : {item.debt_amount.toFixed(2)} €
                   </Text>
                 </View>
@@ -216,7 +216,7 @@ export default function BarathonExpensesScreen() {
             </View>
           )}
           ListEmptyComponent={
-            <Text style={{ textAlign: 'center', color: '#6B7280', marginTop: 24 }}>
+            <Text style={styles.emptyText}>
               Aucune dépense enregistrée pour le moment.
             </Text>
           }
@@ -245,7 +245,7 @@ export default function BarathonExpensesScreen() {
 
             <ScrollView keyboardShouldPersistTaps="handled">
               {/* Amount input */}
-              <View style={{ marginBottom: 14 }}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>Montant total (€)</Text>
                 <TextInput
                   placeholder="0.00"
@@ -258,52 +258,45 @@ export default function BarathonExpensesScreen() {
               </View>
 
               {/* Auto-assigned description display */}
-              <View style={{ marginBottom: 14 }}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>Description (Etape en cours)</Text>
-                <View style={{
-                  borderWidth: 1,
-                  borderColor: '#E5E7EB',
-                  borderRadius: 12,
-                  padding: 12,
-                  marginTop: 6,
-                  backgroundColor: '#F3F4F6',
-                }}>
-                  <Text style={{ fontSize: 15, color: '#4B5563', fontWeight: '600' }}>
+                <View style={styles.currentStopContainer}>
+                  <Text style={styles.currentStopText}>
                     {currentStopName || 'Dépense partagée'}
                   </Text>
                 </View>
               </View>
 
               {/* Payer selection */}
-              <View style={{ marginBottom: 14 }}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>Qui a payé ?</Text>
                 <View style={{ gap: 8, marginTop: 4 }}>
-                  {balances.map((item) => (
-                    <TouchableOpacity
-                      key={item.user_id}
-                      style={{
-                        padding: 12,
-                        borderRadius: 12,
-                        backgroundColor: payerId === item.user_id ? '#EFF6FF' : '#F9FAFB',
-                        borderWidth: 1,
-                        borderColor: payerId === item.user_id ? '#3B82F6' : '#E5E7EB',
-                      }}
-                      onPress={() => setPayerId(item.user_id)}
-                    >
-                      <Text style={{ fontWeight: payerId === item.user_id ? '700' : '500', color: '#1F2937' }}>
-                        {item.username}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  {balances.map((item) => {
+                    const isSelected = payerId === item.user_id;
+                    return (
+                      <TouchableOpacity
+                        key={item.user_id}
+                        style={[
+                          styles.selectionButton,
+                          isSelected && styles.selectionButtonActive,
+                        ]}
+                        onPress={() => setPayerId(item.user_id)}
+                      >
+                        <Text style={isSelected ? styles.selectionButtonTextActive : styles.selectionButtonText}>
+                          {item.username}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
 
               {/* Beneficiary selection */}
-              <View style={{ marginBottom: 20 }}>
+              <View style={styles.inputGroup}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text style={styles.label}>Pour qui ? (Partagé entre...)</Text>
                   <TouchableOpacity onPress={handleSelectAllBeneficiaries}>
-                    <Text style={{ fontSize: 13, color: '#2563EB', fontWeight: '700' }}>
+                    <Text style={styles.selectAllText}>
                       {selectedBeneficiaries.length === balances.length ? 'Tout décocher' : 'Tout cocher'}
                     </Text>
                   </TouchableOpacity>
@@ -315,22 +308,16 @@ export default function BarathonExpensesScreen() {
                     return (
                       <TouchableOpacity
                         key={item.user_id}
-                        style={{
-                          padding: 12,
-                          borderRadius: 12,
-                          backgroundColor: isSelected ? '#F0FDF4' : '#F9FAFB',
-                          borderWidth: 1,
-                          borderColor: isSelected ? '#22C55E' : '#E5E7EB',
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
+                        style={[
+                          styles.beneficiaryButton,
+                          isSelected && styles.beneficiaryButtonActive,
+                        ]}
                         onPress={() => handleToggleBeneficiary(item.user_id)}
                       >
-                        <Text style={{ fontWeight: isSelected ? '700' : '500', color: '#1F2937' }}>
+                        <Text style={isSelected ? styles.beneficiaryButtonTextActive : styles.beneficiaryButtonText}>
                           {item.username}
                         </Text>
-                        <Text style={{ color: isSelected ? '#22C55E' : '#6B7280', fontWeight: '800' }}>
+                        <Text style={isSelected ? styles.beneficiaryCheckActive : styles.beneficiaryCheck}>
                           {isSelected ? '✓' : ''}
                         </Text>
                       </TouchableOpacity>

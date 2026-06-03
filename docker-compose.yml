@@ -27,6 +27,7 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     environment:
       DATABASE_URL: postgresql+psycopg://${DB_USER:-pubrush}:${DB_PASSWORD}@db:5432/${DB_NAME:-pubrush}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}

@@ -221,12 +221,12 @@ export default function BarathonStopSummaryScreen() {
             <Text style={[styles.sectionTitle, { color: '#10B981', marginBottom: 16 }]}>💰 Comptes du Barathon</Text>
 
             {/* Section Compensations */}
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#1F2937', marginBottom: 12 }}>
+            <Text style={styles.sectionTitle}>
               Équilibre des remboursements
             </Text>
 
             {debts.length === 0 ? (
-              <Text style={{ color: '#10B981', fontSize: 14, fontWeight: '700', marginBottom: 16, lineHeight: 20 }}>
+              <Text style={styles.successText}>
                 ✓ Toutes les dépenses sont parfaitement équilibrées ! Aucun remboursement nécessaire.
               </Text>
             ) : (
@@ -237,23 +237,11 @@ export default function BarathonStopSummaryScreen() {
 
                   if (isMeDebtor) {
                     return (
-                      <View
-                        key={index}
-                        style={{
-                          padding: 14,
-                          borderRadius: 14,
-                          backgroundColor: '#FEF2F2',
-                          borderWidth: 1,
-                          borderColor: '#FCA5A5',
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <Text style={{ fontWeight: '700', color: '#B91C1C', fontSize: 14 }}>
+                      <View key={index} style={styles.debtorCard}>
+                        <Text style={styles.debtorText}>
                           ⚠️ Tu dois à {debt.creditorName}
                         </Text>
-                        <Text style={{ fontWeight: '900', color: '#B91C1C', fontSize: 16 }}>
+                        <Text style={styles.debtorAmount}>
                           {debt.amount.toFixed(2)} €
                         </Text>
                       </View>
@@ -262,23 +250,11 @@ export default function BarathonStopSummaryScreen() {
 
                   if (isMeCreditor) {
                     return (
-                      <View
-                        key={index}
-                        style={{
-                          padding: 14,
-                          borderRadius: 14,
-                          backgroundColor: '#F0FDF4',
-                          borderWidth: 1,
-                          borderColor: '#86EFAC',
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <Text style={{ fontWeight: '700', color: '#15803D', fontSize: 14 }}>
+                      <View key={index} style={styles.creditorCard}>
+                        <Text style={styles.creditorText}>
                           🎉 {debt.debtorName} te doit
                         </Text>
-                        <Text style={{ fontWeight: '900', color: '#15803D', fontSize: 16 }}>
+                        <Text style={styles.creditorAmount}>
                           {debt.amount.toFixed(2)} €
                         </Text>
                       </View>
@@ -286,23 +262,11 @@ export default function BarathonStopSummaryScreen() {
                   }
 
                   return (
-                    <View
-                      key={index}
-                      style={{
-                        padding: 14,
-                        borderRadius: 14,
-                        backgroundColor: '#F9FAFB',
-                        borderWidth: 1,
-                        borderColor: '#E5E7EB',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Text style={{ fontWeight: '600', color: '#4B5563', fontSize: 14 }}>
+                    <View key={index} style={styles.neutralCard}>
+                      <Text style={styles.neutralText}>
                         {debt.debtorName} doit à {debt.creditorName}
                       </Text>
-                      <Text style={{ fontWeight: '800', color: '#4B5563', fontSize: 15 }}>
+                      <Text style={styles.neutralAmount}>
                         {debt.amount.toFixed(2)} €
                       </Text>
                     </View>
@@ -314,33 +278,21 @@ export default function BarathonStopSummaryScreen() {
             <View style={{ height: 1, backgroundColor: '#E5E7EB', marginVertical: 14 }} />
 
             {/* Section Historique des dépenses */}
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#1F2937', marginBottom: 12 }}>
+            <Text style={styles.sectionTitle}>
               Historique des dépenses ({expenses.length})
             </Text>
             <View style={{ gap: 8 }}>
               {expenses.map((exp) => (
-                <View
-                  key={exp.id}
-                  style={{
-                    padding: 14,
-                    borderRadius: 14,
-                    backgroundColor: '#F9FAFB',
-                    borderWidth: 1,
-                    borderColor: '#E5E7EB',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#1F2937' }}>
+                <View key={exp.id} style={styles.neutralCard}>
+                  <View style={styles.expenseTextContainer}>
+                    <Text style={styles.expenseTitle}>
                       {exp.description || 'Dépense partagée'}
                     </Text>
-                    <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 3 }}>
+                    <Text style={styles.expenseSub}>
                       Payé par {exp.payer_username} • {exp.beneficiary_user_ids.length} pers.
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#10B981' }}>
+                  <Text style={styles.expenseAmount}>
                     {exp.amount.toFixed(2)} €
                   </Text>
                 </View>

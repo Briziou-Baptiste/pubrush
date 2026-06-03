@@ -9,7 +9,7 @@ import {
   SearchUserResult,
 } from '../types/createBarathon.types';
 
-const API_BASE_URL = 'https://api.pubrush.com';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.pubrush.com';
 
 async function getAuthToken() {
   const token = await SecureStore.getItemAsync('access_token');

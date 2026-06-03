@@ -1,10 +1,11 @@
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from jose import JWTError, jwt
 from pwdlib import PasswordHash
 
-SECRET_KEY = "CHANGE_ME_SUPER_SECRET_KEY_DEV_ONLY"
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGE_ME_SUPER_SECRET_KEY_DEV_ONLY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 

@@ -93,6 +93,7 @@ export default function RootLayout() {
       <Stack.Screen name="past" />
       <Stack.Screen name="create-barathon" />
       <Stack.Screen name="profile" />
+      <Stack.Screen name="profile-details" />
       <Stack.Screen name="create-barathon-map" />
       <Stack.Screen name="create-barathon-recap" />
       <Stack.Screen name="barathon-details" />

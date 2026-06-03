@@ -387,4 +387,97 @@ export const styles = StyleSheet.create({
       fontWeight: '800',
       color: '#6B7280',
     },
+
+    screenPadding: {
+      flex: 1,
+      padding: 16,
+    },
+    backButton: {
+      marginBottom: 16,
+    },
+    backButtonText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#6B7280',
+    },
+    balanceDetails: {
+      fontSize: 12,
+      color: '#6B7280',
+      marginTop: 2,
+    },
+    emptyText: {
+      textAlign: 'center',
+      color: '#6B7280',
+      marginTop: 24,
+    },
+    inputGroup: {
+      marginBottom: 14,
+    },
+    currentStopContainer: {
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      borderRadius: 12,
+      padding: 12,
+      marginTop: 6,
+      backgroundColor: '#F3F4F6',
+    },
+    currentStopText: {
+      fontSize: 15,
+      color: '#4B5563',
+      fontWeight: '600',
+    },
+    selectionButton: {
+      padding: 12,
+      borderRadius: 12,
+      backgroundColor: '#F9FAFB',
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    },
+    selectionButtonActive: {
+      backgroundColor: '#EFF6FF',
+      borderColor: '#3B82F6',
+    },
+    selectionButtonText: {
+      fontWeight: '500',
+      color: '#1F2937',
+    },
+    selectionButtonTextActive: {
+      fontWeight: '700',
+      color: '#1F2937',
+    },
+    beneficiaryButton: {
+      padding: 12,
+      borderRadius: 12,
+      backgroundColor: '#F9FAFB',
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    beneficiaryButtonActive: {
+      backgroundColor: '#F0FDF4',
+      borderColor: '#22C55E',
+    },
+    beneficiaryButtonText: {
+      fontWeight: '500',
+      color: '#1F2937',
+    },
+    beneficiaryButtonTextActive: {
+      fontWeight: '700',
+      color: '#1F2937',
+    },
+    beneficiaryCheck: {
+      color: '#6B7280',
+      fontWeight: '800',
+    },
+    beneficiaryCheckActive: {
+      color: '#22C55E',
+      fontWeight: '800',
+    },
+    selectAllText: {
+      fontSize: 13,
+      color: '#2563EB',
+      fontWeight: '700',
+    },
 });
