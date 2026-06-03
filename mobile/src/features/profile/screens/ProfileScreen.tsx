@@ -139,6 +139,22 @@ export default function ProfileScreen() {
                 </View>
                 <Text style={styles.menuChevron}>❯</Text>
               </TouchableOpacity>
+
+              {/* Separator */}
+              <View style={styles.menuSeparator} />
+
+              {/* Button 3: Saved Barathons */}
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => router.push('/saved-barathons')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuLeft}>
+                  <Text style={styles.menuIcon}>💾</Text>
+                  <Text style={styles.menuText}>Barathons enregistrés</Text>
+                </View>
+                <Text style={styles.menuChevron}>❯</Text>
+              </TouchableOpacity>
             </View>
           </>
         )}

@@ -280,3 +280,32 @@ class MyBarathonBalanceRead(BaseModel):
     balance: float
     status: str
 
+class SavedBarathonStopRead(BaseModel):
+    id: int
+    name: str
+    stop_type: str
+    latitude: float
+    longitude: float
+    stop_order: int
+
+    model_config = {
+        "from_attributes": True
+    }
+
+class SavedBarathonRead(BaseModel):
+    id: int
+    user_id: int
+    name: str
+    travel_time_between_bars_minutes: int
+    max_time_in_bar_minutes: int
+    created_at: datetime
+    stops: list[SavedBarathonStopRead]
+
+    model_config = {
+        "from_attributes": True
+    }
+
+class SaveBarathonPayload(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+
+

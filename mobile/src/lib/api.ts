@@ -284,3 +284,61 @@ export async function fetchMyBarathonBalances(token: string): Promise<BarathonBa
   return handleResponse<BarathonBalance[]>(response);
 }
 
+export type SavedBarathonStop = {
+  id: number;
+  name: string;
+  stop_type: string;
+  latitude: number;
+  longitude: number;
+  stop_order: number;
+};
+
+export type SavedBarathon = {
+  id: number;
+  user_id: number;
+  name: string;
+  travel_time_between_bars_minutes: number;
+  max_time_in_bar_minutes: number;
+  created_at: string;
+  stops: SavedBarathonStop[];
+};
+
+export async function savePastBarathon(barathonId: number, name: string, token: string): Promise<SavedBarathon> {
+  const response = await fetch(`${API_BASE_URL}/barathons/${barathonId}/save`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  return handleResponse<SavedBarathon>(response);
+}
+
+export async function fetchMySavedBarathons(token: string): Promise<SavedBarathon[]> {
+  const response = await fetch(`${API_BASE_URL}/saved-barathons`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<SavedBarathon[]>(response);
+}
+
+export async function deleteSavedBarathon(savedId: number, token: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/saved-barathons/${savedId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.detail || 'Erreur lors de la suppression.');
+  }
+}
+
+

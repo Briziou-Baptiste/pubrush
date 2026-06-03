@@ -35,6 +35,11 @@ class User(Base):
         cascade="all, delete-orphan"
     )
 
+    saved_barathons: Mapped[list["SavedBarathon"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
 
 class Barathon(Base):
     __tablename__ = "barathons"
@@ -262,3 +267,43 @@ class BarathonExpenseBeneficiary(Base):
 
     expense: Mapped["BarathonExpense"] = relationship(back_populates="beneficiaries")
     user: Mapped["User"] = relationship()
+
+
+class SavedBarathon(Base):
+    __tablename__ = "saved_barathons"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    travel_time_between_bars_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=15)
+    max_time_in_bar_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=60)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    user: Mapped["User"] = relationship(back_populates="saved_barathons")
+    stops: Mapped[list["SavedBarathonStop"]] = relationship(
+        back_populates="saved_barathon",
+        cascade="all, delete-orphan",
+        order_by="SavedBarathonStop.stop_order",
+    )
+
+
+class SavedBarathonStop(Base):
+    __tablename__ = "saved_barathon_stops"
+    __table_args__ = (
+        UniqueConstraint("saved_barathon_id", "stop_order", name="uq_saved_barathon_stop_order"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    saved_barathon_id: Mapped[int] = mapped_column(
+        ForeignKey("saved_barathons.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    stop_type: Mapped[str] = mapped_column(String(20), nullable=False, default="bar", server_default="bar")
+    latitude: Mapped[float] = mapped_column(Numeric(9, 6), nullable=False)
+    longitude: Mapped[float] = mapped_column(Numeric(9, 6), nullable=False)
+    stop_order: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    saved_barathon: Mapped["SavedBarathon"] = relationship(back_populates="stops")
+

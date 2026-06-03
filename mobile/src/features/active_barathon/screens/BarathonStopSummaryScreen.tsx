@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
+  Modal,
   SafeAreaView,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { styles } from '../styles/barathonStopSummary.styles';
-import { fetchBarathonExpenses } from '../../../lib/api';
+import { fetchBarathonExpenses, savePastBarathon } from '../../../lib/api';
 import { getAccessToken, getCurrentUser } from '../../../lib/authStorage';
 
 type DebtSettlement = {
@@ -92,6 +96,36 @@ export default function BarathonStopSummaryScreen() {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [balances, setBalances] = useState<any[]>([]);
   const [debts, setDebts] = useState<DebtSettlement[]>([]);
+
+  const [isSaveModalVisible, setIsSaveModalVisible] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+
+  async function handleConfirmSave() {
+    if (!saveName.trim()) {
+      setSaveError('Le nom ne peut pas être vide.');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setSaveError('');
+      const token = await getAccessToken();
+      if (!token) {
+        Alert.alert('Erreur', 'Session expirée. Veuillez vous reconnecter.');
+        return;
+      }
+      await savePastBarathon(Number(params.barathonId), saveName.trim(), token);
+      setIsSaveModalVisible(false);
+      Alert.alert('Succès', 'Barathon enregistré avec succès !');
+    } catch (err) {
+      console.error('[Summary] Error saving barathon:', err);
+      setSaveError(err instanceof Error ? err.message : 'Une erreur est survenue.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   useEffect(() => {
     void loadUserDataAndExpenses();
@@ -301,6 +335,18 @@ export default function BarathonStopSummaryScreen() {
           </View>
         )}
 
+        {params.barathonId && (
+          <TouchableOpacity
+            style={[styles.primaryButton, { backgroundColor: '#2563EB', marginBottom: 12 }]}
+            onPress={() => {
+              setSaveName(params.barathonName ?? '');
+              setIsSaveModalVisible(true);
+            }}
+          >
+            <Text style={styles.primaryButtonText}>Enregistrer ce barathon</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={styles.primaryButton}
           onPress={() => {
@@ -321,6 +367,49 @@ export default function BarathonStopSummaryScreen() {
           <Text style={styles.primaryButtonText}>Retour à mes barathons</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal
+        visible={isSaveModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsSaveModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Nommer le barathon enregistré</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ex: Ma tournée d'anniversaire"
+              value={saveName}
+              onChangeText={setSaveName}
+              placeholderTextColor="#9CA3AF"
+            />
+            {saveError ? <Text style={styles.modalErrorText}>{saveError}</Text> : null}
+            <View style={styles.modalButtonsRow}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => {
+                  setIsSaveModalVisible(false);
+                  setSaveError('');
+                }}
+              >
+                <Text style={styles.modalButtonCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonConfirm]}
+                onPress={handleConfirmSave}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalButtonConfirmText}>Enregistrer</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
