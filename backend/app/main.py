@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session, selectinload
 from datetime import datetime, timedelta
 import random
@@ -16,8 +16,8 @@ from app.api.routes.expenses import router as expenses_router
 from app.api.routes.bars import router as bars_router
 from app.core.lifespan import lifespan
 from app.db import get_db
-from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant
-from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload
+from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop
+from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse
 from app.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.services.email_service import send_reset_code_email
 
@@ -360,3 +360,41 @@ def delete_my_account(
     db.commit()
 
     return {"message": "Votre compte et toutes vos données associées ont été supprimés conformément au RGPD."}
+
+
+@app.get("/me/stats", response_model=UserStatsResponse)
+def get_my_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # 1. Barathons created by current user
+    barathons_created = db.scalar(
+        select(func.count(Barathon.id)).where(Barathon.created_by_user_id == current_user.id)
+    ) or 0
+
+    # 2. Barathons completed/stopped where user participated
+    barathons_completed = db.scalar(
+        select(func.count(Barathon.id))
+        .join(BarathonParticipant, BarathonParticipant.barathon_id == Barathon.id)
+        .where(
+            BarathonParticipant.user_id == current_user.id,
+            Barathon.status.in_(["completed", "stopped"])
+        )
+    ) or 0
+
+    # 3. Total completed stops (bars visited) in barathons the user participated in
+    bars_visited = db.scalar(
+        select(func.count(BarathonStop.id))
+        .join(Barathon, Barathon.id == BarathonStop.barathon_id)
+        .join(BarathonParticipant, BarathonParticipant.barathon_id == Barathon.id)
+        .where(
+            BarathonParticipant.user_id == current_user.id,
+            BarathonStop.is_completed == True
+        )
+    ) or 0
+
+    return {
+        "barathons_created": barathons_created,
+        "barathons_completed": barathons_completed,
+        "bars_visited": bars_visited
+    }

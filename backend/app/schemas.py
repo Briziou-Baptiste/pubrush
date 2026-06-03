@@ -268,3 +268,8 @@ class BarSearchResult(BaseModel):
 
 class UserUpdatePayload(BaseModel):
     username: str = Field(min_length=3, max_length=50)
+
+class UserStatsResponse(BaseModel):
+    barathons_created: int
+    barathons_completed: int
+    bars_visited: int

@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   SafeAreaView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { styles } from '../styles/profile.styles';
-import { fetchMe } from '../../../lib/api';
+import { fetchMe, fetchUserStats, UserStats } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
 
 export default function ProfileScreen() {
@@ -17,9 +19,14 @@ export default function ProfileScreen() {
   const [loadingUser, setLoadingUser] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  useEffect(() => {
-    void loadUserData();
-  }, []);
+  // Stats state
+  const [stats, setStats] = useState<UserStats | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadUserData();
+    }, [])
+  );
 
   async function loadUserData() {
     try {
@@ -28,14 +35,28 @@ export default function ProfileScreen() {
         router.replace('/login');
         return;
       }
-      const data = await fetchMe(token);
-      setUsername(data.username);
+      
+      // Load user profile & stats concurrently
+      const [userData, userStats] = await Promise.all([
+        fetchMe(token),
+        fetchUserStats(token)
+      ]);
+
+      setUsername(userData.username);
+      setStats(userStats);
     } catch (err) {
-      console.error('[Profile] Error loading user profile:', err);
+      console.error('[Profile] Error loading user profile and stats:', err);
       setErrorMsg('Impossible de charger les données utilisateur.');
     } finally {
       setLoadingUser(false);
     }
+  }
+
+  function handleExpensesPress() {
+    Alert.alert(
+      'Dépenses',
+      'Cette fonctionnalité sera disponible prochainement et vous permettra de voir les barathons où vous devez de l\'argent ou si on vous en doit.'
+    );
   }
 
   const initialLetter = username ? username.charAt(0).toUpperCase() : '?';
@@ -68,8 +89,32 @@ export default function ProfileScreen() {
               <Text style={styles.roleSubtitle}>Membre de PubRush</Text>
             </View>
 
+            {/* Stats Dashboard Grid */}
+            {stats && (
+              <View style={styles.statsGrid}>
+                {/* Stats 1: Created */}
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{stats.barathons_created}</Text>
+                  <Text style={styles.statLabel}>Créés</Text>
+                </View>
+
+                {/* Stats 2: Completed */}
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{stats.barathons_completed}</Text>
+                  <Text style={styles.statLabel}>Réalisés</Text>
+                </View>
+
+                {/* Stats 3: Bars Visited */}
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{stats.bars_visited}</Text>
+                  <Text style={styles.statLabel}>Bars visités</Text>
+                </View>
+              </View>
+            )}
+
             {/* Profil Section Menu */}
             <View style={styles.menuCard}>
+              {/* Button 1: Manage profile */}
               <TouchableOpacity
                 style={styles.menuButton}
                 onPress={() => router.push('/profile-details')}
@@ -78,6 +123,22 @@ export default function ProfileScreen() {
                 <View style={styles.menuLeft}>
                   <Text style={styles.menuIcon}>👤</Text>
                   <Text style={styles.menuText}>Gérer mon profil</Text>
+                </View>
+                <Text style={styles.menuChevron}>❯</Text>
+              </TouchableOpacity>
+
+              {/* Separator */}
+              <View style={styles.menuSeparator} />
+
+              {/* Button 2: Expenses */}
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={handleExpensesPress}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuLeft}>
+                  <Text style={styles.menuIcon}>💳</Text>
+                  <Text style={styles.menuText}>Dépenses</Text>
                 </View>
                 <Text style={styles.menuChevron}>❯</Text>
               </TouchableOpacity>

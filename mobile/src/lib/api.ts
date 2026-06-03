@@ -248,3 +248,20 @@ export async function deleteAccount(token: string): Promise<{ message: string }>
 
   return handleResponse<{ message: string }>(response);
 }
+
+export type UserStats = {
+  barathons_created: number;
+  barathons_completed: number;
+  bars_visited: number;
+};
+
+export async function fetchUserStats(token: string): Promise<UserStats> {
+  const response = await fetch(`${API_BASE_URL}/me/stats`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<UserStats>(response);
+}

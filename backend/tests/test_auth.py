@@ -197,3 +197,58 @@ def test_delete_account_shared_barathon(client, user_auth_headers, test_user, te
     assert barathon_db is not None
     # Verify creator has been reassigned to test_user_2
     assert barathon_db.created_by_user_id == test_user_2.id
+
+
+def test_get_my_stats(client, user_auth_headers, test_user, test_user_2, db_session):
+    from app.models import Barathon, BarathonParticipant, BarathonStop
+    # 1. Fetch stats initially -> all should be 0
+    res = client.get("/me/stats", headers=user_auth_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["barathons_created"] == 0
+    assert data["barathons_completed"] == 0
+    assert data["bars_visited"] == 0
+
+    # 2. Create one barathon (created_by test_user, status planned, has 2 stops)
+    barathon = Barathon(
+        name="Stats test",
+        start_datetime=datetime.utcnow() + timedelta(days=1),
+        travel_time_between_bars_minutes=10,
+        max_time_in_bar_minutes=30,
+        created_by_user_id=test_user.id,
+        status="planned"
+    )
+    db_session.add(barathon)
+    db_session.commit()
+    db_session.refresh(barathon)
+
+    # Add participants
+    p1 = BarathonParticipant(barathon_id=barathon.id, user_id=test_user.id, role="creator")
+    db_session.add(p1)
+
+    # Add stops
+    s1 = BarathonStop(barathon_id=barathon.id, name="Stop 1", latitude=48.0, longitude=2.0, stop_order=1, is_completed=True)
+    s2 = BarathonStop(barathon_id=barathon.id, name="Stop 2", latitude=48.1, longitude=2.1, stop_order=2, is_completed=False)
+    db_session.add(s1)
+    db_session.add(s2)
+    db_session.commit()
+
+    # Fetch stats now -> created = 1, completed = 0 (planned is not completed), visited = 1
+    res = client.get("/me/stats", headers=user_auth_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["barathons_created"] == 1
+    assert data["barathons_completed"] == 0
+    assert data["bars_visited"] == 1
+
+    # 3. Change barathon status to completed
+    barathon.status = "completed"
+    db_session.commit()
+
+    # Fetch stats -> created = 1, completed = 1, visited = 1
+    res = client.get("/me/stats", headers=user_auth_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["barathons_created"] == 1
+    assert data["barathons_completed"] == 1
+    assert data["bars_visited"] == 1
