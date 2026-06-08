@@ -72,6 +72,11 @@ class Barathon(Base):
         nullable=False,
         index=True,
     )
+    partner_event_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("partner_events.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     started_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     ended_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
@@ -84,6 +89,7 @@ class Barathon(Base):
     )
 
     creator: Mapped["User"] = relationship(back_populates="created_barathons")
+    partner_event: Mapped[Optional["PartnerEvent"]] = relationship(back_populates="barathons")
 
     participants: Mapped[list["BarathonParticipant"]] = relationship(
         back_populates="barathon",
@@ -134,10 +140,6 @@ class BarathonStop(Base):
     __tablename__ = "barathon_stops"
     __table_args__ = (
         UniqueConstraint("barathon_id", "stop_order", name="uq_barathon_stop_order"),
-        CheckConstraint(
-            "stop_type IN ('bar', 'food', 'meeting_point', 'other')",
-            name="chk_barathon_stops_type",
-        ),
         CheckConstraint(
             "latitude >= -90 AND latitude <= 90",
             name="chk_barathon_stops_latitude",
@@ -307,4 +309,51 @@ class SavedBarathonStop(Base):
     stop_order: Mapped[int] = mapped_column(Integer, nullable=False)
 
     saved_barathon: Mapped["SavedBarathon"] = relationship(back_populates="stops")
+
+
+class PartnerEvent(Base):
+    __tablename__ = "partner_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    code: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    barathons: Mapped[list["Barathon"]] = relationship(back_populates="partner_event")
+    filters: Mapped[list["MapFilter"]] = relationship(
+        secondary="event_map_filters",
+        back_populates="events"
+    )
+
+
+class MapFilter(Base):
+    __tablename__ = "map_filters"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
+    label: Mapped[str] = mapped_column(String(100), nullable=False)
+    icon: Mapped[str] = mapped_column(String(100), nullable=False)
+    osm_query: Mapped[str] = mapped_column(Text, nullable=False)
+    google_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    is_global: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    events: Mapped[list["PartnerEvent"]] = relationship(
+        secondary="event_map_filters",
+        back_populates="filters"
+    )
+
+
+class EventMapFilter(Base):
+    __tablename__ = "event_map_filters"
+    __table_args__ = (
+        UniqueConstraint("event_id", "filter_id", name="uq_event_map_filter"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    event_id: Mapped[int] = mapped_column(ForeignKey("partner_events.id", ondelete="CASCADE"), nullable=False, index=True)
+    filter_id: Mapped[int] = mapped_column(ForeignKey("map_filters.id", ondelete="CASCADE"), nullable=False, index=True)
+
 

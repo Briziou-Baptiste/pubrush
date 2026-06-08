@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -86,110 +87,116 @@ export default function RegisterScreen() {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboardWrapper}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.container}>
-          <View style={styles.header}>
-            <Image
-              source={require('../../../../assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.brand}>PubRush</Text>
-            <Text style={styles.subtitle}>
-              Crée ton compte et démarre ton expérience
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                placeholder="ton@email.com"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoComplete="email"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-                style={[
-                  styles.input,
-                  emailTouched && !emailIsValid ? styles.inputError : null,
-                ]}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <Image
+                source={require('../../../../assets/images/logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
               />
-              {emailTouched && !emailIsValid ? (
-                <Text style={styles.errorText}>Adresse email invalide.</Text>
-              ) : null}
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Username</Text>
-              <TextInput
-                placeholder="Ton pseudo"
-                placeholderTextColor="#9CA3AF"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={username}
-                onChangeText={setUsername}
-                style={[
-                  styles.input,
-                  usernameTouched && !usernameIsValid ? styles.inputError : null,
-                ]}
-              />
-              {usernameTouched && !usernameIsValid ? (
-                <Text style={styles.errorText}>
-                  Le username doit contenir au moins 3 caractères.
-                </Text>
-              ) : null}
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Mot de passe</Text>
-              <TextInput
-                placeholder="Minimum 8 caractères"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                textContentType="newPassword"
-                autoComplete="password-new"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={password}
-                onChangeText={setPassword}
-                style={[
-                  styles.input,
-                  passwordTouched && !passwordIsValid ? styles.inputError : null,
-                ]}
-              />
-              {passwordTouched && !passwordIsValid ? (
-                <Text style={styles.errorText}>
-                  Le mot de passe doit contenir au moins 8 caractères.
-                </Text>
-              ) : null}
-            </View>
-
-            <TouchableOpacity
-              onPress={handleRegister}
-              disabled={loading}
-              style={[
-                styles.primaryButton,
-                loading ? styles.primaryButtonDisabled : null,
-              ]}
-            >
-              <Text style={styles.primaryButtonText}>
-                {loading ? 'Création...' : 'Créer mon compte'}
+              <Text style={styles.brand}>PubRush</Text>
+              <Text style={styles.subtitle}>
+                Crée ton compte et démarre ton expérience
               </Text>
-            </TouchableOpacity>
+            </View>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Déjà inscrit ? </Text>
-              <Link href="/login" style={styles.footerLink}>
-                Se connecter
-              </Link>
+            <View style={styles.card}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  placeholder="ton@email.com"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={email}
+                  onChangeText={setEmail}
+                  style={[
+                    styles.input,
+                    emailTouched && !emailIsValid ? styles.inputError : null,
+                  ]}
+                />
+                {emailTouched && !emailIsValid ? (
+                  <Text style={styles.errorText}>Adresse email invalide.</Text>
+                ) : null}
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Username</Text>
+                <TextInput
+                  placeholder="Ton pseudo"
+                  placeholderTextColor="#9CA3AF"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={username}
+                  onChangeText={setUsername}
+                  style={[
+                    styles.input,
+                    usernameTouched && !usernameIsValid ? styles.inputError : null,
+                  ]}
+                />
+                {usernameTouched && !usernameIsValid ? (
+                  <Text style={styles.errorText}>
+                    Le username doit contenir au moins 3 caractères.
+                  </Text>
+                ) : null}
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Mot de passe</Text>
+                <TextInput
+                  placeholder="Minimum 8 caractères"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  textContentType="newPassword"
+                  autoComplete="password-new"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={password}
+                  onChangeText={setPassword}
+                  style={[
+                    styles.input,
+                    passwordTouched && !passwordIsValid ? styles.inputError : null,
+                  ]}
+                />
+                {passwordTouched && !passwordIsValid ? (
+                  <Text style={styles.errorText}>
+                    Le mot de passe doit contenir au moins 8 caractères.
+                  </Text>
+                ) : null}
+              </View>
+
+              <TouchableOpacity
+                onPress={handleRegister}
+                disabled={loading}
+                style={[
+                  styles.primaryButton,
+                  loading ? styles.primaryButtonDisabled : null,
+                ]}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {loading ? 'Création...' : 'Créer mon compte'}
+                </Text>
+              </TouchableOpacity>
+
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Déjà inscrit ? </Text>
+                <Link href="/login" style={styles.footerLink}>
+                  Se connecter
+                </Link>
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

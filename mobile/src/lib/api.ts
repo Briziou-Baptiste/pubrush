@@ -153,6 +153,17 @@ export async function fetchMyRoleInBarathon(barathonId: number, token: string): 
   return handleResponse<{ role: string | null }>(response);
 }
 
+export async function fetchBarathon(barathonId: number, token: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/barathons/${barathonId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<any>(response);
+}
+
 export async function fetchBarathonExpenses(barathonId: number, token: string): Promise<{ expenses: any[], balances: any[] }> {
   const response = await fetch(`${API_BASE_URL}/barathons/${barathonId}/expenses`, {
     method: 'GET',
@@ -212,9 +223,13 @@ export async function fetchNearbyBars(
   lat: number,
   lon: number,
   maxTravelTimeMinutes: number,
-  token: string
+  token: string,
+  filterKey?: string
 ): Promise<any[]> {
-  const url = `${API_BASE_URL}/bars/nearby?lat=${lat}&lon=${lon}&max_travel_time_minutes=${maxTravelTimeMinutes}`;
+  let url = `${API_BASE_URL}/bars/nearby?lat=${lat}&lon=${lon}&max_travel_time_minutes=${maxTravelTimeMinutes}`;
+  if (filterKey) {
+    url += `&filter_key=${encodeURIComponent(filterKey)}`;
+  }
 
   const response = await fetch(url, {
     method: 'GET',
@@ -340,6 +355,33 @@ export async function deleteSavedBarathon(savedId: number, token: string): Promi
     const data = await response.json().catch(() => ({}));
     throw new Error(data.detail || 'Erreur lors de la suppression.');
   }
+}
+
+export async function validatePartnerEvent(code: string, token: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/partner-events/validate?code=${encodeURIComponent(code)}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<any>(response);
+}
+
+export async function fetchMapFilters(partnerEventId: number | null, token: string): Promise<any[]> {
+  let url = `${API_BASE_URL}/map-filters`;
+  if (partnerEventId) {
+    url += `?partner_event_id=${partnerEventId}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<any[]>(response);
 }
 
 

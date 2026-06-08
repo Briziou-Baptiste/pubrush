@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -59,57 +60,63 @@ export default function ForgotPasswordScreen() {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboardWrapper}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.container}>
-          <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#6B7280' }}>← Retour</Text>
-          </TouchableOpacity>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: '#6B7280' }}>← Retour</Text>
+            </TouchableOpacity>
 
-          <View style={styles.header}>
-            <Text style={styles.brand}>Mot de passe oublié ?</Text>
-            <Text style={styles.subtitle}>
-              Saisis ton adresse email pour recevoir un code de réinitialisation unique à 6 chiffres.
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email du compte</Text>
-              <TextInput
-                placeholder="ton@email.com"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoComplete="email"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-                style={[
-                  styles.input,
-                  emailTouched && !emailIsValid ? styles.inputError : null,
-                ]}
-              />
-              {emailTouched && !emailIsValid ? (
-                <Text style={styles.errorText}>Adresse email invalide.</Text>
-              ) : null}
+            <View style={styles.header}>
+              <Text style={styles.brand}>Mot de passe oublié ?</Text>
+              <Text style={styles.subtitle}>
+                Saisis ton adresse email pour recevoir un code de réinitialisation unique à 6 chiffres.
+              </Text>
             </View>
 
-            <TouchableOpacity
-              onPress={handleSendCode}
-              disabled={loading}
-              style={[
-                styles.primaryButton,
-                loading ? styles.primaryButtonDisabled : null,
-              ]}
-            >
-              <Text style={styles.primaryButtonText}>
-                {loading ? 'Envoi du code...' : 'Envoyer le code'}
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.card}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email du compte</Text>
+                <TextInput
+                  placeholder="ton@email.com"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={email}
+                  onChangeText={setEmail}
+                  style={[
+                    styles.input,
+                    emailTouched && !emailIsValid ? styles.inputError : null,
+                  ]}
+                />
+                {emailTouched && !emailIsValid ? (
+                  <Text style={styles.errorText}>Adresse email invalide.</Text>
+                ) : null}
+              </View>
+
+              <TouchableOpacity
+                onPress={handleSendCode}
+                disabled={loading}
+                style={[
+                  styles.primaryButton,
+                  loading ? styles.primaryButtonDisabled : null,
+                ]}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {loading ? 'Envoi du code...' : 'Envoyer le code'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

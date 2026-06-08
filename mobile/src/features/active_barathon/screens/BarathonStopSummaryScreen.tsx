@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   Text,
@@ -13,7 +15,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { styles } from '../styles/barathonStopSummary.styles';
-import { fetchBarathonExpenses, savePastBarathon, createBarathonExpense } from '../../../lib/api';
+import { fetchBarathonExpenses, savePastBarathon, createBarathonExpense, fetchBarathon } from '../../../lib/api';
 import { getAccessToken, getCurrentUser } from '../../../lib/authStorage';
 
 type DebtSettlement = {
@@ -97,6 +99,24 @@ export default function BarathonStopSummaryScreen() {
   const [balances, setBalances] = useState<any[]>([]);
   const [debts, setDebts] = useState<DebtSettlement[]>([]);
 
+  // Barathon details states loaded dynamically or from params
+  const [stops, setStops] = useState<Stop[]>(() => {
+    if (params.stopsJson) {
+      try {
+        const parsed = JSON.parse(params.stopsJson);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+  const [totalStops, setTotalStops] = useState<number>(() => Number(params.totalStops ?? 0));
+  const [completedStops, setCompletedStops] = useState<number>(() => Number(params.completedStops ?? 0));
+  const [barathonName, setBarathonName] = useState<string>(() => params.barathonName ?? 'Barathon');
+  const [startDateTimeIso, setStartDateTimeIso] = useState<string | undefined>(() => params.startDateTimeIso);
+  const [endDateTimeIso, setEndDateTimeIso] = useState<string | undefined>(() => params.endDateTimeIso);
+
   const [isSaveModalVisible, setIsSaveModalVisible] = useState(false);
   const [saveName, setSaveName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -178,32 +198,32 @@ export default function BarathonStopSummaryScreen() {
       if (params.barathonId) {
         const token = await getAccessToken();
         if (token) {
+          // 1. Fetch expenses
           const expenseData = await fetchBarathonExpenses(Number(params.barathonId), token);
           setExpenses(expenseData.expenses);
           setBalances(expenseData.balances);
           setDebts(calculateSimplifiedDebts(expenseData.balances));
+
+          // 2. Fetch details to populate stops and metadata if missing or to ensure up-to-date values
+          try {
+            const details = await fetchBarathon(Number(params.barathonId), token);
+            if (details) {
+              setBarathonName(details.name);
+              setStops(details.stops || []);
+              setTotalStops((details.stops || []).length);
+              setCompletedStops((details.stops || []).filter((s: any) => s.is_completed).length);
+              setStartDateTimeIso(details.start_datetime);
+              setEndDateTimeIso(details.ended_at || details.end_datetime);
+            }
+          } catch (err) {
+            console.error('Failed to load barathon details in summary:', err);
+          }
         }
       }
     } catch (err) {
       console.error('Failed to load expenses or user in summary:', err);
     }
   }
-
-  const totalStops = Number(params.totalStops ?? 0);
-  const completedStops = Number(params.completedStops ?? 0);
-
-  const stops: Stop[] = useMemo(() => {
-    if (!params.stopsJson || typeof params.stopsJson !== 'string') {
-      return [];
-    }
-
-    try {
-      const parsed = JSON.parse(params.stopsJson);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }, [params.stopsJson]);
 
   const completedPercentage = totalStops > 0
     ? Math.round((completedStops / totalStops) * 100)
@@ -217,12 +237,12 @@ export default function BarathonStopSummaryScreen() {
       : styles.redText;
 
   const durationText = useMemo(() => {
-    if (!params.startDateTimeIso || !params.endDateTimeIso) {
+    if (!startDateTimeIso || !endDateTimeIso) {
       return '--';
     }
 
-    const start = new Date(params.startDateTimeIso);
-    const end = new Date(params.endDateTimeIso);
+    const start = new Date(startDateTimeIso);
+    const end = new Date(endDateTimeIso);
 
     const diffMs = end.getTime() - start.getTime();
     const totalMinutes = Math.max(0, Math.floor(diffMs / 60000));
@@ -230,14 +250,14 @@ export default function BarathonStopSummaryScreen() {
     const minutes = totalMinutes % 60;
 
     return `${hours}h ${minutes}min`;
-  }, [params.startDateTimeIso, params.endDateTimeIso]);
+  }, [startDateTimeIso, endDateTimeIso]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.headerCard}>
           <Text style={styles.title}>Barathon arrêté</Text>
-          <Text style={styles.subtitle}>{params.barathonName ?? 'Barathon'}</Text>
+          <Text style={styles.subtitle}>{barathonName}</Text>
         </View>
 
         <View style={styles.card}>
@@ -403,7 +423,7 @@ export default function BarathonStopSummaryScreen() {
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: '#2563EB', marginBottom: 12 }]}
             onPress={() => {
-              setSaveName(params.barathonName ?? '');
+              setSaveName(barathonName || params.barathonName || '');
               setIsSaveModalVisible(true);
             }}
           >
@@ -438,41 +458,46 @@ export default function BarathonStopSummaryScreen() {
         animationType="fade"
         onRequestClose={() => setIsSaveModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Nommer le barathon enregistré</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Ex: Ma tournée d'anniversaire"
-              value={saveName}
-              onChangeText={setSaveName}
-              placeholderTextColor="#9CA3AF"
-            />
-            {saveError ? <Text style={styles.modalErrorText}>{saveError}</Text> : null}
-            <View style={styles.modalButtonsRow}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonCancel]}
-                onPress={() => {
-                  setIsSaveModalVisible(false);
-                  setSaveError('');
-                }}
-              >
-                <Text style={styles.modalButtonCancelText}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonConfirm]}
-                onPress={handleConfirmSave}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.modalButtonConfirmText}>Enregistrer</Text>
-                )}
-              </TouchableOpacity>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Nommer le barathon enregistré</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Ex: Ma tournée d'anniversaire"
+                value={saveName}
+                onChangeText={setSaveName}
+                placeholderTextColor="#9CA3AF"
+              />
+              {saveError ? <Text style={styles.modalErrorText}>{saveError}</Text> : null}
+              <View style={styles.modalButtonsRow}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonCancel]}
+                  onPress={() => {
+                    setIsSaveModalVisible(false);
+                    setSaveError('');
+                  }}
+                >
+                  <Text style={styles.modalButtonCancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonConfirm]}
+                  onPress={handleConfirmSave}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.modalButtonConfirmText}>Enregistrer</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

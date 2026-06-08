@@ -1,4 +1,4 @@
-export type StopType = 'bar' | 'food';
+export type StopType = string;
 
 export type BarathonStopForm = {
   localId: string;
@@ -15,6 +15,7 @@ export type CreateBarathonPayload = {
   travel_time_between_bars_minutes: number;
   max_time_in_bar_minutes: number;
   participant_user_ids: number[];
+  partner_event_id?: number | null;
   stops: Array<{
     name: string;
     stop_type: StopType;

@@ -2,6 +2,7 @@
   "expo": {
     "name": "mobile",
     "slug": "mobile",
+    "privacy": "unlisted",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -60,15 +61,15 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "c86c9f57-0936-4491-a08e-15f9335d1ff1"
+        "projectId": "dd7be54d-4672-4fed-b273-1d72d0fc2d15"
       }
     },
-    "owner": "batdevtolosa",
+    "owner": "pubrush-tester",
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/c86c9f57-0936-4491-a08e-15f9335d1ff1"
+      "url": "https://u.expo.dev/dd7be54d-4672-4fed-b273-1d72d0fc2d15"
     }
   }
 }

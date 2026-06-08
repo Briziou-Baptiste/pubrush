@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -69,84 +70,90 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboardWrapper}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.container}>
-          <View style={styles.header}>
-            <Image
-              source={require('../../../../assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.brand}>PubRush</Text>
-            <Text style={styles.subtitle}>
-              Connecte-toi pour retrouver tes tournées
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                placeholder="ton@email.com"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoComplete="email"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-                style={[
-                  styles.input,
-                  emailTouched && !emailIsValid ? styles.inputError : null,
-                ]}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <Image
+                source={require('../../../../assets/images/logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
               />
-              {emailTouched && !emailIsValid ? (
-                <Text style={styles.errorText}>Adresse email invalide.</Text>
-              ) : null}
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Mot de passe</Text>
-              <TextInput
-                placeholder="Ton mot de passe"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                textContentType="password"
-                autoComplete="password"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-              />
-              <Link href="/forgot-password" style={styles.forgotPasswordLink}>
-                Mot de passe oublié ?
-              </Link>
-            </View>
-
-            <TouchableOpacity
-              onPress={handleLogin}
-              disabled={loading}
-              style={[
-                styles.primaryButton,
-                loading ? styles.primaryButtonDisabled : null,
-              ]}
-            >
-              <Text style={styles.primaryButtonText}>
-                {loading ? 'Connexion...' : 'Se connecter'}
+              <Text style={styles.brand}>PubRush</Text>
+              <Text style={styles.subtitle}>
+                Connecte-toi pour retrouver tes tournées
               </Text>
-            </TouchableOpacity>
+            </View>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Pas encore de compte ? </Text>
-              <Link href="/register" style={styles.footerLink}>
-                Créer un compte
-              </Link>
+            <View style={styles.card}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  placeholder="ton@email.com"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={email}
+                  onChangeText={setEmail}
+                  style={[
+                    styles.input,
+                    emailTouched && !emailIsValid ? styles.inputError : null,
+                  ]}
+                />
+                {emailTouched && !emailIsValid ? (
+                  <Text style={styles.errorText}>Adresse email invalide.</Text>
+                ) : null}
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Mot de passe</Text>
+                <TextInput
+                  placeholder="Ton mot de passe"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry
+                  textContentType="password"
+                  autoComplete="password"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={password}
+                  onChangeText={setPassword}
+                  style={styles.input}
+                />
+                <Link href="/forgot-password" style={styles.forgotPasswordLink}>
+                  Mot de passe oublié ?
+                </Link>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleLogin}
+                disabled={loading}
+                style={[
+                  styles.primaryButton,
+                  loading ? styles.primaryButtonDisabled : null,
+                ]}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {loading ? 'Connexion...' : 'Se connecter'}
+                </Text>
+              </TouchableOpacity>
+
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Pas encore de compte ? </Text>
+                <Link href="/register" style={styles.footerLink}>
+                  Créer un compte
+                </Link>
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

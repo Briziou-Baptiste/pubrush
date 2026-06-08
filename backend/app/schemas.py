@@ -130,6 +130,7 @@ class BarathonCreate(BaseModel):
     max_time_in_bar_minutes: int = Field(gt=0)
     participant_user_ids: list[int] = Field(default_factory=list)
     stops: list[BarathonStopCreate] = Field(default_factory=list)
+    partner_event_id: Optional[int] = None
 
 
 class BarathonRead(BaseModel):
@@ -146,6 +147,7 @@ class BarathonRead(BaseModel):
     ended_at: Optional[datetime] = None
     participants: list[BarathonParticipantRead] = []
     stops: list[BarathonStopRead] = []
+    partner_event_id: Optional[int] = None
 
     model_config = {
         "from_attributes": True
@@ -309,5 +311,29 @@ class SavedBarathonRead(BaseModel):
 
 class SaveBarathonPayload(BaseModel):
     name: str = Field(min_length=1, max_length=255)
+
+
+class PartnerEventRead(BaseModel):
+    id: int
+    name: str
+    code: str
+    description: Optional[str] = None
+    is_active: bool
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class MapFilterRead(BaseModel):
+    id: int
+    key: str
+    label: str
+    icon: str
+    is_global: bool
+
+    model_config = {
+        "from_attributes": True
+    }
 
 

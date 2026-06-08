@@ -108,6 +108,7 @@ def create_barathon(
         travel_time_between_bars_minutes=payload.travel_time_between_bars_minutes,
         max_time_in_bar_minutes=payload.max_time_in_bar_minutes,
         created_by_user_id=current_user.id,
+        partner_event_id=payload.partner_event_id,
     )
 
     db.add(barathon)

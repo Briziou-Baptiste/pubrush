@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -130,6 +132,7 @@ export default function BarathonRecapScreen() {
     maxTimeInBar?: string;
     travelTime?: string;
     stopsJson?: string;
+    partnerEventId?: string;
   }>();
 
   const mapRef = useRef<MapView | null>(null);
@@ -451,6 +454,7 @@ export default function BarathonRecapScreen() {
       travel_time_between_bars_minutes: travelTimeBetweenBarsMinutes,
       max_time_in_bar_minutes: maxTimeInBarMinutes,
       participant_user_ids: participants.map((participant) => participant.id),
+      partner_event_id: params.partnerEventId ? Number(params.partnerEventId) : null,
       stops: [...stops]
         .sort((a, b) => a.stopOrder - b.stopOrder)
         .map((stop, index) => ({
@@ -522,8 +526,12 @@ export default function BarathonRecapScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backButtonText}>Retour</Text>
         </TouchableOpacity>
 
@@ -876,7 +884,8 @@ export default function BarathonRecapScreen() {
             Ajoute au moins un nouveau participant pour valider.
           </Text>
         ) : null}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

@@ -15,6 +15,7 @@ from app.api.routes.ws import router as ws_router
 from app.api.routes.expenses import router as expenses_router
 from app.api.routes.bars import router as bars_router
 from app.api.routes.saved_barathons import router as saved_barathons_router
+from app.api.routes.partner_events import router as partner_events_router
 from app.core.lifespan import lifespan
 from app.db import get_db
 from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop
@@ -43,6 +44,7 @@ app.include_router(ws_router)
 app.include_router(expenses_router)
 app.include_router(bars_router)
 app.include_router(saved_barathons_router)
+app.include_router(partner_events_router)
 
 @app.get("/health")
 def health():

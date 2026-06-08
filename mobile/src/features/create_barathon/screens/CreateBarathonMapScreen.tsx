@@ -9,6 +9,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import MapView, {
@@ -17,13 +19,14 @@ import MapView, {
   Polyline,
   Region,
 } from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
 
 import LocationButton from '../../home/components/LocationButton';
 import { useUserLocation } from '../../home/hooks/useUserLocation';
 import { styles as homeStyles } from '../../home/styles/home.styles';
 import { createBarathonMapStyles as styles } from '../styles/createBarathonMap.styles';
 import { StopType } from '../types/createBarathon.types';
-import { fetchBarsSearch, fetchNearbyBars } from '../../../lib/api';
+import { fetchBarsSearch, fetchNearbyBars, fetchMapFilters } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
 
 type SelectedPoint = {
@@ -55,6 +58,8 @@ export default function CreateBarathonMapScreen() {
     travelTime?: string;
     maxTimeInBar?: string;
     initialStopsJson?: string;
+    partnerEventId?: string;
+    partnerEventName?: string;
   }>();
 
   const [points, setPoints] = useState<SelectedPoint[]>(() => {
@@ -82,7 +87,36 @@ export default function CreateBarathonMapScreen() {
   } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [pointName, setPointName] = useState('');
-const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
+  
+  const [mapFilters, setMapFilters] = useState<any[]>([]);
+  const [activeFilterKey, setActiveFilterKey] = useState<string>('bar');
+  const [loadingFilters, setLoadingFilters] = useState(false);
+  const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
+
+  useEffect(() => {
+    async function loadFilters() {
+      try {
+        setLoadingFilters(true);
+        const token = await getAccessToken();
+        if (!token) return;
+        
+        const eventId = params.partnerEventId ? Number(params.partnerEventId) : null;
+        const filters = await fetchMapFilters(eventId, token);
+        setMapFilters(filters);
+        
+        if (filters.length > 0) {
+          const globalDefault = filters.find(f => f.is_global) || filters[0];
+          setActiveFilterKey(globalDefault.key);
+          setSelectedStopType(globalDefault.key);
+        }
+      } catch (err) {
+        console.error('Failed to load map filters:', err);
+      } finally {
+        setLoadingFilters(false);
+      }
+    }
+    loadFilters();
+  }, [params.partnerEventId]);
 
   const { location, heading, permissionGranted, loadingLocation } =
     useUserLocation();
@@ -212,7 +246,8 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
           lastPoint.latitude,
           lastPoint.longitude,
           allowedTravelTimeMinutes,
-          token
+          token,
+          activeFilterKey
         );
 
         // If the query took too long and already timed out, or if this effect was cleaned up, ignore results
@@ -292,7 +327,7 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
       active = false;
       clearTimeout(timeoutId);
     };
-  }, [points, allowedTravelTimeMinutes]);
+  }, [points, allowedTravelTimeMinutes, activeFilterKey]);
 
   function handleAddSuggestedPoint(item: any) {
     setPoints((prev) => [
@@ -488,6 +523,22 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
     }).filter(Boolean);
   }, [points]);
 
+  const getStopTypeLabel = (typeKey: string) => {
+    const filter = mapFilters.find((f) => f.key === typeKey);
+    if (filter) {
+      let emoji = '📍';
+      if (filter.icon === 'beer') emoji = '🍻';
+      else if (filter.icon === 'restaurant') emoji = '🍔';
+      else if (filter.icon === 'medical') emoji = '🏥';
+      else if (filter.icon === 'flag') emoji = '🚩';
+      else if (filter.icon === 'pizza') emoji = '🍕';
+      return `${emoji} ${filter.label}`;
+    }
+    if (typeKey === 'bar') return '🍻 Bar';
+    if (typeKey === 'food') return '🍔 Restaurant';
+    return `📍 ${typeKey}`;
+  };
+
   const allMarkers = useMemo(() => {
     const list: React.ReactElement[] = [];
 
@@ -502,7 +553,7 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
             coordinate={{ latitude: lat, longitude: lng }}
             pinColor="red" // Explicitly red, 100% iOS/Android compatible under Fabric
             title={`Étape ${index + 1} - ${p.name}`}
-            description={`${p.stopType === 'bar' ? '🍻 Bar' : '🍔 Restaurant'} • ${lat.toFixed(5)} / ${lng.toFixed(5)}`}
+            description={`${getStopTypeLabel(p.stopType)} • ${lat.toFixed(5)} / ${lng.toFixed(5)}`}
           />
         );
       }
@@ -536,7 +587,7 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
               coordinate={{ latitude: lat, longitude: lng }}
               pinColor="purple" // Explicitly purple, 100% iOS/Android compatible under Fabric
               title={item.name}
-              description={`🚶 ${item.estimatedMinutes} min • ${item.stopType === 'bar' ? '🍻 Bar' : '🍔 Restaurant'} • Appuyer pour ajouter`}
+              description={`🚶 ${item.estimatedMinutes} min • ${getStopTypeLabel(item.stopType)} • Appuyer pour ajouter`}
               onCalloutPress={() => handleConfirmAddSuggestedPoint(item)}
             />
           );
@@ -545,7 +596,7 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
     }
 
     return list;
-  }, [points, pendingPoint, suggestions]);
+  }, [points, pendingPoint, suggestions, mapFilters]);
 
   return (
     <View style={homeStyles.safeArea}>
@@ -648,6 +699,63 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
               color: '#111827',
             }}
           />
+
+          {mapFilters.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                flexDirection: 'row',
+                gap: 8,
+                paddingVertical: 8,
+                paddingHorizontal: 8,
+              }}
+            >
+              {mapFilters.map((filter) => {
+                const isActive = activeFilterKey === filter.key;
+                return (
+                  <TouchableOpacity
+                    key={filter.id}
+                    onPress={() => {
+                      setActiveFilterKey(filter.key);
+                      setSelectedStopType(filter.key);
+                    }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: isActive ? '#3B82F6' : '#F3F4F6',
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderWidth: 1,
+                      borderColor: isActive ? '#3B82F6' : '#E5E7EB',
+                      shadowColor: '#000',
+                      shadowOpacity: isActive ? 0.15 : 0.02,
+                      shadowRadius: 4,
+                      shadowOffset: { width: 0, height: 2 },
+                      elevation: 2,
+                      gap: 6,
+                    }}
+                  >
+                    <Ionicons
+                      name={filter.icon as any}
+                      size={14}
+                      color={isActive ? '#FFFFFF' : '#4B5563'}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: '600',
+                        color: isActive ? '#FFFFFF' : '#4B5563',
+                      }}
+                    >
+                      {filter.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
 
           {searchResults.length > 0 && (
             <ScrollView
@@ -776,6 +884,7 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
                   maxTimeInBar: params.maxTimeInBar,
                   travelTime: params.travelTime,
                   stopsJson: JSON.stringify(points),
+                  partnerEventId: params.partnerEventId || '',
                 },
               });
             }}
@@ -790,81 +899,75 @@ const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
         animationType="fade"
         onRequestClose={closeModal}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>
-              Ajouter ce lieu au barathon ?
-            </Text>
-
-            {pendingPoint && (
-              <Text style={styles.modalCoords}>
-                {pendingPoint.latitude.toFixed(6)} /{' '}
-                {pendingPoint.longitude.toFixed(6)}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>
+                Ajouter ce lieu au barathon ?
               </Text>
-            )}
 
-            <TextInput
-              value={pointName}
-              onChangeText={setPointName}
-              placeholder="Nom du lieu"
-              placeholderTextColor="#8A8A8A"
-              style={styles.input}
-            />
-
-            <View style={styles.stopTypeSelector}>
-              <TouchableOpacity
-                onPress={() => setSelectedStopType('bar')}
-                style={[
-                  styles.stopTypeButton,
-                  selectedStopType === 'bar' && styles.stopTypeButtonActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.stopTypeButtonText,
-                    selectedStopType === 'bar' && styles.stopTypeButtonTextActive,
-                  ]}
-                >
-                  Bar
+              {pendingPoint && (
+                <Text style={styles.modalCoords}>
+                  {pendingPoint.latitude.toFixed(6)} /{' '}
+                  {pendingPoint.longitude.toFixed(6)}
                 </Text>
-              </TouchableOpacity>
+              )}
 
-              <TouchableOpacity
-                onPress={() => setSelectedStopType('food')}
-                style={[
-                  styles.stopTypeButton,
-                  styles.stopTypeButtonSpacing,
-                  selectedStopType === 'food' && styles.stopTypeButtonActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.stopTypeButtonText,
-                    selectedStopType === 'food' && styles.stopTypeButtonTextActive,
-                  ]}
+              <TextInput
+                value={pointName}
+                onChangeText={setPointName}
+                placeholder="Nom du lieu"
+                placeholderTextColor="#8A8A8A"
+                style={styles.input}
+              />
+
+              <View style={[styles.stopTypeSelector, { flexWrap: 'wrap', gap: 6, justifyContent: 'center' }]}>
+                {mapFilters.map((filter) => {
+                  const isSelected = selectedStopType === filter.key;
+                  return (
+                    <TouchableOpacity
+                      key={filter.id}
+                      onPress={() => setSelectedStopType(filter.key)}
+                      style={[
+                        styles.stopTypeButton,
+                        { paddingHorizontal: 12, paddingVertical: 8, marginHorizontal: 2, marginBottom: 4 },
+                        isSelected && styles.stopTypeButtonActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.stopTypeButtonText,
+                          isSelected && styles.stopTypeButtonTextActive,
+                        ]}
+                      >
+                        {filter.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  onPress={closeModal}
+                  style={styles.cancelButton}
                 >
-                  Restaurant
-                </Text>
-              </TouchableOpacity>
-            </View>
+                  <Text style={styles.cancelButtonText}>Non</Text>
+                </TouchableOpacity>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                onPress={closeModal}
-                style={styles.cancelButton}
-              >
-                <Text style={styles.cancelButtonText}>Non</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={confirmAddPoint}
-                style={styles.confirmButton}
-              >
-                <Text style={styles.confirmButtonText}>Oui</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={confirmAddPoint}
+                  style={styles.confirmButton}
+                >
+                  <Text style={styles.confirmButtonText}>Oui</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

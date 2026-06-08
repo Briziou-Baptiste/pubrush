@@ -15,6 +15,8 @@ import BarathonField from '../components/BarathonField';
 import DateTimeModalField from '../components/DateTimeModalField';
 import { styles } from '../styles/createBarathon.styles';
 import { mergeDateAndTime } from '../utils/createBarathon.validators';
+import { validatePartnerEvent } from '../../../lib/api';
+import { getAccessToken } from '../../../lib/authStorage';
 
 export default function CreateBarathonScreen() {
   const params = useLocalSearchParams<{
@@ -29,6 +31,8 @@ export default function CreateBarathonScreen() {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [travelTime, setTravelTime] = useState(params.initialTravelTime ?? '');
   const [maxTimeInBar, setMaxTimeInBar] = useState(params.initialMaxTimeInBar ?? '');
+  const [eventCode, setEventCode] = useState('');
+  const [validatingEvent, setValidatingEvent] = useState(false);
 
   useEffect(() => {
     if (params.initialName) setName(params.initialName);
@@ -75,9 +79,32 @@ export default function CreateBarathonScreen() {
     return true;
   }
 
-  function handleContinue() {
+  async function handleContinue() {
     if (!validateBeforeContinue() || !startDate || !startTime) {
       return;
+    }
+
+    let partnerEventId: number | null = null;
+    let partnerEventName: string | null = null;
+
+    if (eventCode.trim()) {
+      try {
+        setValidatingEvent(true);
+        const token = await getAccessToken();
+        if (!token) {
+          Alert.alert('Erreur', 'Session expirée. Reconnecte-toi.');
+          return;
+        }
+
+        const event = await validatePartnerEvent(eventCode.trim(), token);
+        partnerEventId = event.id;
+        partnerEventName = event.name;
+      } catch (err: any) {
+        Alert.alert('Événement invalide', err.message || 'Impossible de valider le code d’événement.');
+        return;
+      } finally {
+        setValidatingEvent(false);
+      }
     }
 
     const computedStart = mergeDateAndTime(startDate, startTime);
@@ -92,6 +119,8 @@ export default function CreateBarathonScreen() {
         travelTime: travelTime.trim(),
         maxTimeInBar: maxTimeInBar.trim(),
         initialStopsJson: params.initialStopsJson || '',
+        partnerEventId: partnerEventId ? String(partnerEventId) : '',
+        partnerEventName: partnerEventName || '',
       },
     });
   }
@@ -100,7 +129,7 @@ export default function CreateBarathonScreen() {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboardWrapper}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           style={styles.scroll}
@@ -159,10 +188,24 @@ export default function CreateBarathonScreen() {
               placeholder="Ex: 45"
               keyboardType="numeric"
             />
+
+            <BarathonField
+              label="Code d'événement partenaire (Optionnel)"
+              value={eventCode}
+              onChangeText={setEventCode}
+              placeholder="Ex: TOULOUSE2026"
+              autoCapitalize="characters"
+            />
           </View>
 
-          <TouchableOpacity onPress={handleContinue} style={styles.submitButton}>
-            <Text style={styles.submitButtonText}>Choisir les lieux sur la carte</Text>
+          <TouchableOpacity
+            onPress={handleContinue}
+            style={[styles.submitButton, validatingEvent && { opacity: 0.6 }]}
+            disabled={validatingEvent}
+          >
+            <Text style={styles.submitButtonText}>
+              {validatingEvent ? 'Validation du code...' : 'Choisir les lieux sur la carte'}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

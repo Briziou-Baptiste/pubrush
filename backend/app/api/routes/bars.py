@@ -6,9 +6,12 @@ import ssl
 import math
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from app.db import get_db
 from app.api.deps.auth import get_current_user
-from app.models import User
+from app.models import User, MapFilter
 from app.schemas import BarSearchResult
 
 # In-memory thread-safe cache to avoid repeating heavy remote calls for identical or nearby queries
@@ -237,18 +240,29 @@ def get_nearby_bars(
     lat: float,
     lon: float,
     max_travel_time_minutes: int,
+    filter_key: Optional[str] = None,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     if max_travel_time_minutes <= 0:
         return []
 
     # Round coordinates to 4 decimal places (~11 meters of precision) to hit cache for identical points
-    cache_key = (round(lat, 4), round(lon, 4), max_travel_time_minutes)
+    cache_key = (round(lat, 4), round(lon, 4), max_travel_time_minutes, filter_key)
     if cache_key in NEARBY_CACHE:
         return NEARBY_CACHE[cache_key]
 
     # Calculate travel distance limit: 4 km/h = ~66.67 meters per minute
     radius = int(66.67 * max_travel_time_minutes)
+
+    # Fetch custom query from DB if filter_key is provided
+    osm_query = None
+    google_type = None
+    if filter_key:
+        filter_obj = db.scalar(select(MapFilter).where(MapFilter.key == filter_key))
+        if filter_obj:
+            osm_query = filter_obj.osm_query
+            google_type = filter_obj.google_type
 
     provider = os.getenv("PLACE_SEARCH_PROVIDER", "photon").lower()
 
@@ -256,11 +270,11 @@ def get_nearby_bars(
     if provider == "google":
         key = os.getenv("GOOGLE_PLACES_API_KEY")
         if not key:
-            candidates = search_overpass_nearby(lat, lon, radius)
+            candidates = search_overpass_nearby(lat, lon, radius, osm_query, filter_key)
         else:
-            candidates = search_google_nearby(lat, lon, radius, key)
+            candidates = search_google_nearby(lat, lon, radius, key, google_type, filter_key)
     else:
-        candidates = search_overpass_nearby(lat, lon, radius)
+        candidates = search_overpass_nearby(lat, lon, radius, osm_query, filter_key)
 
     # Compute real walking times
     candidates = compute_real_walking_times(lat, lon, candidates)
@@ -289,15 +303,18 @@ def get_nearby_bars(
 
     return res
 
-def search_overpass_nearby(lat: float, lon: float, radius: int):
+def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optional[str] = None, filter_key: Optional[str] = None):
     # Spatial Overpass API query searching for bars, pubs, and restaurants in the nearby area (cap to 50 results)
     # nwr: fetches Nodes, Ways, and Relations (supports polygon centers for large venues)
     # amenity regex filtering: extremely fast single-pass match
     # out center: computes gravity center coordinates for polygonal elements automatically
+    
+    query_body = osm_query if osm_query else 'nwr["amenity"~"^(pub|bar|restaurant)$"]'
+    
     overpass_query = f"""
     [out:json][timeout:5];
     (
-      nwr["amenity"~"^(pub|bar|restaurant)$"](around:{radius},{lat},{lon});
+      {query_body}(around:{radius},{lat},{lon});
     );
     out center 50;
     """
@@ -327,7 +344,7 @@ def search_overpass_nearby(lat: float, lon: float, radius: int):
             
     if not res_data:
         try:
-            return search_photon("bar", lat, lon)[:10]
+            return search_photon(filter_key or "bar", lat, lon)[:10]
         except Exception:
             return []
             
@@ -343,8 +360,11 @@ def search_overpass_nearby(lat: float, lon: float, radius: int):
             if el_lat is None or el_lon is None or not name:
                 continue
                 
-            amenity = tags.get("amenity", "")
-            stop_type = "bar" if amenity in ["bar", "pub"] else "food"
+            if filter_key:
+                stop_type = filter_key
+            else:
+                amenity = tags.get("amenity", "")
+                stop_type = "bar" if amenity in ["bar", "pub"] else "food"
             
             street = tags.get("addr:street")
             city = tags.get("addr:city")
@@ -364,15 +384,15 @@ def search_overpass_nearby(lat: float, lon: float, radius: int):
         return results
     except Exception:
         try:
-            return search_photon("bar", lat, lon)[:10]
+            return search_photon(filter_key or "bar", lat, lon)[:10]
         except Exception:
             return []
 
-def search_google_nearby(lat: float, lon: float, radius: int, key: str):
+def search_google_nearby(lat: float, lon: float, radius: int, key: str, google_type: Optional[str] = None, filter_key: Optional[str] = None):
     query_params = {
         "location": f"{lat},{lon}",
         "radius": str(radius),
-        "type": "bar",
+        "type": google_type or "bar",
         "key": key,
         "language": "fr"
     }
@@ -395,10 +415,13 @@ def search_google_nearby(lat: float, lon: float, radius: int, key: str):
             if lat_val is None or lon_val is None or not result.get("name"):
                 continue
                 
-            types = result.get("types", [])
-            stop_type = "bar"
-            if "restaurant" in types or "cafe" in types or "food" in types:
-                stop_type = "food"
+            if filter_key:
+                stop_type = filter_key
+            else:
+                types = result.get("types", [])
+                stop_type = "bar"
+                if "restaurant" in types or "cafe" in types or "food" in types:
+                    stop_type = "food"
                 
             vicinity = result.get("vicinity", "")
             
@@ -415,4 +438,4 @@ def search_google_nearby(lat: float, lon: float, radius: int, key: str):
             )
         return results
     except Exception as e:
-        return search_overpass_nearby(lat, lon, radius)
+        return search_overpass_nearby(lat, lon, radius, None, filter_key)

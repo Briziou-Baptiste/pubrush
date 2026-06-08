@@ -99,8 +99,10 @@ export function buildCreateBarathonPayload(input: {
   return {
     name: input.name.trim(),
     start_datetime: startDateTime.toISOString(),
+    end_datetime: startDateTime.toISOString(),
     travel_time_between_bars_minutes: Number(input.travelTime),
     max_time_in_bar_minutes: Number(input.maxTimeInBar),
+    participant_user_ids: [],
     stops: input.stops.map((stop, index) => ({
       name: stop.name.trim(),
       stop_type: stop.stopType,

@@ -16,6 +16,7 @@ type BarathonFieldProps = {
   placeholder?: string;
   keyboardType?: 'default' | 'numeric';
   multiline?: boolean;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 };
 
 export default function BarathonField({
@@ -25,6 +26,7 @@ export default function BarathonField({
   placeholder,
   keyboardType = 'default',
   multiline = false,
+  autoCapitalize = 'sentences',
 }: BarathonFieldProps) {
   return (
     <View style={styles.fieldBlock}>
@@ -36,6 +38,7 @@ export default function BarathonField({
         placeholderTextColor="#9CA3AF"
         keyboardType={keyboardType}
         multiline={multiline}
+        autoCapitalize={autoCapitalize}
         style={[styles.input, multiline ? styles.inputMultiline : null]}
       />
     </View>

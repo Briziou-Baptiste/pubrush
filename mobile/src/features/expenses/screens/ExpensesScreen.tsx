@@ -46,8 +46,11 @@ export default function ExpensesScreen() {
 
   function handleCardPress(item: BarathonBalance) {
     router.push({
-      pathname: '/barathon-expenses-placeholder',
-      params: { barathonName: item.barathon_name },
+      pathname: '/barathon-stop-summary',
+      params: {
+        barathonId: String(item.barathon_id),
+        barathonName: item.barathon_name,
+      },
     });
   }
 
