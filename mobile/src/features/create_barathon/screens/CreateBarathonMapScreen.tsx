@@ -242,20 +242,29 @@ export default function CreateBarathonMapScreen() {
     }, 12000);
 
     async function loadSuggestions() {
+      console.log('[loadSuggestions] points length:', points.length);
       if (points.length === 0) {
         setSuggestions([]);
         return;
       }
 
       const lastPoint = points[points.length - 1];
+      console.log('[loadSuggestions] lastPoint:', lastPoint);
 
       try {
         setLoadingSuggestions(true);
         const token = await getAccessToken();
-        if (!token) return;
-        if (!active) return;
+        console.log('[loadSuggestions] token fetched:', !!token, 'active:', active);
+        if (!token) {
+          Alert.alert("Debug Suggestions", "Erreur: token d'authentification manquant.");
+          return;
+        }
+        if (!active) {
+          console.log('[loadSuggestions] exited because active was false (cleanup ran)');
+          return;
+        }
 
-        // Calls our backend API which queries Overpass/OSM for bars around the given location
+        console.log('[loadSuggestions] calling fetchNearbyBars with filter:', activeFilterKey);
         const data = await fetchNearbyBars(
           lastPoint.latitude,
           lastPoint.longitude,
@@ -263,10 +272,21 @@ export default function CreateBarathonMapScreen() {
           token,
           activeFilterKey
         );
+        console.log('[loadSuggestions] response received count:', data?.length);
+
+        if (!data || data.length === 0) {
+          Alert.alert("Debug Suggestions", "L'API a renvoyé 0 résultat (aucun lieu trouvé à proximité).");
+        }
 
         // If the query took too long and already timed out, or if this effect was cleaned up, ignore results
-        if (!active) return;
-        if (didTimeout) return;
+        if (!active) {
+          console.log('[loadSuggestions] exited after fetch because active was false');
+          return;
+        }
+        if (didTimeout) {
+          console.log('[loadSuggestions] exited after fetch because client timed out');
+          return;
+        }
 
         const filtered = (data || [])
           .map((item: any) => {
@@ -321,9 +341,16 @@ export default function CreateBarathonMapScreen() {
           .sort((a, b) => a.estimatedMinutes - b.estimatedMinutes)
           .slice(0, 50);
 
+        console.log('[loadSuggestions] setting suggestions count:', filtered.length);
+
+        if (data && data.length > 0 && filtered.length === 0) {
+          Alert.alert("Debug Suggestions", `L'API a renvoyé ${data.length} lieux à proximité, mais ils ont tous été filtrés comme doublons par rapport aux étapes existantes.`);
+        }
+
         setSuggestions(filtered);
       } catch (error: any) {
         console.error('Failed to load suggestions:', error);
+        Alert.alert("Debug Suggestions (Erreur)", `Erreur lors de la requête: ${error?.message || String(error)}`);
       } finally {
         clearTimeout(timeoutId);
         if (active && !didTimeout) {

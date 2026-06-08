@@ -375,6 +375,7 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
     """
     
     servers = [
+        "https://overpass.openstreetmap.fr/api/interpreter",
         "https://lz4.overpass-api.de/api/interpreter",
         "https://overpass-api.de/api/interpreter",
         "https://z.overpass-api.de/api/interpreter",
@@ -392,7 +393,7 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
                 server_url, 
                 data_encoded=data_encoded,
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-                timeout=3
+                timeout=5
             )
             if res_data:
                 break
