@@ -53,13 +53,23 @@ def health():
 
 @app.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
-    existing_email = db.scalar(select(User).where(User.email == payload.email))
+    existing_email = db.scalar(
+        select(User).where(func.lower(User.email) == func.lower(payload.email))
+    )
     if existing_email:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cette adresse email est déjà enregistrée."
+        )
 
-    existing_username = db.scalar(select(User).where(User.username == payload.username))
+    existing_username = db.scalar(
+        select(User).where(func.lower(User.username) == func.lower(payload.username))
+    )
     if existing_username:
-        raise HTTPException(status_code=400, detail="Username already taken")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ce nom d'utilisateur est déjà pris."
+        )
 
     user = User(
         email=payload.email,
@@ -274,16 +284,22 @@ def update_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if payload.username != current_user.username:
-        # Check uniqueness of username
+    if payload.username.lower() != current_user.username.lower():
+        # Check uniqueness of username case-insensitively
         existing_user = db.scalar(
-            select(User).where(User.username == payload.username)
+            select(User).where(
+                (func.lower(User.username) == func.lower(payload.username)) &
+                (User.id != current_user.id)
+            )
         )
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Ce nom d'utilisateur est déjà pris."
             )
+        current_user.username = payload.username
+    elif payload.username != current_user.username:
+        # Just a case change for the same user (e.g. "alice" -> "Alice")
         current_user.username = payload.username
 
     db.commit()

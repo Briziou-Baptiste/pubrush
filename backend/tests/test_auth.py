@@ -23,7 +23,7 @@ def test_register_duplicate_email(client, test_user):
     }
     response = client.post("/register", json=payload)
     assert response.status_code == 400
-    assert response.json()["detail"] == "Email already registered"
+    assert response.json()["detail"] == "Cette adresse email est déjà enregistrée."
 
 def test_register_duplicate_username(client, test_user):
     payload = {
@@ -33,7 +33,7 @@ def test_register_duplicate_username(client, test_user):
     }
     response = client.post("/register", json=payload)
     assert response.status_code == 400
-    assert response.json()["detail"] == "Username already taken"
+    assert response.json()["detail"] == "Ce nom d'utilisateur est déjà pris."
 
 def test_login_success(client, test_user):
     payload = {
@@ -127,6 +127,42 @@ def test_update_username_duplicate(client, user_auth_headers, test_user_2):
     response = client.put("/me", json=payload, headers=user_auth_headers)
     assert response.status_code == 400
     assert response.json()["detail"] == "Ce nom d'utilisateur est déjà pris."
+
+
+def test_register_duplicate_username_case_insensitive(client, test_user):
+    payload = {
+        "email": "anotherdistinctemail@pubrush.com",
+        "username": test_user.username.upper(),
+        "password": "somepassword123"
+    }
+    response = client.post("/register", json=payload)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Ce nom d'utilisateur est déjà pris."
+
+
+def test_register_duplicate_email_case_insensitive(client, test_user):
+    payload = {
+        "email": test_user.email.upper(),
+        "username": "anotherdistinctusername",
+        "password": "somepassword123"
+    }
+    response = client.post("/register", json=payload)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Cette adresse email est déjà enregistrée."
+
+
+def test_update_username_duplicate_case_insensitive(client, user_auth_headers, test_user_2):
+    payload = {"username": test_user_2.username.upper()}
+    response = client.put("/me", json=payload, headers=user_auth_headers)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Ce nom d'utilisateur est déjà pris."
+
+
+def test_update_username_case_change(client, user_auth_headers, test_user):
+    payload = {"username": test_user.username.upper()}
+    response = client.put("/me", json=payload, headers=user_auth_headers)
+    assert response.status_code == 200
+    assert response.json()["username"] == test_user.username.upper()
 
 
 def test_delete_account_solo_barathon(client, user_auth_headers, test_user, db_session):
