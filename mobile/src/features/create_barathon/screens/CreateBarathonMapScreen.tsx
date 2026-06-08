@@ -11,6 +11,7 @@ import {
   View,
   Platform,
   KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import MapView, {
@@ -130,14 +131,12 @@ export default function CreateBarathonMapScreen() {
 
 
 
-  function handleSearchChange(text: string) {
-    setSearchQuery(text);
-
+  useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    const cleanText = text.trim();
+    const cleanText = searchQuery.trim();
     if (cleanText.length < 2) {
       setSearchResults([]);
       return;
@@ -146,7 +145,18 @@ export default function CreateBarathonMapScreen() {
     searchTimeoutRef.current = setTimeout(() => {
       void performSearch(cleanText);
     }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, activeFilterKey]);
+
+  function handleSearchChange(text: string) {
+    setSearchQuery(text);
   }
+
 
   // Performs a text search for bars via the backend proxy
   async function performSearch(query: string) {
@@ -159,7 +169,8 @@ export default function CreateBarathonMapScreen() {
         query,
         location?.latitude,
         location?.longitude,
-        token
+        token,
+        activeFilterKey
       );
 
       const parsedResults = data.map((item: any) => ({
@@ -606,6 +617,7 @@ export default function CreateBarathonMapScreen() {
         initialRegion={initialRegion}
         showsUserLocation={permissionGranted}
         showsMyLocationButton={false}
+        onPress={() => Keyboard.dismiss()}
       >
         {[
           ...(points.length > 0 ? [
@@ -687,18 +699,26 @@ export default function CreateBarathonMapScreen() {
           elevation: 4,
           padding: 4,
         }}>
-          <TextInput
-            placeholder="🔍 Rechercher un bar (ex: Delirium...)"
-            placeholderTextColor="#8A8A8A"
-            value={searchQuery}
-            onChangeText={handleSearchChange}
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 10,
-              fontSize: 14,
-              color: '#111827',
-            }}
-          />
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 14,
+          }}>
+            <Ionicons name="search" size={18} color="#8A8A8A" />
+            <TextInput
+              placeholder="Rechercher un lieu (ex: Delirium...)"
+              placeholderTextColor="#8A8A8A"
+              value={searchQuery}
+              onChangeText={handleSearchChange}
+              style={{
+                flex: 1,
+                paddingLeft: 8,
+                paddingVertical: 10,
+                fontSize: 14,
+                color: '#111827',
+              }}
+            />
+          </View>
 
           {mapFilters.length > 0 && (
             <ScrollView

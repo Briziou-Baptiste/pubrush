@@ -202,11 +202,15 @@ export async function fetchBarsSearch(
   query: string,
   lat: number | undefined,
   lon: number | undefined,
-  token: string
+  token: string,
+  filterKey?: string
 ): Promise<any[]> {
   let url = `${API_BASE_URL}/bars/search?q=${encodeURIComponent(query)}`;
   if (lat !== undefined && lon !== undefined) {
     url += `&lat=${lat}&lon=${lon}`;
+  }
+  if (filterKey) {
+    url += `&filter_key=${encodeURIComponent(filterKey)}`;
   }
 
   const response = await fetch(url, {

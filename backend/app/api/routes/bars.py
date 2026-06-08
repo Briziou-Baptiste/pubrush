@@ -37,6 +37,8 @@ def search_bars(
     q: str,
     lat: Optional[float] = None,
     lon: Optional[float] = None,
+    filter_key: Optional[str] = None,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     query_str = q.strip()
@@ -46,11 +48,18 @@ def search_bars(
     # Round coordinates to 3 decimal places (~110 meters of precision) to hit caches during autocomplete searches
     lat_key = round(lat, 3) if lat is not None else None
     lon_key = round(lon, 3) if lon is not None else None
-    cache_key = (query_str.lower(), lat_key, lon_key)
+    cache_key = (query_str.lower(), lat_key, lon_key, filter_key)
 
     # Check search cache for hits
     if cache_key in SEARCH_CACHE:
         return SEARCH_CACHE[cache_key]
+
+    # Fetch custom query from DB if filter_key is provided
+    google_type = None
+    if filter_key:
+        filter_obj = db.scalar(select(MapFilter).where(MapFilter.key == filter_key))
+        if filter_obj:
+            google_type = filter_obj.google_type
 
     provider = os.getenv("PLACE_SEARCH_PROVIDER", "photon").lower()
     results = []
@@ -61,10 +70,10 @@ def search_bars(
             # Fallback on photon if key is missing to avoid crashing
             provider = "photon"
         else:
-            results = search_google_places(query_str, lat, lon, key)
+            results = search_google_places(query_str, lat, lon, key, google_type, filter_key)
 
     if provider == "photon":
-        results = search_photon(query_str, lat, lon)
+        results = search_photon(query_str, lat, lon, filter_key)
 
     # Limit the cache size to prevent potential memory leaks / excessive memory usage
     if len(SEARCH_CACHE) > 200:
@@ -73,8 +82,8 @@ def search_bars(
 
     return results
 
-def search_photon(q: str, lat: Optional[float], lon: Optional[float]):
-    query_params = {"q": q, "limit": 10}
+def search_photon(q: str, lat: Optional[float], lon: Optional[float], filter_key: Optional[str] = None):
+    query_params = {"q": q, "limit": 15}  # Request slightly more to allow filtering
     if lat is not None and lon is not None:
         query_params["lat"] = str(lat)
         query_params["lon"] = str(lon)
@@ -93,8 +102,33 @@ def search_photon(q: str, lat: Optional[float], lon: Optional[float]):
             if len(coords) < 2 or not props.get("name"):
                 continue
                 
+            osm_key = props.get("osm_key", "")
             osm_val = props.get("osm_value", "")
-            stop_type = "bar" if osm_val in ["bar", "pub", "biergarten"] else "food"
+            
+            # If a filter is active, check if it matches the osm_key/osm_value
+            if filter_key:
+                # Dynamic matching rules
+                if filter_key == "bar":
+                    if not (osm_key == "amenity" and osm_val in ["pub", "bar", "biergarten"]):
+                        continue
+                elif filter_key == "food":
+                    if not (osm_key == "amenity" and osm_val in ["restaurant", "fast_food", "cafe", "food_court"]):
+                        continue
+                elif filter_key == "first_aid":
+                    if not ((osm_key == "amenity" and osm_val in ["hospital", "first_aid"]) or 
+                            (osm_key == "emergency" and osm_val in ["first_aid_station"])):
+                        continue
+                elif filter_key == "challenge":
+                    if not ((osm_key == "amenity" and osm_val in ["townhall", "community_centre"]) or 
+                            osm_key in ["historic", "tourism"] or osm_val in ["monument", "landmark"]):
+                        continue
+                elif filter_key == "partner_restaurant":
+                    if not (osm_key == "amenity" and osm_val == "restaurant"):
+                        continue
+                
+                stop_type = filter_key
+            else:
+                stop_type = "bar" if osm_val in ["bar", "pub", "biergarten"] else "food"
             
             results.append(
                 BarSearchResult(
@@ -107,19 +141,22 @@ def search_photon(q: str, lat: Optional[float], lon: Optional[float]):
                     stop_type=stop_type
                 )
             )
-        return results
+        return results[:10]  # Return capped list
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Erreur lors de la requête OpenStreetMap (Photon) : {str(e)}"
         )
 
-def search_google_places(q: str, lat: Optional[float], lon: Optional[float], key: str):
+def search_google_places(q: str, lat: Optional[float], lon: Optional[float], key: str, google_type: Optional[str] = None, filter_key: Optional[str] = None):
     query_params = {
         "query": q,
         "key": key,
         "language": "fr"
     }
+    if google_type:
+        query_params["type"] = google_type
+
     if lat is not None and lon is not None:
         query_params["location"] = f"{lat},{lon}"
         query_params["radius"] = "5000"
@@ -157,10 +194,13 @@ def search_google_places(q: str, lat: Optional[float], lon: Optional[float], key
             if len(parts) >= 3:
                 country = parts[2]
                 
-            types = result.get("types", [])
-            stop_type = "bar"
-            if "restaurant" in types or "cafe" in types or "food" in types:
-                stop_type = "food"
+            if filter_key:
+                stop_type = filter_key
+            else:
+                types = result.get("types", [])
+                stop_type = "bar"
+                if "restaurant" in types or "cafe" in types or "food" in types:
+                    stop_type = "food"
                 
             results.append(
                 BarSearchResult(
@@ -175,8 +215,8 @@ def search_google_places(q: str, lat: Optional[float], lon: Optional[float], key
             )
         return results
     except Exception as e:
-        # Silent fallback to Photon if Google request fails (e.g. invalid key or billing issues)
-        return search_photon(q, lat, lon)
+        # Silent fallback to Photon if Google request fails
+        return search_photon(q, lat, lon, filter_key)
 
 def get_straight_line_walking_minutes(lat1: float, lon1: float, lat2: float, lon2: float) -> int:
     """
