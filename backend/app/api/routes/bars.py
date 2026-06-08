@@ -267,7 +267,7 @@ def compute_real_walking_times(lat: float, lon: float, candidates: list[BarSearc
         coords.append(f"{c.longitude},{c.latitude}")
 
     coords_str = ";".join(coords)
-    url = f"https://router.project-osrm.org/table/v1/foot/{coords_str}?sources=0"
+    url = f"http://router.project-osrm.org/table/v1/foot/{coords_str}?sources=0"
 
     try:
         res_data = _http_get_json(url, timeout=5)
@@ -376,7 +376,9 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
     
     servers = [
         "https://lz4.overpass-api.de/api/interpreter",
-        "https://overpass-api.de/api/interpreter"
+        "https://overpass-api.de/api/interpreter",
+        "https://z.overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter"
     ]
     
     data_encoded = urllib.parse.urlencode({"data": overpass_query}).encode("utf-8")
@@ -390,7 +392,7 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
                 server_url, 
                 data_encoded=data_encoded,
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-                timeout=6
+                timeout=3
             )
             if res_data:
                 break

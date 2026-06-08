@@ -164,11 +164,14 @@ export default function CreateBarathonMapScreen() {
       const token = await getAccessToken();
       if (!token) return;
 
+      const searchLat = points.length > 0 ? points[points.length - 1].latitude : location?.latitude;
+      const searchLon = points.length > 0 ? points[points.length - 1].longitude : location?.longitude;
+
       // Calls our backend API which in turn queries Photon/OSM with caching and SSL bypass
       const data = await fetchBarsSearch(
         query,
-        location?.latitude,
-        location?.longitude,
+        searchLat,
+        searchLon,
         token,
         activeFilterKey
       );
