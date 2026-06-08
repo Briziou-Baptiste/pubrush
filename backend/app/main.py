@@ -85,6 +85,18 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     return user
 
 
+@app.get("/check-username")
+def check_username(username: str, db: Session = Depends(get_db)):
+    username_clean = username.strip()
+    if len(username_clean) < 3:
+        return {"available": False}
+
+    existing_username = db.scalar(
+        select(User).where(func.lower(User.username) == func.lower(username_clean))
+    )
+    return {"available": existing_username is None}
+
+
 @app.post("/login", response_model=TokenResponse)
 def login(payload: UserLogin, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == payload.email))

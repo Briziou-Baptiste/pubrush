@@ -288,3 +288,25 @@ def test_get_my_stats(client, user_auth_headers, test_user, test_user_2, db_sess
     assert data["barathons_created"] == 1
     assert data["barathons_completed"] == 1
     assert data["bars_visited"] == 1
+
+
+def test_check_username(client, test_user):
+    # 1. Test with available username
+    res = client.get("/check-username?username=totallynewusername")
+    assert res.status_code == 200
+    assert res.json()["available"] is True
+
+    # 2. Test with already taken username (case-sensitive)
+    res = client.get(f"/check-username?username={test_user.username}")
+    assert res.status_code == 200
+    assert res.json()["available"] is False
+
+    # 3. Test with already taken username (case-insensitive)
+    res = client.get(f"/check-username?username={test_user.username.upper()}")
+    assert res.status_code == 200
+    assert res.json()["available"] is False
+
+    # 4. Test with too short username
+    res = client.get("/check-username?username=ab")
+    assert res.status_code == 200
+    assert res.json()["available"] is False

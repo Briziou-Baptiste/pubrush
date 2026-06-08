@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 
 import { styles } from '../styles/profileDetails.styles';
 import { styles as profileStyles } from '../styles/profile.styles';
-import { changePassword, fetchMe, updateUsername, deleteAccount } from '../../../lib/api';
+import { changePassword, fetchMe, updateUsername, deleteAccount, checkUsernameAvailability } from '../../../lib/api';
 import { getAccessToken, clearSession } from '../../../lib/authStorage';
 
 export default function ProfileDetailsScreen() {
@@ -29,6 +29,7 @@ export default function ProfileDetailsScreen() {
   const [usernameError, setUsernameError] = useState<string>('');
   const [usernameSuccess, setUsernameSuccess] = useState<string>('');
   const [usernameSubmitting, setUsernameSubmitting] = useState<boolean>(false);
+  const [usernameIsTaken, setUsernameIsTaken] = useState<boolean | null>(null);
 
   // Password fields
   const [oldPassword, setOldPassword] = useState<string>('');
@@ -42,6 +43,30 @@ export default function ProfileDetailsScreen() {
 
   // Account deletion state
   const [deleting, setDeleting] = useState<boolean>(false);
+
+  useEffect(() => {
+    const clean = newUsername.trim();
+    if (clean.length < 3) {
+      setUsernameIsTaken(null);
+      return;
+    }
+
+    if (clean.toLowerCase() === username.toLowerCase()) {
+      setUsernameIsTaken(false);
+      return;
+    }
+
+    const delayDebounceId = setTimeout(async () => {
+      try {
+        const isAvailable = await checkUsernameAvailability(clean);
+        setUsernameIsTaken(!isAvailable);
+      } catch (error) {
+        console.error('[ProfileDetailsScreen] Error checking username availability:', error);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceId);
+  }, [newUsername, username]);
 
   useEffect(() => {
     void loadUserData();
@@ -77,6 +102,11 @@ export default function ProfileDetailsScreen() {
 
     if (newUsername.trim().length < 3) {
       setUsernameError("Le nom d'utilisateur doit comporter au moins 3 caractères.");
+      return;
+    }
+
+    if (usernameIsTaken) {
+      setUsernameError("Ce nom d'utilisateur est déjà pris.");
       return;
     }
 
@@ -217,9 +247,13 @@ export default function ProfileDetailsScreen() {
                   <View style={styles.infoGroup}>
                     <Text style={styles.label}>Nom d'utilisateur</Text>
                     {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
+                    {usernameIsTaken ? <Text style={styles.errorText}>Ce nom d'utilisateur est déjà pris.</Text> : null}
                     {usernameSuccess ? <Text style={styles.successText}>{usernameSuccess}</Text> : null}
                     <TextInput
-                      style={styles.usernameInput}
+                      style={[
+                        styles.usernameInput,
+                        usernameIsTaken ? styles.inputError : null
+                      ]}
                       value={newUsername}
                       onChangeText={setNewUsername}
                       placeholder="Nom d'utilisateur"

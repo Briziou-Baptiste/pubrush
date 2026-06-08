@@ -1,5 +1,5 @@
 import { Link, router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Image,
@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 
-import { loginUser, registerUser } from '../../../lib/api';
+import { loginUser, registerUser, checkUsernameAvailability } from '../../../lib/api';
 import { saveSession } from '../../../lib/authStorage';
 import { isValidEmail, isValidPassword } from '../../../lib/validators';
 import { styles } from '../styles/register.styles';
@@ -23,6 +23,7 @@ export default function RegisterScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [usernameIsTaken, setUsernameIsTaken] = useState<boolean | null>(null);
 
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
   const normalizedUsername = useMemo(() => username.trim(), [username]);
@@ -35,6 +36,24 @@ export default function RegisterScreen() {
   const passwordIsValid = isValidPassword(password);
   const usernameIsValid = normalizedUsername.length >= 3;
 
+  useEffect(() => {
+    if (normalizedUsername.length < 3) {
+      setUsernameIsTaken(null);
+      return;
+    }
+
+    const delayDebounceId = setTimeout(async () => {
+      try {
+        const isAvailable = await checkUsernameAvailability(normalizedUsername);
+        setUsernameIsTaken(!isAvailable);
+      } catch (error) {
+        console.error('[RegisterScreen] Error checking username availability:', error);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceId);
+  }, [normalizedUsername]);
+
   async function handleRegister() {
     if (!emailIsValid) {
       Alert.alert('Email invalide', 'Entre une adresse email valide.');
@@ -45,6 +64,14 @@ export default function RegisterScreen() {
       Alert.alert(
         'Username invalide',
         'Le username doit contenir au moins 3 caractères.'
+      );
+      return;
+    }
+
+    if (usernameIsTaken) {
+      Alert.alert(
+        'Username indisponible',
+        "Ce nom d'utilisateur est déjà pris."
       );
       return;
     }
@@ -141,12 +168,16 @@ export default function RegisterScreen() {
                   onChangeText={setUsername}
                   style={[
                     styles.input,
-                    usernameTouched && !usernameIsValid ? styles.inputError : null,
+                    (usernameTouched && !usernameIsValid) || usernameIsTaken ? styles.inputError : null,
                   ]}
                 />
                 {usernameTouched && !usernameIsValid ? (
                   <Text style={styles.errorText}>
                     Le username doit contenir au moins 3 caractères.
+                  </Text>
+                ) : usernameIsTaken ? (
+                  <Text style={styles.errorText}>
+                    Ce nom d'utilisateur est déjà pris.
                   </Text>
                 ) : null}
               </View>

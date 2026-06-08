@@ -269,6 +269,15 @@ export async function deleteAccount(token: string): Promise<{ message: string }>
   return handleResponse<{ message: string }>(response);
 }
 
+export async function checkUsernameAvailability(username: string): Promise<boolean> {
+  const response = await fetch(`${API_BASE_URL}/check-username?username=${encodeURIComponent(username)}`, {
+    method: 'GET',
+  });
+  const data = await handleResponse<{ available: boolean }>(response);
+  return data.available;
+}
+
+
 export type UserStats = {
   barathons_created: number;
   barathons_completed: number;

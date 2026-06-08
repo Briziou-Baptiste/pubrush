@@ -81,6 +81,10 @@ export const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     marginTop: 6,
   },
+  inputError: {
+    borderColor: '#DC2626',
+    borderWidth: 1.5,
+  },
   saveButton: {
     marginTop: 10,
     height: 42,
