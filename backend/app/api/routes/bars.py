@@ -75,6 +75,21 @@ def search_bars(
     if provider == "photon":
         results = search_photon(query_str, lat, lon, filter_key)
 
+    # Prioritize/only show results in the user's city (within 35 km) if possible
+    if lat is not None and lon is not None and results:
+        local_results = []
+        for r in results:
+            # Calculate distance in km (Haversine)
+            dlat = math.radians(r.latitude - lat)
+            dlon = math.radians(r.longitude - lon)
+            a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat)) * math.cos(math.radians(r.latitude)) * math.sin(dlon / 2)**2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            dist_km = 6371.0 * c
+            if dist_km <= 35.0:
+                local_results.append(r)
+        if local_results:
+            results = local_results
+
     # Limit the cache size to prevent potential memory leaks / excessive memory usage
     if len(SEARCH_CACHE) > 200:
         SEARCH_CACHE.clear()

@@ -23,7 +23,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.58)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.65)',
     shadowColor: '#000',
