@@ -246,7 +246,7 @@ def get_map_filters(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Fetch event-specific filters if partner_event_id is provided
+    # Fetch event-specific and global filters if partner_event_id is provided
     if partner_event_id:
         event = db.scalar(
             select(PartnerEvent).where(
@@ -255,7 +255,16 @@ def get_map_filters(
             )
         )
         if event:
-            return event.filters
+            event_filters = list(event.filters)
+            global_filters = db.scalars(
+                select(MapFilter).where(MapFilter.is_global == True)
+            ).all()
+            
+            # Combine them, deduplicating by key (event filters overwrite global ones if they have the same key)
+            filter_dict = {f.key: f for f in global_filters}
+            for f in event_filters:
+                filter_dict[f.key] = f
+            return list(filter_dict.values())
         return []
 
     # Otherwise (e.g. for general map), return all global filters

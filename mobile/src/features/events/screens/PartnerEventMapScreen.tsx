@@ -126,21 +126,25 @@ export default function PartnerEventMapScreen() {
   };
 
   const getMarkerEmoji = (type: string) => {
-    switch (type) {
+    switch (type?.toLowerCase()) {
       case 'bar': return '🍻';
       case 'security': return '🛡️';
       case 'water': return '💧';
       case 'first_aid': return '🏥';
+      case 'partner_restaurant': case 'food': case 'restaurant': return '🍕';
+      case 'challenge': return '🚩';
       default: return '📍';
     }
   };
 
   const getMarkerColor = (type: string) => {
-    switch (type) {
+    switch (type?.toLowerCase()) {
       case 'bar': return '#F59E0B'; // Amber
       case 'security': return '#3B82F6'; // Blue
       case 'water': return '#06B6D4'; // Cyan
       case 'first_aid': return '#EF4444'; // Red
+      case 'partner_restaurant': case 'food': case 'restaurant': return '#10B981'; // Emerald
+      case 'challenge': return '#8B5CF6'; // Violet
       default: return '#6B7280'; // Slate/Gray
     }
   };

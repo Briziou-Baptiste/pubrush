@@ -6,6 +6,7 @@ interface PartnerSpotsModalProps {
   isOpen: boolean;
   onClose: () => void;
   spotsEvent: any;
+  filters?: any[];
   spots: any[];
   loadingSpots: boolean;
   spotForm: {
@@ -24,6 +25,7 @@ export default function PartnerSpotsModal({
   isOpen,
   onClose,
   spotsEvent,
+  filters = [],
   spots,
   loadingSpots,
   spotForm,
@@ -42,6 +44,65 @@ export default function PartnerSpotsModal({
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const tileLayerRef = useRef<any>(null);
+
+  // Combine global and event filters
+  const combinedFilters = React.useMemo(() => {
+    const eventFilters = spotsEvent?.filters || [];
+    const globalFilters = (filters || []).filter((f: any) => f.is_global);
+    const combined = [...globalFilters];
+    eventFilters.forEach((ef: any) => {
+      if (!combined.some((gf: any) => gf.key === ef.key)) {
+        combined.push(ef);
+      }
+    });
+    return combined;
+  }, [spotsEvent, filters]);
+
+  // Sync default spot_type when event filters are loaded or changed
+  useEffect(() => {
+    if (isOpen && combinedFilters.length > 0) {
+      const filterKeys = combinedFilters.map((f: any) => f.key);
+      if (!filterKeys.includes(spotForm.spot_type)) {
+        setSpotForm((prev: any) => ({
+          ...prev,
+          spot_type: filterKeys[0],
+        }));
+      }
+    }
+  }, [isOpen, spotsEvent, filters, spotForm.spot_type, setSpotForm, combinedFilters]);
+
+  const getSpotTypeLabel = (type: string) => {
+    const match = combinedFilters.find((f: any) => f.key === type);
+    if (match) {
+      return match.label || match.name || match.key;
+    }
+    switch (type) {
+      case 'bar': return 'Bar Partenaire';
+      case 'security': return 'Poste de sécurité';
+      case 'water': return 'Point d\'eau';
+      case 'first_aid': return 'Premiers secours';
+      default: return 'Autre point';
+    }
+  };
+
+  const getSpotTypeBadgeClass = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case 'bar':
+        return 'bg-orange-500/10 border-orange-500/20 text-orange-400';
+      case 'security':
+        return 'bg-blue-500/10 border-blue-500/20 text-blue-400';
+      case 'water':
+        return 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400';
+      case 'first_aid':
+        return 'bg-rose-500/10 border-rose-500/20 text-rose-400';
+      case 'partner_restaurant': case 'food': case 'restaurant':
+        return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
+      case 'challenge':
+        return 'bg-violet-500/10 border-violet-500/20 text-violet-400';
+      default:
+        return 'bg-slate-800 border-slate-700 text-slate-400';
+    }
+  };
 
   // Search logic (debounced 300ms)
   useEffect(() => {
@@ -336,11 +397,21 @@ export default function PartnerSpotsModal({
                     onChange={(e) => setSpotForm({ ...spotForm, spot_type: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 transition-colors"
                   >
-                    <option value="bar">🍻 Bar Partenaire</option>
-                    <option value="security">🛡️ Poste de sécurité</option>
-                    <option value="water">💧 Point d'eau</option>
-                    <option value="first_aid">🏥 Premiers secours</option>
-                    <option value="other">📍 Autre point</option>
+                    {combinedFilters.length > 0 ? (
+                      combinedFilters.map((f: any) => (
+                        <option key={f.key} value={f.key}>
+                          {f.label || f.name || f.key}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="bar">Bar Partenaire</option>
+                        <option value="security">Poste de sécurité</option>
+                        <option value="water">Point d'eau</option>
+                        <option value="first_aid">Premiers secours</option>
+                        <option value="other">Autre point</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
@@ -383,8 +454,12 @@ export default function PartnerSpotsModal({
                         <div className="space-y-0.5 flex-grow">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-xs font-black text-white">{spot.name}</span>
-                            <span className="text-[8px] px-1 py-0.2 rounded border bg-slate-850 border-slate-700 text-slate-400">
-                              {spot.spot_type === "bar" ? "🍻" : spot.spot_type === "security" ? "🛡️" : spot.spot_type === "water" ? "💧" : spot.spot_type === "first_aid" ? "🏥" : "📍"}
+                            <span
+                              className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-wider border ${getSpotTypeBadgeClass(
+                                spot.spot_type
+                              )}`}
+                            >
+                              {getSpotTypeLabel(spot.spot_type)}
                             </span>
                           </div>
                           <p className="text-[9px] text-slate-500 font-mono">
@@ -508,27 +583,11 @@ export default function PartnerSpotsModal({
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-black text-white">{spot.name}</span>
                               <span
-                                className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border ${
-                                  spot.spot_type === "bar"
-                                    ? "bg-orange-500/10 border-orange-500/20 text-orange-450"
-                                    : spot.spot_type === "security"
-                                    ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                                    : spot.spot_type === "water"
-                                    ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-450"
-                                    : spot.spot_type === "first_aid"
-                                    ? "bg-rose-500/10 border-rose-500/20 text-rose-450"
-                                    : "bg-slate-800 border-slate-700 text-slate-400"
-                                }`}
+                                className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border ${getSpotTypeBadgeClass(
+                                  spot.spot_type
+                                )}`}
                               >
-                                {spot.spot_type === "bar"
-                                  ? "🍻 Bar"
-                                  : spot.spot_type === "security"
-                                  ? "🛡️ Sécurité"
-                                  : spot.spot_type === "water"
-                                  ? "💧 Eau"
-                                  : spot.spot_type === "first_aid"
-                                  ? "🏥 Secours"
-                                  : "📍 Autre"}
+                                {getSpotTypeLabel(spot.spot_type)}
                               </span>
                             </div>
                             <p className="text-[10px] text-slate-500 font-mono">

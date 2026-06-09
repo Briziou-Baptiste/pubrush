@@ -231,10 +231,16 @@ export default function AdminEventsAndFilters() {
   };
 
   const openSpotsModal = async (event: any) => {
+    const eventFilters = event.filters || [];
+    const globalFilters = filters.filter((f: any) => f.is_global);
+    const defaultSpotType = globalFilters.length > 0 
+      ? globalFilters[0].key 
+      : (eventFilters.length > 0 ? eventFilters[0].key : "bar");
+
     setSpotsEvent(event);
     setSpotForm({
       name: "",
-      spot_type: "bar",
+      spot_type: defaultSpotType,
       latitude: "",
       longitude: "",
       description: ""
@@ -276,9 +282,16 @@ export default function AdminEventsAndFilters() {
         description: spotForm.description || undefined
       });
       showMessage("Point partenaire ajouté avec succès.");
+
+      const eventFilters = spotsEvent.filters || [];
+      const globalFilters = filters.filter((f: any) => f.is_global);
+      const defaultSpotType = globalFilters.length > 0 
+        ? globalFilters[0].key 
+        : (eventFilters.length > 0 ? eventFilters[0].key : "bar");
+
       setSpotForm({
         name: "",
-        spot_type: "bar",
+        spot_type: defaultSpotType,
         latitude: "",
         longitude: "",
         description: ""
@@ -697,6 +710,7 @@ export default function AdminEventsAndFilters() {
           setSpots([]);
         }}
         spotsEvent={spotsEvent}
+        filters={filters}
         spots={spots}
         loadingSpots={loadingSpots}
         spotForm={spotForm}

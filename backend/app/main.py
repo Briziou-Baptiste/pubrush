@@ -895,10 +895,28 @@ def admin_create_event_spot(
     if not event:
         raise HTTPException(status_code=404, detail="Événement partenaire introuvable.")
     
+    # Validate spot type against global and event-specific filters
+    global_filters = db.scalars(
+        select(MapFilter).where(MapFilter.is_global == True)
+    ).all()
+    global_keys = {f.key for f in global_filters}
+
+    if event.filters:
+        allowed_keys = global_keys | {f.key for f in event.filters}
+    else:
+        allowed_keys = global_keys | {"security", "water", "first_aid", "other"}
+
+    spot_type_stripped = payload.spot_type.strip()
+    if spot_type_stripped not in allowed_keys:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Le type de point '{spot_type_stripped}' n'est pas autorisé pour cet événement. Les types autorisés sont : {', '.join(sorted(allowed_keys))}"
+        )
+    
     spot = PartnerEventSpot(
         event_id=event_id,
         name=payload.name.strip(),
-        spot_type=payload.spot_type.strip(),
+        spot_type=spot_type_stripped,
         latitude=payload.latitude,
         longitude=payload.longitude,
         description=payload.description.strip() if payload.description else None
