@@ -140,6 +140,13 @@ def test_admin_endpoints_security(client, user_auth_headers, admin_auth_headers,
     assert event_data["name"] == "Soirée Test"
     event_id = event_data["id"]
 
+    # Standard user can fetch active partner events list -> 200
+    response = client.get("/partner-events", headers=user_auth_headers)
+    assert response.status_code == 200
+    events_list = response.json()
+    assert len(events_list) >= 1
+    assert any(e["id"] == event_id for e in events_list)
+
     # Admin can create map filter -> 200
     payload_filter = {
         "key": "test_filter",

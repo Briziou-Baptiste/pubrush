@@ -397,4 +397,15 @@ export async function fetchMapFilters(partnerEventId: number | null, token: stri
   return handleResponse<any[]>(response);
 }
 
+export async function fetchPartnerEvents(token: string): Promise<any[]> {
+  const response = await fetch(`${API_BASE_URL}/partner-events`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<any[]>(response);
+}
+
 

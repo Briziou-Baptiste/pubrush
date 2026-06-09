@@ -1,0 +1,206 @@
+@reference "tailwindcss";
+
+.usersWrapper {
+  @apply space-y-8 relative;
+}
+
+.toast {
+  @apply fixed top-6 right-6 z-50 p-4 rounded-xl border flex items-center gap-3 shadow-2xl;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toastSuccess {
+  @apply bg-emerald-500/10 border-emerald-500/20 text-emerald-400;
+}
+
+.toastError {
+  @apply bg-rose-500/10 border-rose-500/20 text-rose-400;
+}
+
+.header {
+  @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4;
+}
+
+.title {
+  @apply text-3xl font-black tracking-tight text-white flex items-center gap-3;
+}
+
+.titleIcon {
+  @apply w-8 h-8 text-rose-500;
+}
+
+.subtitle {
+  @apply text-slate-400 mt-1;
+}
+
+.searchWrapper {
+  @apply w-full sm:w-80 relative;
+}
+
+.searchIcon {
+  @apply w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2;
+}
+
+.searchInput {
+  @apply w-full bg-slate-900/30 border border-slate-900 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors;
+}
+
+.spinnerWrapper {
+  @apply h-96 flex items-center justify-center;
+}
+
+.spinner {
+  @apply w-8 h-8 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin;
+}
+
+.errorCard {
+  @apply p-6 rounded-2xl bg-rose-500/5 border border-rose-500/20 text-rose-400 flex gap-3 items-center;
+}
+
+.tableCard {
+  @apply bg-slate-900/10 border border-slate-900 rounded-3xl overflow-hidden shadow-xl;
+}
+
+.scrollWrapper {
+  @apply overflow-x-auto;
+}
+
+.table {
+  @apply w-full text-left border-collapse;
+}
+
+.theadTr {
+  @apply border-b border-slate-900 bg-slate-950/40 text-slate-500 font-bold text-xs uppercase tracking-wider;
+}
+
+.th {
+  @apply px-6 py-4.5;
+}
+
+.tbody {
+  @apply divide-y divide-slate-900/80 text-sm;
+}
+
+.trHover {
+  @apply hover:bg-slate-900/10 transition-colors;
+}
+
+.tdMono {
+  @apply px-6 py-4 font-mono text-slate-500;
+}
+
+.tdUser {
+  @apply px-6 py-4;
+}
+
+.userProfile {
+  @apply flex items-center gap-3;
+}
+
+.userAvatar {
+  @apply w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center font-bold uppercase text-xs;
+}
+
+.username {
+  @apply font-bold text-white;
+}
+
+.tdEmail {
+  @apply px-6 py-4 text-slate-300 font-medium;
+}
+
+.tdRole {
+  @apply px-6 py-4;
+}
+
+.badgeAdmin {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold uppercase tracking-wide;
+}
+
+.badgeMember {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wide;
+}
+
+.tdActions {
+  @apply px-6 py-4 text-right;
+}
+
+.actionsContainer {
+  @apply flex items-center justify-end gap-2;
+}
+
+.btnActionDemote {
+  @apply p-2 rounded-lg border transition-all cursor-pointer bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white;
+}
+
+.btnActionPromote {
+  @apply p-2 rounded-lg border transition-all cursor-pointer bg-rose-500/5 border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:bg-rose-500/10;
+}
+
+.btnDelete {
+  @apply p-2 rounded-lg bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 transition-all cursor-pointer;
+}
+
+.noResults {
+  @apply px-6 py-12 text-center text-slate-500 font-medium;
+}
+
+/* Modal layers */
+.modalBackdrop {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm;
+}
+
+.modalCard {
+  @apply w-full max-w-md bg-slate-900 border border-slate-900 rounded-3xl p-6 shadow-2xl relative;
+  animation: zoomIn 0.2s ease-out;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modalClose {
+  @apply absolute top-4 right-4 p-1 rounded-lg bg-slate-950 border border-slate-900 text-slate-400 hover:text-white cursor-pointer;
+}
+
+.modalHeader {
+  @apply flex items-center gap-3 text-rose-500 mb-4;
+}
+
+.modalTitle {
+  @apply text-lg font-black text-white;
+}
+
+.modalDesc {
+  @apply text-sm text-slate-400 leading-relaxed;
+}
+
+.modalActions {
+  @apply mt-6 flex justify-end gap-3;
+}
+
+.btnCancel {
+  @apply px-4 py-2.5 rounded-xl border border-slate-800 text-sm font-bold text-slate-300 hover:text-white transition-all cursor-pointer bg-transparent;
+}
+
+.btnConfirm {
+  @apply px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-sm font-bold text-white transition-all cursor-pointer border-none;
+}

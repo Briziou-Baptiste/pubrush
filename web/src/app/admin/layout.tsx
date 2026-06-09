@@ -15,6 +15,7 @@ import {
   X
 } from "lucide-react";
 import { api } from "./api";
+import styles from "./adminLayout.module.css";
 
 export default function AdminLayout({
   children,
@@ -93,40 +94,36 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex">
+    <div className={styles.layoutContainer}>
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex lg:w-64 border-r border-slate-900 bg-slate-950/60 backdrop-blur-md flex-col shrink-0">
+      <aside className={styles.sidebarDesktop}>
         {/* Brand */}
-        <div className="h-20 px-6 border-b border-slate-900 flex items-center gap-3">
+        <div className={styles.sidebarBrand}>
           <Image src="/logo.png" alt="PubRush Logo" width={32} height={32} className="rounded-lg object-contain" />
-          <span className="text-xl font-black text-white">
-            Pub<span className="text-rose-500">Rush</span>
+          <span className={styles.brandText}>
+            Pub<span className={styles.brandHighlight}>Rush</span>
           </span>
-          <span className="text-[9px] font-bold tracking-wider text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded uppercase">Admin</span>
+          <span className={styles.adminBadge}>Admin</span>
         </div>
 
         {/* User Block */}
-        <div className="px-4 py-6 border-b border-slate-900 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-violet-600/10 border border-violet-500/30 flex items-center justify-center text-violet-400 font-bold uppercase">
+        <div className={styles.userBlock}>
+          <div className={styles.userAvatar}>
             {adminUser?.username?.substring(0, 2) || "AD"}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-white truncate">{adminUser?.username}</p>
-            <p className="text-xs text-slate-500 truncate">{adminUser?.email}</p>
+          <div className={styles.userDetails}>
+            <p className={styles.userName}>{adminUser?.username}</p>
+            <p className={styles.userEmail}>{adminUser?.email}</p>
           </div>
         </div>
 
         {/* Links */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5">
+        <nav className={styles.navBlock}>
           {menuItems.map((item) => (
             <Link 
               key={item.href} 
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                item.active 
-                  ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
-                  : "text-slate-400 hover:text-white hover:bg-slate-900/50 border border-transparent"
-              }`}
+              className={item.active ? styles.navLinkActive : styles.navLinkInactive}
             >
               <item.icon className="w-4.5 h-4.5" />
               {item.label}
@@ -135,14 +132,14 @@ export default function AdminLayout({
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-4 border-t border-slate-900 space-y-1">
-          <Link href="/" className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition-colors rounded-xl">
+        <div className={styles.bottomActions}>
+          <Link href="/" className={styles.bottomLink}>
             <ArrowLeft className="w-4.5 h-4.5" />
             Retour au site
           </Link>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/5 transition-all rounded-xl cursor-pointer"
+            className={styles.logoutBtn}
           >
             <LogOut className="w-4.5 h-4.5" />
             Se déconnecter
@@ -151,79 +148,75 @@ export default function AdminLayout({
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={styles.mainContainer}>
         {/* Top Navbar - Mobile & Desktop breadcrumbs */}
-        <header className="h-20 border-b border-slate-900/80 bg-slate-950/40 backdrop-blur-md px-6 flex items-center justify-between lg:justify-end">
+        <header className={styles.headerBar}>
           {/* Mobile hamburger menu */}
-          <div className="flex items-center gap-3 lg:hidden">
+          <div className={styles.mobileTitleWrapper}>
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
+              className={styles.hamburgerBtn}
             >
               <Menu className="w-6 h-6" />
             </button>
             <span className="text-lg font-bold text-white">PubRush Admin</span>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+          <div className={styles.headerMeta}>
+            <div className={styles.secureBadge}>
               <ShieldCheck className="w-3.5 h-3.5" />
               Connexion sécurisée
             </div>
-            <div className="w-px h-6 bg-slate-800 hidden sm:block" />
-            <span className="text-sm text-slate-400">
-              Session : <span className="font-bold text-slate-200">{adminUser?.username}</span>
+            <div className={styles.divider} />
+            <span className={styles.sessionInfo}>
+              Session : <span className={styles.sessionName}>{adminUser?.username}</span>
             </span>
           </div>
         </header>
 
         {/* Page children */}
-        <main className="flex-1 overflow-y-auto p-6 sm:p-10">
+        <main className={styles.contentBody}>
           {children}
         </main>
       </div>
 
       {/* Mobile Drawer Sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-64 bg-slate-950 border-r border-slate-900 flex flex-col h-full animate-in slide-in-from-left duration-300">
+        <div className={styles.mobileDrawer}>
+          <div className={styles.mobileSidebar}>
             {/* Mobile Sidebar Header */}
-            <div className="h-20 px-6 border-b border-slate-900 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+            <div className={styles.mobileHeader}>
+              <div className={styles.mobileBrandWrapper}>
                 <Image src="/logo.png" alt="PubRush Logo" width={28} height={28} className="rounded-lg object-contain" />
-                <span className="text-lg font-black text-white">Pub<span className="text-rose-500">Rush</span></span>
+                <span className="text-lg font-black text-white">Pub<span className={styles.brandHighlight}>Rush</span></span>
               </div>
               <button 
                 onClick={() => setSidebarOpen(false)}
-                className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400"
+                className={styles.mobileCloseBtn}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Mobile User Block */}
-            <div className="px-4 py-5 border-b border-slate-900 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-violet-600/10 border border-violet-500/30 flex items-center justify-center text-violet-400 font-bold uppercase text-xs">
+            <div className={styles.mobileUserBlock}>
+              <div className={styles.mobileUserAvatar}>
                 {adminUser?.username?.substring(0, 2)}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate">{adminUser?.username}</p>
-                <p className="text-[10px] text-slate-500 truncate">{adminUser?.email}</p>
+              <div className={styles.userDetails}>
+                <p className={styles.userName}>{adminUser?.username}</p>
+                <p className={styles.userEmail}>{adminUser?.email}</p>
               </div>
             </div>
 
             {/* Mobile Nav Links */}
-            <nav className="flex-1 px-3 py-6 space-y-1">
+            <nav className={styles.mobileNav}>
               {menuItems.map((item) => (
                 <Link 
                   key={item.href} 
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    item.active 
-                      ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
-                      : "text-slate-400 hover:text-white hover:bg-slate-900/50 border border-transparent"
-                  }`}
+                  className={item.active ? styles.navLinkActive : styles.navLinkInactive}
                 >
                   <item.icon className="w-4.5 h-4.5" />
                   {item.label}
@@ -232,8 +225,8 @@ export default function AdminLayout({
             </nav>
 
             {/* Mobile Bottom Actions */}
-            <div className="p-4 border-t border-slate-900 space-y-1">
-              <Link href="/" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-400 hover:text-white transition-colors rounded-xl">
+            <div className={styles.bottomActions}>
+              <Link href="/" onClick={() => setSidebarOpen(false)} className={styles.bottomLink}>
                 <ArrowLeft className="w-4.5 h-4.5" />
                 Retour au site
               </Link>
@@ -242,7 +235,7 @@ export default function AdminLayout({
                   setSidebarOpen(false);
                   handleLogout();
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/5 transition-all rounded-xl cursor-pointer"
+                className={styles.logoutBtn}
               >
                 <LogOut className="w-4.5 h-4.5" />
                 Se déconnecter

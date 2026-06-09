@@ -1,0 +1,37 @@
+@reference "tailwindcss";
+
+.footer {
+  @apply border-t border-slate-900 bg-slate-950/80 py-12 w-full mt-auto relative z-10;
+}
+
+.container {
+  @apply max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6;
+}
+
+.brand {
+  @apply flex items-center gap-2.5 no-underline;
+}
+
+.brandText {
+  @apply text-base font-extrabold text-white;
+}
+
+.brandHighlight {
+  @apply text-rose-500;
+}
+
+.warning {
+  @apply text-xs text-slate-500 text-center md:text-left order-last md:order-none leading-relaxed max-w-md;
+}
+
+.alcoholWarning {
+  @apply block mt-1 text-[11px] text-slate-600;
+}
+
+.links {
+  @apply flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400;
+}
+
+.link {
+  @apply hover:text-white transition-colors no-underline;
+}

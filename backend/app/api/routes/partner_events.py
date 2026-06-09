@@ -10,6 +10,15 @@ from app.schemas import PartnerEventRead, MapFilterRead
 
 router = APIRouter(tags=["partner-events"])
 
+@router.get("/partner-events", response_model=list[PartnerEventRead])
+def get_active_partner_events(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return db.scalars(
+        select(PartnerEvent).where(PartnerEvent.is_active == True).order_by(PartnerEvent.name)
+    ).all()
+
 @router.get("/partner-events/validate", response_model=PartnerEventRead)
 def validate_partner_event(
     code: str,

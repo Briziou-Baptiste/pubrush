@@ -1,0 +1,65 @@
+@reference "tailwindcss";
+
+.pageContainer {
+  @apply min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 selection:text-white relative flex flex-col;
+}
+
+.glow {
+  @apply absolute top-0 left-1/4 w-96 h-96 bg-rose-500/5 rounded-full blur-[120px] pointer-events-none;
+}
+
+.navbar {
+  @apply border-b border-slate-900/80 bg-slate-950/80 backdrop-blur-md relative z-10;
+}
+
+.navContainer {
+  @apply max-w-4xl mx-auto px-6 h-20 flex items-center justify-between;
+}
+
+.brandLink {
+  @apply flex items-center gap-3 no-underline;
+}
+
+.brandLogo {
+  @apply w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-violet-600 flex items-center justify-center;
+}
+
+.brandText {
+  @apply text-xl font-black tracking-tight text-white;
+}
+
+.brandHighlight {
+  @apply text-rose-500;
+}
+
+.backLink {
+  @apply text-sm font-semibold text-slate-400 hover:text-white transition-colors flex items-center gap-2 no-underline;
+}
+
+.mainContent {
+  @apply max-w-4xl mx-auto px-6 py-16 flex-1 relative z-10;
+}
+
+.title {
+  @apply text-3xl sm:text-5xl font-black text-white tracking-tight mb-8;
+}
+
+.date {
+  @apply text-sm text-slate-500 mb-8;
+}
+
+.sections {
+  @apply space-y-8 text-slate-300 leading-relaxed text-sm sm:text-base;
+}
+
+.sections p {
+  @apply mb-4 last:mb-0;
+}
+
+.sectionCard {
+  @apply bg-slate-900/30 border border-slate-900 p-6 sm:p-8 rounded-2xl;
+}
+
+.sectionTitle {
+  @apply text-lg sm:text-xl font-bold text-white mb-4;
+}

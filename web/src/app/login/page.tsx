@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Mail, Lock, ShieldAlert, ArrowLeft, User, Sparkles } from "lucide-react";
 import { api } from "../admin/api";
 import styles from "./login.module.css";
+import Footer from "../../components/Footer";
 
 export default function LoginRegister() {
   const router = useRouter();
@@ -98,7 +99,8 @@ export default function LoginRegister() {
         </Link>
       </div>
 
-      <div className={styles.wrapper}>
+      <div className={styles.contentContainer}>
+        <div className={styles.wrapper}>
         {/* Logo and title */}
         <div className={styles.header}>
           <Image src="/logo_artistic.png" alt="PubRush Logo" width={56} height={56} className={styles.logo} />
@@ -267,6 +269,8 @@ export default function LoginRegister() {
 
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 }

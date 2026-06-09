@@ -1,0 +1,165 @@
+@reference "tailwindcss";
+
+.dashboard {
+  @apply space-y-10;
+}
+
+.titleWrapper {
+  @apply mb-1;
+}
+
+.title {
+  @apply text-3xl font-black tracking-tight text-white flex items-center gap-3;
+}
+
+.titleIcon {
+  @apply w-8 h-8 text-rose-500;
+}
+
+.subtitle {
+  @apply text-slate-400 mt-1;
+}
+
+.kpiGrid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+.kpiCard {
+  @apply bg-slate-900/30 border border-slate-900 p-6 rounded-3xl backdrop-blur-sm relative hover:border-slate-800 transition-all duration-300 shadow-xl;
+}
+
+.kpiCardGlowBlue {
+  @apply shadow-blue-500/10;
+}
+
+.kpiCardGlowRose {
+  @apply shadow-rose-500/10;
+}
+
+.kpiCardGlowViolet {
+  @apply shadow-violet-500/10;
+}
+
+.kpiHeader {
+  @apply flex justify-between items-start;
+}
+
+.kpiLabel {
+  @apply text-xs font-bold text-slate-500 uppercase tracking-wider;
+}
+
+.kpiValue {
+  @apply text-4xl font-black text-white mt-3 tracking-tight;
+}
+
+.kpiIconWrapper {
+  @apply w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg;
+}
+
+.kpiIconWrapperBlue {
+  @apply bg-gradient-to-br from-blue-500 to-indigo-600;
+}
+
+.kpiIconWrapperRose {
+  @apply bg-gradient-to-br from-rose-500 to-pink-600;
+}
+
+.kpiIconWrapperViolet {
+  @apply bg-gradient-to-br from-violet-500 to-fuchsia-600;
+}
+
+.kpiDesc {
+  @apply text-xs text-slate-400 mt-4 leading-normal font-medium;
+}
+
+.analyticsGrid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+}
+
+.welcomeCard {
+  @apply p-8 sm:p-10 rounded-3xl border border-slate-900 bg-gradient-to-br from-rose-500/10 to-violet-600/5 relative overflow-hidden flex flex-col justify-between min-h-[300px];
+}
+
+.welcomeGlow {
+  @apply absolute top-0 right-0 w-64 h-64 bg-rose-500/10 rounded-full blur-[80px] pointer-events-none;
+}
+
+.welcomeTag {
+  @apply inline-block text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider;
+}
+
+.welcomeTitle {
+  @apply text-2xl sm:text-3xl font-black text-white tracking-tight mt-6 leading-normal;
+}
+
+.welcomeDesc {
+  @apply text-slate-400 text-sm mt-3 leading-relaxed max-w-md;
+}
+
+.welcomeActions {
+  @apply flex flex-wrap gap-4 mt-8;
+}
+
+.btnSecondary {
+  @apply inline-flex items-center gap-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-white font-bold text-sm px-5 py-3 rounded-xl transition-all no-underline;
+}
+
+.btnPrimary {
+  @apply inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-violet-600 hover:from-rose-600 hover:to-violet-700 text-white font-bold text-sm px-5 py-3 rounded-xl transition-all no-underline;
+}
+
+.systemCard {
+  @apply p-8 rounded-3xl border border-slate-900 bg-slate-900/20 flex flex-col justify-between;
+}
+
+.systemTitle {
+  @apply font-extrabold text-white text-lg flex items-center gap-2.5;
+}
+
+.systemTitleIcon {
+  @apply w-5 h-5 text-rose-500;
+}
+
+.systemSubtitle {
+  @apply text-slate-400 text-xs mt-1;
+}
+
+.systemList {
+  @apply space-y-4 mt-6;
+}
+
+.systemItem {
+  @apply flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-slate-900;
+}
+
+.systemItemLabel {
+  @apply text-sm font-semibold text-slate-300;
+}
+
+.systemStatus {
+  @apply text-xs font-bold text-emerald-400 flex items-center gap-1.5;
+}
+
+.systemStatusDot {
+  @apply w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse;
+}
+
+.versionFooter {
+  @apply mt-8 text-center sm:text-left;
+}
+
+.versionText {
+  @apply text-xs text-slate-500 font-semibold uppercase tracking-wider;
+}
+
+.spinnerWrapper {
+  @apply h-96 flex items-center justify-center;
+}
+
+.spinner {
+  @apply w-8 h-8 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin;
+}
+
+.errorWrapper {
+  @apply p-6 rounded-2xl bg-rose-500/5 border border-rose-500/20 text-rose-400 flex gap-3 items-center;
+}

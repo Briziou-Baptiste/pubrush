@@ -4,11 +4,20 @@
   color: #f1f5f9; /* slate-100 */
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem 1.5rem;
+  justify-content: space-between;
   position: relative;
   overflow: hidden;
+}
+
+.contentContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  z-index: 10;
+  padding: 4rem 1.5rem;
 }
 
 .glowTop {
@@ -40,6 +49,7 @@
   position: absolute;
   top: 2rem;
   left: 2rem;
+  z-index: 20;
 }
 
 .backLink {

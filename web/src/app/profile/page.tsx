@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { api } from "../admin/api";
 import styles from "./profile.module.css";
+import Footer from "../../components/Footer";
+
 
 export default function UserProfile() {
   const router = useRouter();
@@ -196,9 +198,7 @@ export default function UserProfile() {
       </main>
 
       {/* Footer */}
-      <footer className={styles.footer}>
-        <p>© {new Date().getFullYear()} PubRush. L'abus d'alcool est dangereux pour la santé.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

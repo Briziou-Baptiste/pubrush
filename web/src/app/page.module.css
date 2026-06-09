@@ -1,0 +1,552 @@
+@reference "tailwindcss";
+
+.pageContainer {
+  @apply min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 selection:text-white overflow-x-hidden relative flex flex-col;
+}
+
+.glowTop {
+  @apply absolute top-0 left-1/4 w-96 h-96 bg-rose-500/10 rounded-full blur-[120px] pointer-events-none;
+}
+
+.glowBottom {
+  @apply absolute top-[800px] right-1/4 w-[450px] h-[450px] bg-violet-600/10 rounded-full blur-[150px] pointer-events-none;
+}
+
+.navbar {
+  @apply sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900/80;
+}
+
+.navContainer {
+  @apply max-w-7xl mx-auto px-6 h-20 flex items-center justify-between;
+}
+
+.brandLink {
+  @apply flex items-center gap-3 no-underline;
+}
+
+.brandText {
+  @apply text-2xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent;
+}
+
+.brandHighlight {
+  @apply text-rose-500;
+}
+
+.desktopLinks {
+  @apply hidden md:flex items-center gap-8;
+}
+
+.navLink {
+  @apply text-sm font-semibold text-slate-300 hover:text-white transition-colors no-underline;
+}
+
+.navBtnLogin {
+  @apply text-sm font-semibold px-4 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all no-underline;
+}
+
+.navBtnDownload {
+  @apply text-sm font-bold bg-gradient-to-r from-rose-500 to-violet-600 hover:from-rose-600 hover:to-violet-700 text-white px-5 py-2.5 rounded-xl transition-all hover:shadow-lg hover:shadow-rose-500/15 no-underline;
+}
+
+.burgerBtn {
+  @apply md:hidden p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white;
+}
+
+.mobileDropdown {
+  @apply md:hidden border-t border-slate-900 bg-slate-950 px-6 py-6 flex flex-col gap-4;
+}
+
+.mobileNavLink {
+  @apply text-lg font-medium py-2 text-slate-300 hover:text-white no-underline;
+}
+
+.mobileNavBtnDownload {
+  @apply w-full text-center font-bold bg-gradient-to-r from-rose-500 to-violet-600 py-3.5 rounded-xl mt-2 block text-white no-underline;
+}
+
+/* Hero Section */
+.heroSection {
+  @apply max-w-7xl mx-auto px-6 pt-12 pb-24 md:py-32 flex flex-col lg:flex-row items-center justify-between gap-16 flex-grow relative z-10;
+}
+
+.heroLeft {
+  @apply flex-grow flex flex-col items-center lg:items-start text-center lg:text-left;
+}
+
+.heroTag {
+  @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-semibold tracking-wide mb-6;
+}
+
+.heroTitle {
+  @apply text-4xl sm:text-6xl font-black tracking-tight leading-tight max-w-2xl bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent;
+}
+
+.heroTitleGradient {
+  @apply bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500 bg-clip-text text-transparent;
+}
+
+.heroDesc {
+  @apply mt-6 text-lg md:text-xl text-slate-400 leading-relaxed max-w-xl;
+}
+
+.downloadContainer {
+  @apply mt-10 flex flex-wrap gap-4 justify-center lg:justify-start w-full;
+}
+
+.downloadBtn {
+  @apply flex items-center gap-4 bg-slate-900/60 border border-slate-800 hover:border-rose-500/30 hover:bg-slate-900 hover:shadow-lg hover:shadow-rose-500/5 text-white px-6 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 w-full sm:w-auto no-underline;
+}
+
+.downloadBtnViolet {
+  @apply flex items-center gap-4 bg-slate-900/60 border border-slate-800 hover:border-violet-500/30 hover:bg-slate-900 hover:shadow-lg hover:shadow-violet-500/5 text-white px-6 py-3 rounded-xl transition-all duration-300 hover:-translate-y-0.5 w-full sm:w-auto no-underline;
+}
+
+.downloadBtnLabel {
+  @apply text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none;
+}
+
+.downloadBtnValue {
+  @apply text-base font-black text-white mt-1.5 leading-none tracking-tight;
+}
+
+/* Phone Simulator */
+.simulatorWrapper {
+  @apply w-[320px] h-[650px] shrink-0 flex-none relative mx-auto lg:mx-0;
+}
+
+.simulatorGlow {
+  @apply absolute inset-0 bg-gradient-to-br from-rose-500/20 to-violet-600/20 rounded-[3rem] blur-3xl opacity-60 pointer-events-none;
+}
+
+.simulatorFrame {
+  @apply absolute inset-0 border-slate-900 bg-slate-900 border-[12px] rounded-[3rem] shadow-2xl overflow-hidden select-none;
+}
+
+.islandTime {
+  @apply absolute top-3 left-0 right-0 z-30 flex items-center justify-between px-6;
+}
+
+.timeText {
+  @apply text-[10px] text-slate-900 font-bold;
+}
+
+.island {
+  @apply w-20 h-4.5 bg-black rounded-full;
+}
+
+.statusIcons {
+  @apply flex gap-1 items-center;
+}
+
+.networkIcon {
+  @apply w-2.5 h-2.5 bg-slate-900 rounded-full flex items-center justify-center text-[7px] text-white font-bold;
+}
+
+.batteryIcon {
+  @apply w-4 h-2 border border-slate-900 rounded-[3px] p-0.5 flex items-center;
+}
+
+.batteryLevel {
+  @apply w-2 h-full bg-slate-900 rounded-[1px];
+}
+
+.mapBg {
+  @apply absolute inset-0 bg-[#F4F6FA] z-0 overflow-hidden;
+}
+
+.mapSvg {
+  @apply absolute inset-0 w-[296px] h-[626px] opacity-75 pointer-events-none;
+}
+
+.searchRadius {
+  @apply absolute top-[300px] left-[148px] -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-blue-500/25 bg-blue-500/[0.03] pointer-events-none;
+}
+
+.userDotWrapper {
+  @apply absolute top-[260px] left-[100px] z-10;
+}
+
+.userDot {
+  @apply w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md flex items-center justify-center;
+}
+
+.userDotPing {
+  @apply w-1.5 h-1.5 bg-white rounded-full animate-ping;
+}
+
+.purplePin {
+  @apply w-6 h-6 rounded-full bg-purple-700 border-2 border-white shadow-md flex items-center justify-center;
+}
+
+.purplePinDot {
+  @apply w-2 h-2 bg-white rounded-full;
+}
+
+.redPin {
+  @apply w-6 h-6 rounded-full bg-red-600 border-2 border-white shadow-lg flex items-center justify-center;
+}
+
+.redPinDot {
+  @apply w-2 h-2 bg-white rounded-full;
+}
+
+.topFloatingCard {
+  @apply absolute top-12 left-3.5 right-3.5 bg-white border border-slate-100 p-3.5 rounded-2xl shadow-md z-20 flex justify-between items-center text-slate-800;
+}
+
+.cardTitle {
+  @apply text-sm font-extrabold tracking-tight;
+}
+
+.cardSubtitle {
+  @apply text-[10px] text-slate-500 font-semibold mt-0.5;
+}
+
+.cardMeta {
+  @apply text-[9px] text-slate-400 font-medium;
+}
+
+.cardBtn {
+  @apply bg-black text-white text-[10px] font-bold px-3.5 py-1.5 rounded-xl cursor-pointer;
+}
+
+.searchControls {
+  @apply absolute top-[230px] left-3.5 right-3.5 z-20 space-y-2.5;
+}
+
+.searchBar {
+  @apply bg-white border border-slate-100 p-2.5 rounded-2xl shadow-sm flex items-center gap-2;
+}
+
+.searchText {
+  @apply text-[10px] text-slate-400 font-medium;
+}
+
+.pills {
+  @apply flex gap-2;
+}
+
+.pillActive {
+  @apply bg-blue-600 text-white px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-[9px] font-bold;
+}
+
+.pillInactive {
+  @apply bg-slate-100 text-slate-700 border border-slate-200/50 px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-[9px] font-semibold;
+}
+
+.bottomFloatingCard {
+  @apply absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 rounded-t-[2rem] shadow-[0_-8px_24px_rgba(0,0,0,0.06)] z-20 text-slate-800 space-y-3;
+}
+
+.floatingSectionHeader {
+  @apply text-[10px] font-extrabold uppercase tracking-wider text-slate-400;
+}
+
+.stepCard {
+  @apply mt-2 p-3 rounded-xl bg-slate-50 border border-slate-100 flex justify-between items-center;
+}
+
+.stepLabel {
+  @apply text-[9px] font-bold text-rose-500;
+}
+
+.stepTitle {
+  @apply text-xs font-black text-slate-800;
+}
+
+.stepMeta {
+  @apply text-[9px] text-slate-400 font-medium;
+}
+
+.stepDelete {
+  @apply text-[9px] font-extrabold text-red-500 bg-rose-500/5 px-2.5 py-1 rounded-lg;
+}
+
+.stepIndicator {
+  @apply flex flex-col items-center gap-0.5;
+}
+
+.indicatorText {
+  @apply text-[10px] font-bold text-emerald-600;
+}
+
+.ctaBtn {
+  @apply w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-3.5 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/10 cursor-pointer;
+}
+
+/* Features */
+.featuresSection {
+  @apply py-24 border-y border-slate-900 bg-slate-950/30 relative z-10;
+}
+
+.sectionHeader {
+  @apply text-center max-w-3xl mx-auto mb-20;
+}
+
+.sectionTag {
+  @apply text-xs uppercase font-extrabold text-rose-500 tracking-widest mb-3;
+}
+
+.sectionTitle {
+  @apply text-3xl sm:text-5xl font-black text-white tracking-tight;
+}
+
+.sectionDesc {
+  @apply mt-4 text-base text-slate-400;
+}
+
+.featuresGrid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8;
+}
+
+.featureCard {
+  @apply p-8 rounded-3xl border border-slate-900 bg-slate-900/40 hover:bg-slate-900/70 hover:border-slate-800 transition-all hover:-translate-y-1 duration-300;
+}
+
+.featureIconRose,
+.featureIconViolet,
+.featureIconEmerald,
+.featureIconPink {
+  @apply w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-transform;
+}
+
+.featureIconRose {
+  @apply bg-rose-500/10 text-rose-500;
+}
+
+.featureIconViolet {
+  @apply bg-violet-500/10 text-violet-500;
+}
+
+.featureIconEmerald {
+  @apply bg-emerald-500/10 text-emerald-500;
+}
+
+.featureIconPink {
+  @apply bg-pink-500/10 text-pink-500;
+}
+
+.featureCard:hover .featureIconRose,
+.featureCard:hover .featureIconViolet,
+.featureCard:hover .featureIconEmerald,
+.featureCard:hover .featureIconPink {
+  @apply scale-110;
+}
+
+.featureTitle {
+  @apply text-lg font-bold text-white mb-2;
+}
+
+.featureDesc {
+  @apply text-sm text-slate-400 leading-relaxed;
+}
+
+/* Events */
+.eventsSection {
+  @apply py-24 max-w-7xl mx-auto px-6 relative z-10;
+}
+
+.eventsSectionGlow {
+  @apply absolute -top-12 left-1/2 -translate-x-1/2 w-64 h-64 bg-violet-600/5 rounded-full blur-[100px] pointer-events-none;
+}
+
+.eventsCardWrapper {
+  @apply rounded-[40px] border border-slate-900 bg-slate-900/30 p-8 sm:p-16 flex flex-col lg:flex-row items-center gap-16 overflow-hidden;
+}
+
+.eventsLeft {
+  @apply flex-grow;
+}
+
+.eventsTag {
+  @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold uppercase tracking-wider mb-6;
+}
+
+.eventsTitle {
+  @apply text-3xl sm:text-5xl font-black text-white tracking-tight;
+}
+
+.eventsDesc {
+  @apply mt-6 text-slate-400 leading-relaxed;
+}
+
+.eventsList {
+  @apply mt-8 space-y-4;
+}
+
+.eventsListItem {
+  @apply flex items-start gap-3;
+}
+
+.eventsListCheck {
+  @apply w-5 h-5 text-rose-500 shrink-0 mt-0.5;
+}
+
+.eventsListText {
+  @apply text-slate-300 font-medium;
+}
+
+.eventsCta {
+  @apply mt-10;
+}
+
+.eventsCtaBtn {
+  @apply inline-flex items-center gap-2 font-bold bg-gradient-to-r from-rose-500 to-violet-600 hover:from-rose-600 hover:to-violet-700 text-white px-6 py-3 rounded-xl transition-all no-underline;
+}
+
+.eventsRight {
+  @apply flex-grow w-full flex items-center justify-center max-w-sm lg:max-w-md bg-gradient-to-br from-rose-500/10 to-violet-500/5 p-8 rounded-3xl border border-slate-900 relative;
+}
+
+.eventsPromoCard {
+  @apply w-full bg-slate-950/80 rounded-2xl border border-slate-800 p-6 flex flex-col shadow-2xl;
+}
+
+.promoHeader {
+  @apply flex items-center justify-between border-b border-slate-800 pb-4 mb-4;
+}
+
+.promoTitle {
+  @apply font-extrabold text-white text-base;
+}
+
+.promoSubtitle {
+  @apply text-[11px] text-slate-400 mt-1;
+}
+
+.promoLiveBadge {
+  @apply text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider;
+}
+
+.promoList {
+  @apply space-y-3;
+}
+
+.promoCardActive {
+  @apply p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex flex-col gap-1;
+}
+
+.promoCardInactive {
+  @apply p-3.5 rounded-xl bg-slate-900/40 border border-slate-900 flex flex-col gap-1 opacity-70;
+}
+
+.promoCardTag {
+  @apply text-xs font-bold text-rose-400 uppercase tracking-wide;
+}
+
+.promoCardTagInactive {
+  @apply text-xs font-bold text-slate-500 uppercase tracking-wide;
+}
+
+.promoCardTitle {
+  @apply text-sm font-extrabold text-white;
+}
+
+.promoCardLocation {
+  @apply text-xs text-slate-400 mt-1 flex items-center gap-1;
+}
+
+.promoAlert {
+  @apply mt-5 p-3 rounded-xl bg-rose-500/5 border border-rose-500/15 flex items-center gap-3;
+}
+
+.promoAlertText {
+  @apply text-[11px] text-rose-300 leading-normal;
+}
+
+/* Contact */
+.contactSection {
+  @apply py-24 bg-slate-950 border-t border-slate-900 relative z-10;
+}
+
+.contactGlow {
+  @apply absolute bottom-0 right-0 w-80 h-80 bg-rose-600/5 rounded-full blur-[100px] pointer-events-none;
+}
+
+.contactContainer {
+  @apply max-w-5xl mx-auto px-6;
+}
+
+.contactGrid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-16 items-start;
+}
+
+.contactLeft {
+  @apply flex-grow;
+}
+
+.contactInfoList {
+  @apply mt-8 space-y-6;
+}
+
+.contactInfoItem {
+  @apply flex items-center gap-4;
+}
+
+.contactIconMail {
+  @apply w-11 h-11 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-rose-500;
+}
+
+.contactIconMessage {
+  @apply w-11 h-11 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-violet-500;
+}
+
+.contactLabel {
+  @apply text-xs text-slate-500 font-bold uppercase tracking-wider;
+}
+
+.contactValueLink {
+  @apply text-sm font-semibold text-slate-300 hover:text-white transition-colors no-underline;
+}
+
+.contactValue {
+  @apply text-sm font-semibold text-slate-300;
+}
+
+.contactRight {
+  @apply bg-slate-900/30 border border-slate-900 p-8 rounded-3xl backdrop-blur-sm relative;
+}
+
+.successCard {
+  @apply text-center py-12 flex flex-col items-center gap-4;
+}
+
+.successIcon {
+  @apply w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-2;
+}
+
+.successTitle {
+  @apply text-xl font-bold text-white;
+}
+
+.successDesc {
+  @apply text-sm text-slate-400 max-w-sm;
+}
+
+.successBtn {
+  @apply mt-6 text-sm font-bold text-rose-400 hover:text-rose-300 transition-colors;
+}
+
+.form {
+  @apply space-y-5;
+}
+
+.formLabel {
+  @apply block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5;
+}
+
+.formInput {
+  @apply w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors;
+}
+
+.formTextarea {
+  @apply w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors resize-none;
+}
+
+.formSubmit {
+  @apply w-full flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-violet-600 hover:from-rose-600 hover:to-violet-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all cursor-pointer shadow-lg shadow-rose-500/10;
+}
+
+.spinner {
+  @apply w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin;
+}
