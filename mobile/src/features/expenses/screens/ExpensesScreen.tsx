@@ -87,10 +87,11 @@ export default function ExpensesScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* Header */}
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
+          <Text style={styles.backButtonText}>Retour</Text>
+        </TouchableOpacity>
+
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>Retour</Text>
-          </TouchableOpacity>
           <Text style={styles.title}>Mes Dépenses</Text>
         </View>
 
@@ -130,16 +131,15 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 28,
+    marginBottom: 20,
   },
   backButton: {
+    alignSelf: 'flex-start',
     backgroundColor: '#111827',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
+    marginBottom: 20,
   },
   backButtonText: {
     color: '#FFF',
@@ -147,10 +147,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '800',
     color: '#111827',
-    textAlign: 'right',
+    textAlign: 'center',
   },
   listContainer: {
     paddingBottom: 40,

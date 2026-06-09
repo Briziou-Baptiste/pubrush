@@ -86,3 +86,85 @@ def test_password_reset_flow(mock_send_email, client, db_session, test_user):
     response = client.post("/login", json=payload_login)
     assert response.status_code == 200
     assert "access_token" in response.json()
+
+
+def test_admin_endpoints_security(client, user_auth_headers, admin_auth_headers, test_user_2):
+    # 1. Access without token -> 401
+    response = client.get("/admin/stats")
+    assert response.status_code == 401
+
+    # 2. Access with standard user token -> 403
+    response = client.get("/admin/stats", headers=user_auth_headers)
+    assert response.status_code == 403
+
+    # 3. Access with admin token -> 200
+    response = client.get("/admin/stats", headers=admin_auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_users" in data
+    assert "total_barathons" in data
+
+    # 4. Get all users -> 200
+    response = client.get("/admin/users", headers=admin_auth_headers)
+    assert response.status_code == 200
+    users_list = response.json()
+    assert len(users_list) >= 2
+
+    # 5. Toggle admin role -> 200
+    response = client.put(f"/admin/users/{test_user_2.id}/toggle-admin", headers=admin_auth_headers)
+    assert response.status_code == 200
+    updated_user = response.json()
+    assert updated_user["is_admin"] is True
+
+    # Toggle back
+    response = client.put(f"/admin/users/{test_user_2.id}/toggle-admin", headers=admin_auth_headers)
+    assert response.status_code == 200
+    updated_user = response.json()
+    assert updated_user["is_admin"] is False
+
+    # 6. Create, update, link and delete Partner Event and Map Filter
+    # Standard user cannot create event -> 403
+    payload_event = {
+        "name": "Soirée Test",
+        "code": "TEST1234",
+        "description": "Description test",
+        "is_active": True
+    }
+    response = client.post("/admin/partner-events", json=payload_event, headers=user_auth_headers)
+    assert response.status_code == 403
+
+    # Admin can create event -> 200
+    response = client.post("/admin/partner-events", json=payload_event, headers=admin_auth_headers)
+    assert response.status_code == 200
+    event_data = response.json()
+    assert event_data["name"] == "Soirée Test"
+    event_id = event_data["id"]
+
+    # Admin can create map filter -> 200
+    payload_filter = {
+        "key": "test_filter",
+        "label": "Filtre Test",
+        "icon": "test_icon",
+        "osm_query": "node(area.searchArea);",
+        "is_global": False
+    }
+    response = client.post("/admin/map-filters", json=payload_filter, headers=admin_auth_headers)
+    assert response.status_code == 200
+    filter_data = response.json()
+    assert filter_data["key"] == "test_filter"
+    filter_id = filter_data["id"]
+
+    # Admin can link filter to event -> 200
+    response = client.post(f"/admin/partner-events/{event_id}/filters/{filter_id}", headers=admin_auth_headers)
+    assert response.status_code == 200
+    link_data = response.json()
+    assert len(link_data["filters"]) == 1
+
+    # Admin can delete filter -> 200
+    response = client.delete(f"/admin/map-filters/{filter_id}", headers=admin_auth_headers)
+    assert response.status_code == 200
+
+    # Admin can delete event -> 200
+    response = client.delete(f"/admin/partner-events/{event_id}", headers=admin_auth_headers)
+    assert response.status_code == 200
+

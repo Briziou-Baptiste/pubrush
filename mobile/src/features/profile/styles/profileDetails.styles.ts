@@ -11,16 +11,15 @@ export const styles = StyleSheet.create({
     paddingTop: 24,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 28,
+    marginBottom: 20,
   },
   backButton: {
+    alignSelf: 'flex-start',
     backgroundColor: '#111827',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
+    marginBottom: 20,
   },
   backButtonText: {
     color: '#FFF',
@@ -28,10 +27,10 @@ export const styles = StyleSheet.create({
     fontSize: 14,
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '800',
     color: '#111827',
-    textAlign: 'right',
+    textAlign: 'center',
   },
   card: {
     backgroundColor: '#FFFFFF',

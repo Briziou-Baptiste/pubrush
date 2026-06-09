@@ -18,8 +18,8 @@ from app.api.routes.saved_barathons import router as saved_barathons_router
 from app.api.routes.partner_events import router as partner_events_router
 from app.core.lifespan import lifespan
 from app.db import get_db
-from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop
-from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse
+from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop, PartnerEvent, MapFilter
+from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse, PartnerEventRead, MapFilterRead
 from app.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.services.email_service import send_reset_code_email
 
@@ -141,6 +141,15 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
+
+
+def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vous n'avez pas les droits d'administration nécessaires."
+        )
+    return current_user
 
 
 @app.get("/me", response_model=MeResponse)
@@ -318,14 +327,10 @@ def update_profile(
     return current_user
 
 
-@app.delete("/me")
-def delete_my_account(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
+def _delete_user_data(user_to_delete: User, db: Session):
     # 1. Process barathons created by the user
     created_barathons = db.scalars(
-        select(Barathon).where(Barathon.created_by_user_id == current_user.id)
+        select(Barathon).where(Barathon.created_by_user_id == user_to_delete.id)
     ).all()
 
     for barathon in created_barathons:
@@ -334,8 +339,8 @@ def delete_my_account(
             select(BarathonParticipant).where(BarathonParticipant.barathon_id == barathon.id)
         ).all()
         
-        # Filter out current user
-        other_participants = [p for p in participants if p.user_id != current_user.id]
+        # Filter out user
+        other_participants = [p for p in participants if p.user_id != user_to_delete.id]
 
         if not other_participants:
             # User is the only participant, delete the barathon entirely
@@ -347,21 +352,21 @@ def delete_my_account(
             barathon.creator = new_creator_user
             new_creator_participant.role = "creator"
             
-            # Delete current user's participation links for this barathon
+            # Delete user's participation links for this barathon
             current_link = db.scalar(
                 select(BarathonParticipant).where(
                     BarathonParticipant.barathon_id == barathon.id,
-                    BarathonParticipant.user_id == current_user.id
+                    BarathonParticipant.user_id == user_to_delete.id
                 )
             )
             if current_link:
                 db.delete(current_link)
 
-            # Delete current user's assigned role in BarathonParticipantRole
+            # Delete user's assigned role in BarathonParticipantRole
             current_role_entry = db.scalar(
                 select(BarathonParticipantRole).where(
                     BarathonParticipantRole.barathon_id == barathon.id,
-                    BarathonParticipantRole.user_id == current_user.id
+                    BarathonParticipantRole.user_id == user_to_delete.id
                 )
             )
             if current_role_entry:
@@ -370,7 +375,7 @@ def delete_my_account(
     # 2. Process other barathons joined by the user (where they are not creator)
     joined_links = db.scalars(
         select(BarathonParticipant).where(
-            BarathonParticipant.user_id == current_user.id,
+            BarathonParticipant.user_id == user_to_delete.id,
             BarathonParticipant.role != "creator"
         )
     ).all()
@@ -381,14 +386,22 @@ def delete_my_account(
         role_entry = db.scalar(
             select(BarathonParticipantRole).where(
                 BarathonParticipantRole.barathon_id == link.barathon_id,
-                BarathonParticipantRole.user_id == current_user.id
+                BarathonParticipantRole.user_id == user_to_delete.id
             )
         )
         if role_entry:
             db.delete(role_entry)
 
     # 3. Delete the user
-    db.delete(current_user)
+    db.delete(user_to_delete)
+
+
+@app.delete("/me")
+def delete_my_account(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    _delete_user_data(current_user, db)
     db.commit()
 
     return {"message": "Votre compte et toutes vos données associées ont été supprimés conformément au RGPD."}
@@ -430,3 +443,343 @@ def get_my_stats(
         "barathons_completed": barathons_completed,
         "bars_visited": bars_visited
     }
+
+
+# ==========================================
+# ADMIN ENDPOINTS (Secured by get_current_admin_user)
+# ==========================================
+
+@app.get("/admin/stats")
+def get_global_stats(
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    total_users = db.scalar(select(func.count(User.id))) or 0
+    total_barathons = db.scalar(select(func.count(Barathon.id))) or 0
+    total_stops = db.scalar(select(func.count(BarathonStop.id))) or 0
+    
+    return {
+        "total_users": total_users,
+        "total_barathons": total_barathons,
+        "total_stops": total_stops,
+    }
+
+
+@app.get("/admin/users", response_model=list[UserRead])
+def get_all_users(
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    users = db.scalars(select(User).order_by(User.id.asc())).all()
+    return users
+
+
+@app.put("/admin/users/{user_id}/toggle-admin", response_model=UserRead)
+def toggle_user_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    if user_id == admin_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vous ne pouvez pas modifier votre propre rôle d'administrateur."
+        )
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+    
+    user.is_admin = not user.is_admin
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@app.delete("/admin/users/{user_id}")
+def delete_user_by_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    if user_id == admin_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vous ne pouvez pas supprimer votre propre compte depuis le dashboard."
+        )
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
+    
+    _delete_user_data(user, db)
+    db.commit()
+    return {"message": "Utilisateur supprimé avec succès."}
+
+
+# ==========================================
+# ADMIN PARTNER EVENTS & MAP FILTERS CRUD
+# ==========================================
+
+from typing import Optional
+from pydantic import BaseModel, Field
+
+class AdminPartnerEventCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    code: str = Field(..., min_length=1, max_length=50)
+    description: Optional[str] = None
+    is_active: bool = True
+
+class AdminPartnerEventUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class AdminMapFilterCreate(BaseModel):
+    key: str = Field(..., min_length=1, max_length=50)
+    label: str = Field(..., min_length=1, max_length=100)
+    icon: str = Field(..., min_length=1, max_length=100)
+    osm_query: str
+    google_type: Optional[str] = None
+    is_global: bool = True
+
+class AdminMapFilterUpdate(BaseModel):
+    key: Optional[str] = None
+    label: Optional[str] = None
+    icon: Optional[str] = None
+    osm_query: Optional[str] = None
+    google_type: Optional[str] = None
+    is_global: Optional[bool] = None
+
+
+@app.get("/admin/partner-events")
+def admin_get_partner_events(
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    events = db.scalars(
+        select(PartnerEvent)
+        .options(selectinload(PartnerEvent.filters))
+        .order_by(PartnerEvent.id.desc())
+    ).all()
+    
+    result = []
+    for e in events:
+        result.append({
+            "id": e.id,
+            "name": e.name,
+            "code": e.code,
+            "description": e.description,
+            "is_active": e.is_active,
+            "created_at": e.created_at,
+            "filters": [{"id": f.id, "key": f.key, "label": f.label} for f in e.filters]
+        })
+    return result
+
+
+@app.post("/admin/partner-events")
+def admin_create_partner_event(
+    payload: AdminPartnerEventCreate,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    existing = db.scalar(select(PartnerEvent).where(PartnerEvent.code == payload.code.strip()))
+    if existing:
+        raise HTTPException(status_code=400, detail="Un événement partenaire avec ce code existe déjà.")
+    
+    event = PartnerEvent(
+        name=payload.name.strip(),
+        code=payload.code.strip().upper(),
+        description=payload.description.strip() if payload.description else None,
+        is_active=payload.is_active
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event
+
+
+@app.put("/admin/partner-events/{event_id}")
+def admin_update_partner_event(
+    event_id: int,
+    payload: AdminPartnerEventUpdate,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    event = db.get(PartnerEvent, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement partenaire introuvable.")
+    
+    if payload.name is not None:
+        event.name = payload.name.strip()
+    if payload.code is not None:
+        code_clean = payload.code.strip().upper()
+        if code_clean != event.code:
+            existing = db.scalar(select(PartnerEvent).where(PartnerEvent.code == code_clean))
+            if existing:
+                raise HTTPException(status_code=400, detail="Un événement partenaire avec ce code existe déjà.")
+            event.code = code_clean
+    if payload.description is not None:
+        event.description = payload.description.strip() if payload.description else None
+    if payload.is_active is not None:
+        event.is_active = payload.is_active
+        
+    db.commit()
+    db.refresh(event)
+    return event
+
+
+@app.delete("/admin/partner-events/{event_id}")
+def admin_delete_partner_event(
+    event_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    event = db.get(PartnerEvent, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement partenaire introuvable.")
+    
+    db.delete(event)
+    db.commit()
+    return {"message": "Événement partenaire supprimé avec succès."}
+
+
+@app.get("/admin/map-filters")
+def admin_get_map_filters(
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    filters = db.scalars(select(MapFilter).order_by(MapFilter.id.desc())).all()
+    return filters
+
+
+@app.post("/admin/map-filters")
+def admin_create_map_filter(
+    payload: AdminMapFilterCreate,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    existing = db.scalar(select(MapFilter).where(MapFilter.key == payload.key.strip()))
+    if existing:
+        raise HTTPException(status_code=400, detail="Un filtre avec cette clé existe déjà.")
+    
+    m_filter = MapFilter(
+        key=payload.key.strip(),
+        label=payload.label.strip(),
+        icon=payload.icon.strip(),
+        osm_query=payload.osm_query.strip(),
+        google_type=payload.google_type.strip() if payload.google_type else None,
+        is_global=payload.is_global
+    )
+    db.add(m_filter)
+    db.commit()
+    db.refresh(m_filter)
+    return m_filter
+
+
+@app.put("/admin/map-filters/{filter_id}")
+def admin_update_map_filter(
+    filter_id: int,
+    payload: AdminMapFilterUpdate,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    m_filter = db.get(MapFilter, filter_id)
+    if not m_filter:
+        raise HTTPException(status_code=404, detail="Filtre introuvable.")
+    
+    if payload.key is not None:
+        key_clean = payload.key.strip()
+        if key_clean != m_filter.key:
+            existing = db.scalar(select(MapFilter).where(MapFilter.key == key_clean))
+            if existing:
+                raise HTTPException(status_code=400, detail="Un filtre avec cette clé existe déjà.")
+            m_filter.key = key_clean
+    if payload.label is not None:
+        m_filter.label = payload.label.strip()
+    if payload.icon is not None:
+        m_filter.icon = payload.icon.strip()
+    if payload.osm_query is not None:
+        m_filter.osm_query = payload.osm_query.strip()
+    if payload.google_type is not None:
+        m_filter.google_type = payload.google_type.strip() if payload.google_type else None
+    if payload.is_global is not None:
+        m_filter.is_global = payload.is_global
+        
+    db.commit()
+    db.refresh(m_filter)
+    return m_filter
+
+
+@app.delete("/admin/map-filters/{filter_id}")
+def admin_delete_map_filter(
+    filter_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    m_filter = db.get(MapFilter, filter_id)
+    if not m_filter:
+        raise HTTPException(status_code=404, detail="Filtre introuvable.")
+    
+    db.delete(m_filter)
+    db.commit()
+    return {"message": "Filtre supprimé avec succès."}
+
+
+@app.post("/admin/partner-events/{event_id}/filters/{filter_id}")
+def admin_link_filter_to_event(
+    event_id: int,
+    filter_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    event = db.scalar(
+        select(PartnerEvent)
+        .options(selectinload(PartnerEvent.filters))
+        .where(PartnerEvent.id == event_id)
+    )
+    m_filter = db.get(MapFilter, filter_id)
+    
+    if not event or not m_filter:
+        raise HTTPException(status_code=404, detail="Événement ou filtre introuvable.")
+    
+    if m_filter not in event.filters:
+        event.filters.append(m_filter)
+        db.commit()
+        db.refresh(event)
+        
+    return {
+        "id": event.id,
+        "name": event.name,
+        "filters": [{"id": f.id, "key": f.key, "label": f.label} for f in event.filters]
+    }
+
+
+@app.delete("/admin/partner-events/{event_id}/filters/{filter_id}")
+def admin_unlink_filter_from_event(
+    event_id: int,
+    filter_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    event = db.scalar(
+        select(PartnerEvent)
+        .options(selectinload(PartnerEvent.filters))
+        .where(PartnerEvent.id == event_id)
+    )
+    m_filter = db.get(MapFilter, filter_id)
+    
+    if not event or not m_filter:
+        raise HTTPException(status_code=404, detail="Événement ou filtre introuvable.")
+    
+    if m_filter in event.filters:
+        event.filters.remove(m_filter)
+        db.commit()
+        db.refresh(event)
+        
+    return {
+        "id": event.id,
+        "name": event.name,
+        "filters": [{"id": f.id, "key": f.key, "label": f.label} for f in event.filters]
+    }
+
+

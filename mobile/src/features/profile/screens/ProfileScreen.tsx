@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   SafeAreaView,
   Text,
   TouchableOpacity,
@@ -9,6 +8,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from '../styles/profile.styles';
 import { fetchMe, fetchUserStats, UserStats } from '../../../lib/api';
@@ -62,15 +62,16 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* Header */}
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
+          <Text style={styles.backButtonText}>Retour</Text>
+        </TouchableOpacity>
+
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>Retour</Text>
-          </TouchableOpacity>
           <Text style={styles.title}>Infos personnelles</Text>
         </View>
 
         {loadingUser ? (
-          <ActivityIndicator size="large" color="#111827" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color="#6366F1" style={{ marginTop: 40 }} />
         ) : errorMsg ? (
           <View style={styles.userCard}>
             <Text style={styles.errorText}>{errorMsg}</Text>
@@ -90,20 +91,20 @@ export default function ProfileScreen() {
             {stats && (
               <View style={styles.statsGrid}>
                 {/* Stats 1: Created */}
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{stats.barathons_created}</Text>
+                <View style={[styles.statCard, { backgroundColor: '#EEF2FF', borderColor: '#E0E7FF' }]}>
+                  <Text style={[styles.statValue, { color: '#4F46E5' }]}>{stats.barathons_created}</Text>
                   <Text style={styles.statLabel}>Créés</Text>
                 </View>
 
                 {/* Stats 2: Completed */}
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{stats.barathons_completed}</Text>
+                <View style={[styles.statCard, { backgroundColor: '#EFF6FF', borderColor: '#DBEAFE' }]}>
+                  <Text style={[styles.statValue, { color: '#2563EB' }]}>{stats.barathons_completed}</Text>
                   <Text style={styles.statLabel}>Réalisés</Text>
                 </View>
 
                 {/* Stats 3: Bars Visited */}
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{stats.bars_visited}</Text>
+                <View style={[styles.statCard, { backgroundColor: '#FFFBEB', borderColor: '#FEF3C7' }]}>
+                  <Text style={[styles.statValue, { color: '#D97706' }]}>{stats.bars_visited}</Text>
                   <Text style={styles.statLabel}>Bars visités</Text>
                 </View>
               </View>
@@ -118,10 +119,12 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuLeft}>
-                  <Text style={styles.menuIcon}>👤</Text>
+                  <View style={[styles.iconBadge, { backgroundColor: '#3B82F6' }]}>
+                    <Ionicons name="person" size={16} color="#FFFFFF" />
+                  </View>
                   <Text style={styles.menuText}>Gérer mon profil</Text>
                 </View>
-                <Text style={styles.menuChevron}>❯</Text>
+                <Ionicons name="chevron-forward" size={16} color="#C7C7CC" />
               </TouchableOpacity>
 
               {/* Separator */}
@@ -134,10 +137,12 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuLeft}>
-                  <Text style={styles.menuIcon}>💳</Text>
+                  <View style={[styles.iconBadge, { backgroundColor: '#10B981' }]}>
+                    <Ionicons name="wallet" size={16} color="#FFFFFF" />
+                  </View>
                   <Text style={styles.menuText}>Dépenses</Text>
                 </View>
-                <Text style={styles.menuChevron}>❯</Text>
+                <Ionicons name="chevron-forward" size={16} color="#C7C7CC" />
               </TouchableOpacity>
 
               {/* Separator */}
@@ -150,10 +155,12 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuLeft}>
-                  <Text style={styles.menuIcon}>💾</Text>
+                  <View style={[styles.iconBadge, { backgroundColor: '#F59E0B' }]}>
+                    <Ionicons name="star" size={16} color="#FFFFFF" />
+                  </View>
                   <Text style={styles.menuText}>Barathons enregistrés</Text>
                 </View>
-                <Text style={styles.menuChevron}>❯</Text>
+                <Ionicons name="chevron-forward" size={16} color="#C7C7CC" />
               </TouchableOpacity>
             </View>
           </>

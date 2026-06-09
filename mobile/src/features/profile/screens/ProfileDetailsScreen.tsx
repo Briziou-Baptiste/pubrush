@@ -222,10 +222,11 @@ export default function ProfileDetailsScreen() {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View style={styles.container}>
             {/* Header */}
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
+              <Text style={styles.backButtonText}>Retour</Text>
+            </TouchableOpacity>
+
             <View style={styles.header}>
-              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Text style={styles.backButtonText}>Retour</Text>
-              </TouchableOpacity>
               <Text style={styles.title}>Gérer mon profil</Text>
             </View>
 

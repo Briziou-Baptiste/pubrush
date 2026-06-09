@@ -71,7 +71,7 @@ def upgrade() -> None:
 
     op.execute("""
     INSERT INTO partner_events (name, code, description, is_active, created_at) VALUES
-    ('Grand Barathon de Toulouse', 'TOULOUSE2026', 'Le plus grand barathon de Toulouse avec des épreuves et des partenaires.', true, NOW());
+    ('Événement Partenaire', 'TOULOUSE2026', 'Un événement spécial avec des épreuves, des points de secours et des établissements partenaires.', true, NOW());
     """)
 
     op.execute("""

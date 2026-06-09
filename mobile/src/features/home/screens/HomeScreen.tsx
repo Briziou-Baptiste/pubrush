@@ -111,7 +111,7 @@ export default function HomeScreen() {
     router.replace('/login');
   }
 
-  function navigateTo(path: '/planned' | '/past' | '/create-barathon' | '/profile' | '/saved-barathons') {
+  function navigateTo(path: '/planned' | '/past' | '/create-barathon' | '/profile' | '/saved-barathons' | '/events') {
     setMenuVisible(false);
     router.push(path);
   }
