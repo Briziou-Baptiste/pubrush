@@ -6,7 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from app.db import get_db
-from app.models import PartnerEvent, MapFilter, User, EventTicket
+from app.models import PartnerEvent, MapFilter, User, EventTicket, PartnerEventUser
 from app.api.deps.auth import get_current_user
 from app.schemas import PartnerEventRead, MapFilterRead
 
@@ -69,6 +69,17 @@ def redeem_partner_event_ticket(
     if ticket.is_used:
         if ticket.used_by_user_id == current_user.id:
             event = ticket.event
+            # Ensure they are registered in PartnerEventUser
+            existing_join = db.scalar(
+                select(PartnerEventUser).where(
+                    PartnerEventUser.event_id == event.id,
+                    PartnerEventUser.user_id == current_user.id
+                )
+            )
+            if not existing_join:
+                join_record = PartnerEventUser(event_id=event.id, user_id=current_user.id)
+                db.add(join_record)
+                db.commit()
             return {
                 "id": event.id,
                 "name": event.name,
@@ -109,6 +120,17 @@ def redeem_partner_event_ticket(
     ticket.used_by_user_id = current_user.id
     ticket.used_at = now
     
+    # Ensure they are registered in PartnerEventUser
+    existing_join = db.scalar(
+        select(PartnerEventUser).where(
+            PartnerEventUser.event_id == event.id,
+            PartnerEventUser.user_id == current_user.id
+        )
+    )
+    if not existing_join:
+        join_record = PartnerEventUser(event_id=event.id, user_id=current_user.id)
+        db.add(join_record)
+        
     db.commit()
     db.refresh(ticket)
     
@@ -141,7 +163,91 @@ def validate_partner_event(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Événement partenaire introuvable ou inactif."
         )
+        
+    # Check ticket requirement
+    if event.requires_ticket:
+        ticket = db.scalar(
+            select(EventTicket).where(
+                EventTicket.event_id == event.id,
+                EventTicket.used_by_user_id == current_user.id,
+                EventTicket.is_used == True
+            )
+        )
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cet événement nécessite un ticket d'accès valide."
+            )
+            
+    # Also register the user as having joined if not already
+    existing_join = db.scalar(
+        select(PartnerEventUser).where(
+            PartnerEventUser.event_id == event.id,
+            PartnerEventUser.user_id == current_user.id
+        )
+    )
+    if not existing_join:
+        join_record = PartnerEventUser(event_id=event.id, user_id=current_user.id)
+        db.add(join_record)
+        db.commit()
+        
     return event
+
+
+@router.post("/partner-events/{event_id}/join")
+def join_partner_event(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    event = db.get(PartnerEvent, event_id)
+    if not event or not event.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Événement partenaire introuvable ou inactif."
+        )
+
+    # Check dates activity
+    now = datetime.utcnow()
+    if event.start_date and now < event.start_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"L'événement commencera le {event.start_date.strftime('%d/%m/%Y à %H:%M')}."
+        )
+    if event.end_date and now > event.end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="L'événement est déjà terminé."
+        )
+
+    # If it requires a ticket, verify that they have a redeemed ticket for it
+    if event.requires_ticket:
+        ticket = db.scalar(
+            select(EventTicket).where(
+                EventTicket.event_id == event.id,
+                EventTicket.used_by_user_id == current_user.id,
+                EventTicket.is_used == True
+            )
+        )
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cet événement nécessite un ticket d'accès valide."
+            )
+
+    # Add to PartnerEventUser
+    existing_join = db.scalar(
+        select(PartnerEventUser).where(
+            PartnerEventUser.event_id == event.id,
+            PartnerEventUser.user_id == current_user.id
+        )
+    )
+    if not existing_join:
+        join_record = PartnerEventUser(event_id=event.id, user_id=current_user.id)
+        db.add(join_record)
+        db.commit()
+    
+    return {"message": "Vous avez rejoint l'événement avec succès."}
 
 
 @router.get("/map-filters", response_model=list[MapFilterRead])

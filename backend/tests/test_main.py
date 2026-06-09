@@ -206,9 +206,39 @@ def test_admin_endpoints_security(client, user_auth_headers, admin_auth_headers,
     assert used_tickets[0]["is_used"] is True
     assert used_tickets[0]["used_by_username"] == test_user.username
 
-    # Clean up event
+    # Test GET /partner-events/validate endpoint (requires ticket since pvt_event requires ticket)
+    # The user has redeemed the ticket so validation should succeed
+    response = client.get(f"/partner-events/validate?code={event_pvt['code']}", headers=user_auth_headers)
+    assert response.status_code == 200
+    assert response.json()["code"] == event_pvt['code']
+
+    # Test POST /partner-events/{event_id}/join endpoint for private event
+    # Sould succeed since user redeemed ticket
+    response = client.post(f"/partner-events/{pvt_event_id}/join", headers=user_auth_headers)
+    assert response.status_code == 200
+
+    # Let's create a public event to test join without ticket
+    payload_event_pub = {
+        "name": "Evenement Public",
+        "code": "PUB_EVENT_123",
+        "description": "Un event public",
+        "is_active": True,
+        "requires_ticket": False
+    }
+    response = client.post("/admin/partner-events", json=payload_event_pub, headers=admin_auth_headers)
+    assert response.status_code == 200
+    pub_event_id = response.json()["id"]
+
+    # Test join public event -> 200
+    response = client.post(f"/partner-events/{pub_event_id}/join", headers=user_auth_headers)
+    assert response.status_code == 200
+
+    # Clean up events
     response = client.delete(f"/admin/partner-events/{pvt_event_id}", headers=admin_auth_headers)
     assert response.status_code == 200
+    response = client.delete(f"/admin/partner-events/{pub_event_id}", headers=admin_auth_headers)
+    assert response.status_code == 200
+
 
     # Admin can create map filter -> 200
     payload_filter = {

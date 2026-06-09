@@ -420,5 +420,15 @@ export async function redeemTicketCode(ticketCode: string, token: string): Promi
   return handleResponse<any>(response);
 }
 
+export async function joinPartnerEvent(eventId: number, token: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/partner-events/${eventId}/join`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleResponse<any>(response);
+}
+
 
 

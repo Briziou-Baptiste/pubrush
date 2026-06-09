@@ -323,3 +323,7 @@
   @apply px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border bg-emerald-500/10 border-emerald-500/20 text-emerald-400;
 }
 
+.qrCodeBtn {
+  @apply inline-flex items-center justify-center p-1 rounded bg-slate-950 border border-slate-900 hover:border-slate-800 text-slate-400 hover:text-white cursor-pointer transition-colors;
+}
+

@@ -21,7 +21,7 @@ import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { fetchPartnerEvents, redeemTicketCode } from '../../../lib/api';
+import { fetchPartnerEvents, redeemTicketCode, joinPartnerEvent } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
 
 export default function EventsScreen() {
@@ -134,20 +134,60 @@ export default function EventsScreen() {
       setActivationSuccess(true);
       
       // Reload events to update locked/unlocked state in UI
-      await loadEvents(false);
+      void loadEvents(false);
       
-      // Close modal after successful verification
+      // Close modal and redirect after successful verification
       setTimeout(() => {
         setActivationModalOpen(false);
+        const eventCode = selectedEvent?.code;
         setSelectedEvent(null);
         setTicketCodeInput('');
         setActivationSuccess(false);
-      }, 1500);
+
+        if (eventCode) {
+          router.push({
+            pathname: '/create-barathon',
+            params: { eventCode: eventCode }
+          });
+        }
+      }, 1200);
     } catch (err: any) {
       console.error('[Events] Error activating ticket:', err);
       setActivationError(err.message || 'Code de ticket invalide ou déjà utilisé.');
     } finally {
       setValidatingTicket(false);
+    }
+  };
+
+  const handleJoinEvent = async (event: any) => {
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        router.replace('/login');
+        return;
+      }
+
+      // If it requires a ticket and is not unlocked, open the modal
+      if (event.requires_ticket && !event.is_unlocked) {
+        openActivationModal(event);
+        return;
+      }
+
+      // Call API to register user in partner_event_users
+      await joinPartnerEvent(event.id, token);
+
+      // Redirect to create-barathon
+      router.push({
+        pathname: '/create-barathon',
+        params: { eventCode: event.code }
+      });
+    } catch (err: any) {
+      console.error('[Events] Error joining event:', err);
+      // Fallback: still redirect to create-barathon even if join record fails (e.g. unique constraint or connection glitch)
+      router.push({
+        pathname: '/create-barathon',
+        params: { eventCode: event.code }
+      });
     }
   };
 
@@ -270,30 +310,23 @@ export default function EventsScreen() {
                     {' '}Actif
                   </Text>
                   
-                  {item.requires_ticket && !item.is_unlocked ? (
-                    <TouchableOpacity 
-                      style={[styles.joinButton, styles.unlockButton]}
-                      onPress={() => openActivationModal(item)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.unlockButtonText}>Déverrouiller</Text>
-                      <Ionicons name="key" size={14} color="#FFF" />
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity 
-                      style={styles.joinButton}
-                      onPress={() => {
-                        router.push({
-                          pathname: '/create-barathon',
-                          params: { eventCode: item.code }
-                        });
-                      }}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.joinButtonText}>Rejoindre</Text>
+                  <TouchableOpacity 
+                    style={[
+                      styles.joinButton, 
+                      item.requires_ticket && !item.is_unlocked && styles.unlockButton
+                    ]}
+                    onPress={() => void handleJoinEvent(item)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.joinButtonText}>
+                      {item.requires_ticket && !item.is_unlocked ? "Rejoindre (Privé)" : "Rejoindre"}
+                    </Text>
+                    {item.requires_ticket && !item.is_unlocked ? (
+                      <Ionicons name="lock-closed" size={14} color="#FFF" />
+                    ) : (
                       <Ionicons name="arrow-forward" size={14} color="#FFF" />
-                    </TouchableOpacity>
-                  )}
+                    )}
+                  </TouchableOpacity>
                 </View>
               </View>
             )}

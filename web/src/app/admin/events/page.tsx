@@ -14,7 +14,8 @@ import {
   ShieldAlert,
   Sparkles,
   Code,
-  X
+  X,
+  QrCode
 } from "lucide-react";
 import { api } from "../api";
 import styles from "./events.module.css";
@@ -48,6 +49,10 @@ export default function AdminEventsAndFilters() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [generateCount, setGenerateCount] = useState<number>(50);
   const [loadingTickets, setLoadingTickets] = useState(false);
+
+  // QR Code Modal States
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [qrModalEvent, setQrModalEvent] = useState<any | null>(null);
 
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [editingFilter, setEditingFilter] = useState<any | null>(null);
@@ -356,6 +361,16 @@ export default function AdminEventsAndFilters() {
                     <div>
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <span className={styles.codeTag}>CODE: {event.code}</span>
+                        <button
+                          onClick={() => {
+                            setQrModalEvent(event);
+                            setQrModalOpen(true);
+                          }}
+                          className={styles.qrCodeBtn}
+                          title="Afficher le QR Code de l'événement"
+                        >
+                          <QrCode className="w-3 h-3" />
+                        </button>
                         {event.requires_ticket && (
                           <span className={styles.ticketBadge}>Ticket Requis</span>
                         )}
@@ -908,6 +923,56 @@ export default function AdminEventsAndFilters() {
                   setTicketModalOpen(false);
                   setTicketEvent(null);
                   setTickets([]);
+                }}
+                className={styles.btnCancel}
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= 
+      /* QR CODE MODAL 
+      /* ========================================================================= */}
+      {qrModalOpen && qrModalEvent && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalCard}>
+            <button
+              onClick={() => {
+                setQrModalOpen(false);
+                setQrModalEvent(null);
+              }}
+              className={styles.modalCloseSmall}
+            >
+              <X className="w-4.5 h-4.5" />
+            </button>
+
+            <h3 className={styles.modalTitle}>
+              <QrCode className="w-5.5 h-5.5 text-rose-500" />
+              QR Code de l'Événement
+            </h3>
+            
+            <div className="flex flex-col items-center justify-center py-6 bg-slate-950 rounded-2xl border border-slate-900">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrModalEvent.code)}&color=0-0-0&bgcolor=255-255-255`} 
+                alt={`QR Code for ${qrModalEvent.code}`}
+                className="w-48 h-48 rounded-xl border-4 border-white mb-2"
+              />
+              <span className="mt-3 font-mono text-sm font-bold text-white tracking-widest uppercase">
+                {qrModalEvent.code}
+              </span>
+              <span className="text-xs text-slate-500 mt-1 font-bold">
+                {qrModalEvent.name}
+              </span>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-900/80 flex justify-end">
+              <button
+                onClick={() => {
+                  setQrModalOpen(false);
+                  setQrModalEvent(null);
                 }}
                 className={styles.btnCancel}
               >

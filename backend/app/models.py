@@ -374,3 +374,19 @@ class EventTicket(Base):
     used_by_user: Mapped[Optional["User"]] = relationship(foreign_keys=[used_by_user_id])
 
 
+class PartnerEventUser(Base):
+    __tablename__ = "partner_event_users"
+    __table_args__ = (
+        UniqueConstraint("event_id", "user_id", name="uq_partner_event_user"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    event_id: Mapped[int] = mapped_column(ForeignKey("partner_events.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    joined_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    event: Mapped["PartnerEvent"] = relationship()
+    user: Mapped["User"] = relationship()
+
+
+
