@@ -178,6 +178,18 @@ export const api = {
     }
     return request(path);
   },
+
+  async getUserRegistrationStats(period: string) {
+    return request(`/admin/stats/users-registration?period=${period}`);
+  },
+
+  async getAppUsageStats(period: string) {
+    return request(`/admin/stats/app-usage?period=${period}`);
+  },
+
+  async getEventStats(eventId: number) {
+    return request(`/admin/partner-events/${eventId}/stats`);
+  },
 };
 
 

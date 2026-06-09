@@ -13,11 +13,17 @@ import {
 import { api } from "./api";
 import Link from "next/link";
 import styles from "./admin.module.css";
+import DashboardChart from "./components/DashboardChart";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [regPeriod, setRegPeriod] = useState<string>("day");
+  const [usagePeriod, setUsagePeriod] = useState<string>("day");
+  const [regData, setRegData] = useState<any[]>([]);
+  const [usageData, setUsageData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -33,6 +39,32 @@ export default function AdminDashboard() {
 
     fetchStats();
   }, []);
+
+  // Fetch new user registration stats when period changes
+  useEffect(() => {
+    const fetchRegStats = async () => {
+      try {
+        const data = await api.getUserRegistrationStats(regPeriod);
+        setRegData(data);
+      } catch (err) {
+        console.error("Error loading registration stats:", err);
+      }
+    };
+    fetchRegStats();
+  }, [regPeriod]);
+
+  // Fetch app usage logs when period changes
+  useEffect(() => {
+    const fetchUsageStats = async () => {
+      try {
+        const data = await api.getAppUsageStats(usagePeriod);
+        setUsageData(data);
+      } catch (err) {
+        console.error("Error loading usage stats:", err);
+      }
+    };
+    fetchUsageStats();
+  }, [usagePeriod]);
 
   if (loading) {
     return (
@@ -108,6 +140,30 @@ export default function AdminDashboard() {
             <p className={styles.kpiDesc}>{kpi.desc}</p>
           </div>
         ))}
+      </div>
+
+      {/* Analytics Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <DashboardChart
+          title="Nouveaux Utilisateurs"
+          data={regData}
+          period={regPeriod}
+          setPeriod={setRegPeriod}
+          type="bar"
+          keys={["value"]}
+          labels={["Inscriptions"]}
+          colors={["#EF4444"]}
+        />
+        <DashboardChart
+          title="Fréquentation Mobile"
+          data={usageData}
+          period={usagePeriod}
+          setPeriod={setUsagePeriod}
+          type="line"
+          keys={["login", "use_app"]}
+          labels={["Connexions", "Utilisations"]}
+          colors={["#3B82F6", "#8B5CF6"]}
+        />
       </div>
 
       {/* Analytics illustration & Actions shortcut */}

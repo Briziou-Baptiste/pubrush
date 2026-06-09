@@ -9,7 +9,8 @@ from sqlalchemy import (
     Numeric,
     String,
     UniqueConstraint,
-    Text
+    Text,
+    func
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,6 +25,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow, server_default=func.now())
 
     created_barathons: Mapped[list["Barathon"]] = relationship(
         back_populates="creator",
@@ -420,6 +422,17 @@ class PartnerEventSpot(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     event: Mapped["PartnerEvent"] = relationship(back_populates="spots")
+
+
+class AppUsageLog(Base):
+    __tablename__ = "app_usage_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(50), nullable=False)  # 'login' or 'use_app'
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    user: Mapped["User"] = relationship()
 
 
 

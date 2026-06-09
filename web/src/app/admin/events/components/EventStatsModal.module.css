@@ -1,0 +1,270 @@
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: rgba(2, 6, 23, 0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 672px; /* max-w-2xl */
+  background-color: #0f172a; /* slate-900 */
+  border: 1px solid rgba(51, 65, 85, 0.8);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 6px;
+  border-radius: 8px;
+  background-color: #020617;
+  border: 1px solid #1e293b;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+  z-index: 10;
+}
+
+.modalCloseBtn:hover {
+  color: #ffffff;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+.subtitleHighlight {
+  color: #f43f5e;
+  font-weight: 700;
+}
+
+.loaderWrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+  gap: 12px;
+}
+
+.loader {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(244, 63, 94, 0.2);
+  border-top-color: #f43f5e;
+  animation: spin 1s linear infinite;
+}
+
+.errorMessage {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+  color: #fb7185;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.contentWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.kpiCard {
+  background-color: rgba(2, 6, 23, 0.5);
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.kpiIconBox {
+  padding: 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kpiIconBoxRose {
+  background-color: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+}
+
+.kpiIconBoxViolet {
+  background-color: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
+
+.kpiLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpiValue {
+  font-size: 18px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.kpiValueActive {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.kpiValueInactive {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.chartCard {
+  background-color: rgba(2, 6, 23, 0.4);
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.chartCardTitle {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.chartContainer {
+  width: 100%;
+  min-height: 160px;
+  position: relative;
+}
+
+.emptyState {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 140;
+  pointer-events: none;
+  background-color: rgba(2, 6, 23, 0.95);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 100px;
+}
+
+.tooltipLabel {
+  font-size: 9px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tooltipRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.tooltipRowName {
+  font-size: 9px;
+  font-weight: 700;
+  color: #f87171;
+}
+
+.tooltipValue {
+  font-size: 12px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(51, 65, 85, 0.8);
+  display: flex;
+  justify-content: end;
+}
+
+.btnCancel {
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid #1e293b;
+  font-size: 14px;
+  font-weight: 700;
+  color: #cbd5e1;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnCancel:hover {
+  color: #ffffff;
+  border-color: #334155;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

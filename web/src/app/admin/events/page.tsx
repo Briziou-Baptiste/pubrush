@@ -17,7 +17,8 @@ import {
   X,
   QrCode,
   Ticket,
-  MapPin
+  MapPin,
+  BarChart3
 } from "lucide-react";
 import { api } from "../api";
 import styles from "./events.module.css";
@@ -29,6 +30,7 @@ import LinkFiltersModal from "./components/LinkFiltersModal";
 import TicketModal from "./components/TicketModal";
 import QrCodeModal from "./components/QrCodeModal";
 import PartnerSpotsModal from "./components/PartnerSpotsModal";
+import EventStatsModal from "./components/EventStatsModal";
 
 
 export default function AdminEventsAndFilters() {
@@ -70,6 +72,10 @@ export default function AdminEventsAndFilters() {
   const [spotsEvent, setSpotsEvent] = useState<any | null>(null);
   const [spots, setSpots] = useState<any[]>([]);
   const [loadingSpots, setLoadingSpots] = useState(false);
+
+  // Event Stats Modal States
+  const [statsModalOpen, setStatsModalOpen] = useState(false);
+  const [statsModalEvent, setStatsModalEvent] = useState<any | null>(null);
   const [spotForm, setSpotForm] = useState({
     name: "",
     spot_type: "bar",
@@ -561,6 +567,17 @@ export default function AdminEventsAndFilters() {
                       <QrCode className="w-4 h-4" />
                     </button>
 
+                    <button
+                      onClick={() => {
+                        setStatsModalEvent(event);
+                        setStatsModalOpen(true);
+                      }}
+                      className={styles.actionBtn}
+                      title="Statistiques de fréquentation"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                    </button>
+
 
                     <button
                       onClick={() => openEditEventModal(event)}
@@ -717,6 +734,15 @@ export default function AdminEventsAndFilters() {
         setSpotForm={setSpotForm}
         onSubmitSpot={handleSpotSubmit}
         onDeleteSpot={handleDeleteSpot}
+      />
+
+      <EventStatsModal
+        isOpen={statsModalOpen}
+        onClose={() => {
+          setStatsModalOpen(false);
+          setStatsModalEvent(null);
+        }}
+        event={statsModalEvent}
       />
     </div>
   );

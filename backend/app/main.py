@@ -18,7 +18,7 @@ from app.api.routes.saved_barathons import router as saved_barathons_router
 from app.api.routes.partner_events import router as partner_events_router
 from app.core.lifespan import lifespan
 from app.db import get_db
-from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop, PartnerEvent, MapFilter, EventTicket, PartnerEventUser, PartnerEventSpot
+from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop, PartnerEvent, MapFilter, EventTicket, PartnerEventUser, PartnerEventSpot, AppUsageLog
 from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse, PartnerEventRead, MapFilterRead, PartnerEventSpotRead, PartnerEventSpotCreate
 from app.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.services.email_service import send_reset_code_email
@@ -106,6 +106,11 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
 
     if not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Mauvais mot de passe")
+
+    # Record login usage log
+    log = AppUsageLog(user_id=user.id, action="login")
+    db.add(log)
+    db.commit()
 
     token = create_access_token(
         {
@@ -463,6 +468,141 @@ def get_global_stats(
         "total_barathons": total_barathons,
         "total_stops": total_stops,
     }
+
+
+@app.get("/admin/stats/users-registration")
+def get_users_registration_stats(
+    period: str = "day",
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    if period not in ("day", "month", "year"):
+        raise HTTPException(status_code=400, detail="Période invalide")
+
+    now = datetime.utcnow()
+    if period == "day":
+        start_date = now - timedelta(days=30)
+        trunc = func.date_trunc('day', User.created_at)
+    elif period == "month":
+        start_date = now - timedelta(days=365)
+        trunc = func.date_trunc('month', User.created_at)
+    else:
+        start_date = now - timedelta(days=365 * 5)
+        trunc = func.date_trunc('year', User.created_at)
+
+    query = (
+        select(trunc.label('label'), func.count(User.id).label('count'))
+        .where(User.created_at >= start_date)
+        .group_by(trunc)
+        .order_by(trunc.asc())
+    )
+
+    results = db.execute(query).all()
+    
+    data = []
+    for r in results:
+        label_dt = r.label
+        if period == "day":
+            label_str = label_dt.strftime("%d %b")
+        elif period == "month":
+            label_str = label_dt.strftime("%b %y")
+        else:
+            label_str = label_dt.strftime("%Y")
+        data.append({"label": label_str, "value": r.count})
+        
+    return data
+
+
+@app.get("/admin/stats/app-usage")
+def get_app_usage_stats(
+    period: str = "day",
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    if period not in ("day", "month", "year"):
+        raise HTTPException(status_code=400, detail="Période invalide")
+
+    now = datetime.utcnow()
+    if period == "day":
+        start_date = now - timedelta(days=30)
+        trunc = func.date_trunc('day', AppUsageLog.created_at)
+    elif period == "month":
+        start_date = now - timedelta(days=365)
+        trunc = func.date_trunc('month', AppUsageLog.created_at)
+    else:
+        start_date = now - timedelta(days=365 * 5)
+        trunc = func.date_trunc('year', AppUsageLog.created_at)
+
+    query = (
+        select(trunc.label('label'), AppUsageLog.action.label('action'), func.count(AppUsageLog.id).label('count'))
+        .where(AppUsageLog.created_at >= start_date)
+        .group_by(trunc, AppUsageLog.action)
+        .order_by(trunc.asc())
+    )
+    
+    results = db.execute(query).all()
+    
+    temp_dict = {}
+    for r in results:
+        label_dt = r.label
+        if period == "day":
+            label_str = label_dt.strftime("%d %b")
+        elif period == "month":
+            label_str = label_dt.strftime("%b %y")
+        else:
+            label_str = label_dt.strftime("%Y")
+            
+        if label_str not in temp_dict:
+            temp_dict[label_str] = {"label": label_str, "login": 0, "use_app": 0}
+            
+        temp_dict[label_str][r.action] = r.count
+        
+    return list(temp_dict.values())
+
+
+@app.get("/admin/partner-events/{event_id}/stats")
+def get_event_stats(
+    event_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    event = db.get(PartnerEvent, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement introuvable")
+
+    trunc = func.date_trunc('day', PartnerEventUser.joined_at)
+    query = (
+        select(trunc.label('label'), func.count(PartnerEventUser.id).label('count'))
+        .where(PartnerEventUser.event_id == event_id)
+        .group_by(trunc)
+        .order_by(trunc.asc())
+    )
+    
+    results = db.execute(query).all()
+    
+    data = []
+    cumulative = 0
+    for r in results:
+        label_dt = r.label
+        label_str = label_dt.strftime("%d %b")
+        cumulative += r.count
+        data.append({"label": label_str, "value": cumulative})
+        
+    return data
+
+
+@app.post("/analytics/log")
+def log_analytics(
+    action: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if action not in ("login", "use_app"):
+        raise HTTPException(status_code=400, detail="Action non autorisée")
+    log = AppUsageLog(user_id=current_user.id, action=action)
+    db.add(log)
+    db.commit()
+    return {"status": "success"}
 
 
 @app.get("/admin/users", response_model=list[UserRead])
