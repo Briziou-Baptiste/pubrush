@@ -11,7 +11,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 
-import { styles } from '../styles/createBarathon.styles';
+import { styles } from '../features/create_barathon/styles/createBarathon.styles';
 
 type DateTimeFieldProps = {
   label: string;

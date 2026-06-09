@@ -11,6 +11,7 @@ export type BarathonListItem = {
   created_by_user_id: number;
   started_at: string | null;
   ended_at: string | null;
+  end_datetime?: string | null;
   current_user_role?: CurrentUserRole;
   participants_count: number;
   stops: Array<{
@@ -20,5 +21,6 @@ export type BarathonListItem = {
     latitude: number;
     longitude: number;
     stop_order: number;
+    is_completed?: boolean;
   }>;
 };

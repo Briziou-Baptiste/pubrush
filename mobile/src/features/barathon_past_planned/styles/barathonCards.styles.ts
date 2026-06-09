@@ -189,9 +189,9 @@ export const styles = StyleSheet.create({
     actionsColumn: {
       marginTop: 16,
     },
-    actionsRow: {
-      flexDirection: 'row',
-      gap: 10,
+    infoBlockPressable: {
+      borderColor: '#3B82F6',
+      backgroundColor: '#EFF6FF',
     },
     deleteActionButton: {
 

@@ -15,7 +15,8 @@ import {
   Sparkles,
   Code,
   X,
-  QrCode
+  QrCode,
+  Ticket
 } from "lucide-react";
 import { api } from "../api";
 import styles from "./events.module.css";
@@ -360,17 +361,6 @@ export default function AdminEventsAndFilters() {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className={styles.codeTag}>CODE: {event.code}</span>
-                        <button
-                          onClick={() => {
-                            setQrModalEvent(event);
-                            setQrModalOpen(true);
-                          }}
-                          className={styles.qrCodeBtn}
-                          title="Afficher le QR Code de l'événement"
-                        >
-                          <QrCode className="w-3 h-3" />
-                        </button>
                         {event.requires_ticket && (
                           <span className={styles.ticketBadge}>Ticket Requis</span>
                         )}
@@ -422,30 +412,44 @@ export default function AdminEventsAndFilters() {
                       <Link2 className="w-3.5 h-3.5" />
                       Associer filtres
                     </button>
-
-                    {event.requires_ticket && (
-                      <button
-                        onClick={() => openTicketModal(event)}
-                        className={styles.ticketsBtn}
-                      >
-                        <Code className="w-3.5 h-3.5" />
-                        Gérer Tickets
-                      </button>
-                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {event.requires_ticket && (
+                      <button
+                        onClick={() => openTicketModal(event)}
+                        className={styles.actionBtn}
+                        title="Gérer les tickets"
+                      >
+                        <Ticket className="w-4 h-4" />
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => {
+                        setQrModalEvent(event);
+                        setQrModalOpen(true);
+                      }}
+                      className={styles.actionBtn}
+                      title="Afficher le QR Code de l'événement"
+                    >
+                      <QrCode className="w-4 h-4" />
+                    </button>
+
                     <button
                       onClick={() => openEditEventModal(event)}
-                      className={styles.editEventBtn}
+                      className={styles.actionBtn}
+                      title="Modifier l'événement"
                     >
-                      <Edit className="w-3.5 h-3.5" />
+                      <Edit className="w-4 h-4" />
                     </button>
+
                     <button
                       onClick={() => handleDeleteEvent(event.id)}
                       className={styles.deleteEventBtn}
+                      title="Supprimer l'événement"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -816,59 +820,61 @@ export default function AdminEventsAndFilters() {
       /* TICKET MANAGER MODAL 
       /* ========================================================================= */}
       {ticketModalOpen && ticketEvent && (
-        <div className={styles.modalBackdrop}>
-          <div className={styles.modalCardLarge}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-3xl bg-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
             <button
               onClick={() => {
                 setTicketModalOpen(false);
                 setTicketEvent(null);
                 setTickets([]);
               }}
-              className={styles.modalCloseSmall}
+              className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white cursor-pointer transition-colors"
             >
               <X className="w-4.5 h-4.5" />
             </button>
 
-            <h3 className={styles.modalTitle}>
+            <h3 className="text-xl font-black text-white mb-2 flex items-center gap-2.5">
               <Code className="w-5.5 h-5.5 text-rose-500" />
               Gestion des Tickets d'Accès
             </h3>
-            <p className={styles.linkingSubtitle}>
+            <p className="text-xs text-slate-400 mb-6">
               Événement : <span className="text-rose-400 font-bold">{ticketEvent.name}</span>
             </p>
 
-            <div className={styles.ticketGrid}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden min-h-0 flex-grow">
               {/* Left Column: Generate Tickets */}
-              <div className={styles.ticketLeftCol}>
-                <h4 className={styles.ticketSubTitle}>Générer de nouveaux codes</h4>
-                <form onSubmit={handleGenerateTickets} className={styles.ticketForm}>
-                  <div>
-                    <label className={styles.formLabel}>Nombre de tickets</label>
-                    <input 
-                      type="number"
-                      min={1}
-                      max={1000}
-                      value={generateCount}
-                      onChange={(e) => setGenerateCount(parseInt(e.target.value) || 1)}
-                      className={styles.formInput}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loadingTickets}
-                    className={styles.btnGenerate}
-                  >
-                    {loadingTickets ? "Génération..." : "Générer les codes"}
-                  </button>
-                </form>
+              <div className="flex flex-col justify-between py-1">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">Générer de nouveaux codes</h4>
+                  <form onSubmit={handleGenerateTickets} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nombre de tickets</label>
+                      <input 
+                        type="number"
+                        min={1}
+                        max={1000}
+                        value={generateCount}
+                        onChange={(e) => setGenerateCount(parseInt(e.target.value) || 1)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loadingTickets}
+                      className="w-full px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-violet-600 hover:from-rose-600 hover:to-violet-700 disabled:opacity-50 text-sm font-bold text-white transition-all cursor-pointer border-none shadow-lg shadow-rose-500/10"
+                    >
+                      {loadingTickets ? "Génération..." : "Générer les codes"}
+                    </button>
+                  </form>
+                </div>
 
                 {tickets.length > 0 && (
                   <div className="mt-6">
-                    <h4 className={styles.ticketSubTitle}>Actions globales</h4>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">Actions globales</h4>
                     <button
                       onClick={downloadTicketsCSV}
-                      className={styles.btnDownload}
+                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-sm font-bold text-white transition-all cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4" />
                       Télécharger (CSV)
@@ -881,15 +887,15 @@ export default function AdminEventsAndFilters() {
               </div>
 
               {/* Right Column: Tickets List */}
-              <div className={styles.ticketRightCol}>
+              <div className="flex flex-col overflow-hidden py-1">
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className={styles.ticketSubTitle}>Liste des codes ({tickets.length})</h4>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">Liste des codes ({tickets.length})</h4>
                   <span className="text-[10px] bg-slate-900 border border-slate-800 text-slate-400 px-2.5 py-0.5 rounded-full font-bold">
                     {tickets.filter(t => t.is_used).length} utilisés
                   </span>
                 </div>
 
-                <div className={styles.ticketsScrollable}>
+                <div className="space-y-2 max-h-[40vh] md:max-h-[50vh] overflow-y-auto pr-1">
                   {loadingTickets && tickets.length === 0 ? (
                     <p className="text-xs text-slate-500 italic py-4 text-center">Chargement...</p>
                   ) : tickets.length === 0 ? (
@@ -897,7 +903,7 @@ export default function AdminEventsAndFilters() {
                   ) : (
                     <div className="space-y-2">
                       {tickets.map((t) => (
-                        <div key={t.id} className={styles.ticketItem}>
+                        <div key={t.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/60 hover:border-slate-850 transition-colors">
                           <div>
                             <span className="font-mono text-xs text-white select-all font-bold">{t.ticket_code}</span>
                             {t.is_used && (
@@ -906,7 +912,7 @@ export default function AdminEventsAndFilters() {
                               </p>
                             )}
                           </div>
-                          <span className={t.is_used ? styles.ticketUsedBadge : styles.ticketUnusedBadge}>
+                          <span className={t.is_used ? "px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border bg-rose-500/10 border-rose-500/20 text-rose-400" : "px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border bg-emerald-500/10 border-emerald-500/20 text-emerald-400"}>
                             {t.is_used ? "Utilisé" : "Disponible"}
                           </span>
                         </div>
@@ -917,14 +923,14 @@ export default function AdminEventsAndFilters() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-900/80 flex justify-end">
+            <div className="mt-6 pt-4 border-t border-slate-800/80 flex justify-end">
               <button
                 onClick={() => {
                   setTicketModalOpen(false);
                   setTicketEvent(null);
                   setTickets([]);
                 }}
-                className={styles.btnCancel}
+                className="px-4 py-2.5 rounded-xl border border-slate-800 text-sm font-bold text-slate-300 hover:text-white transition-all cursor-pointer bg-transparent"
               >
                 Fermer
               </button>
@@ -937,19 +943,19 @@ export default function AdminEventsAndFilters() {
       /* QR CODE MODAL 
       /* ========================================================================= */}
       {qrModalOpen && qrModalEvent && (
-        <div className={styles.modalBackdrop}>
-          <div className={styles.modalCard}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-2xl relative">
             <button
               onClick={() => {
                 setQrModalOpen(false);
                 setQrModalEvent(null);
               }}
-              className={styles.modalCloseSmall}
+              className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white cursor-pointer transition-colors"
             >
               <X className="w-4.5 h-4.5" />
             </button>
 
-            <h3 className={styles.modalTitle}>
+            <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2.5">
               <QrCode className="w-5.5 h-5.5 text-rose-500" />
               QR Code de l'Événement
             </h3>
@@ -968,13 +974,13 @@ export default function AdminEventsAndFilters() {
               </span>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-900/80 flex justify-end">
+            <div className="mt-6 pt-4 border-t border-slate-800/80 flex justify-end">
               <button
                 onClick={() => {
                   setQrModalOpen(false);
                   setQrModalEvent(null);
                 }}
-                className={styles.btnCancel}
+                className="px-4 py-2.5 rounded-xl border border-slate-800 text-sm font-bold text-slate-300 hover:text-white transition-all cursor-pointer bg-transparent"
               >
                 Fermer
               </button>

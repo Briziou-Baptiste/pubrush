@@ -105,11 +105,6 @@ def redeem_partner_event_ticket(
         )
         
     now = datetime.utcnow()
-    if event.start_date and now < event.start_date:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"L'événement commencera le {event.start_date.strftime('%d/%m/%Y à %H:%M')}."
-        )
     if event.end_date and now > event.end_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -209,11 +204,6 @@ def join_partner_event(
 
     # Check dates activity
     now = datetime.utcnow()
-    if event.start_date and now < event.start_date:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"L'événement commencera le {event.start_date.strftime('%d/%m/%Y à %H:%M')}."
-        )
     if event.end_date and now > event.end_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
