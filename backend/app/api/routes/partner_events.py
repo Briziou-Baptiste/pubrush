@@ -246,13 +246,7 @@ def get_map_filters(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Fetch global filters
-    global_filters = db.scalars(
-        select(MapFilter).where(MapFilter.is_global == True)
-    ).all()
-
     # Fetch event-specific filters if partner_event_id is provided
-    event_filters = []
     if partner_event_id:
         event = db.scalar(
             select(PartnerEvent).where(
@@ -261,17 +255,14 @@ def get_map_filters(
             )
         )
         if event:
-            # SQLAlchemy relationship filters
-            event_filters = event.filters
+            return event.filters
+        return []
 
-    # Combine filters and ensure no duplicates by using key
-    combined = list(global_filters)
-    existing_keys = {f.key for f in combined}
-    for f in event_filters:
-        if f.key not in existing_keys:
-            combined.append(f)
-
-    return combined
+    # Otherwise (e.g. for general map), return all global filters
+    global_filters = db.scalars(
+        select(MapFilter).where(MapFilter.is_global == True)
+    ).all()
+    return list(global_filters)
 
 
 @router.get("/partner-events/{event_id}/spots", response_model=list[PartnerEventSpotRead])
