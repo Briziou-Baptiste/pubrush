@@ -170,5 +170,14 @@ export const api = {
       method: 'DELETE',
     });
   },
+
+  async searchBars(query: string, lat?: number, lon?: number) {
+    let path = `/bars/search?q=${encodeURIComponent(query)}`;
+    if (lat !== undefined && lon !== undefined) {
+      path += `&lat=${lat}&lon=${lon}`;
+    }
+    return request(path);
+  },
 };
+
 

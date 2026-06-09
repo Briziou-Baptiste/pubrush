@@ -430,5 +430,16 @@ export async function joinPartnerEvent(eventId: number, token: string): Promise<
   return handleResponse<any>(response);
 }
 
+export async function fetchPartnerEventSpots(eventId: number, token: string): Promise<any[]> {
+  const response = await fetch(`${API_BASE_URL}/partner-events/${eventId}/spots`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleResponse<any[]>(response);
+}
+
+
 
 

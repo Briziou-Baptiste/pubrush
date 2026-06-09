@@ -140,15 +140,16 @@ export default function EventsScreen() {
       // Close modal and redirect after successful verification
       setTimeout(() => {
         setActivationModalOpen(false);
-        const eventCode = selectedEvent?.code;
+        const eventId = selectedEvent?.id;
+        const eventName = selectedEvent?.name;
         setSelectedEvent(null);
         setTicketCodeInput('');
         setActivationSuccess(false);
 
-        if (eventCode) {
+        if (eventId) {
           router.push({
-            pathname: '/create-barathon',
-            params: { eventCode: eventCode }
+            pathname: '/partner-event-map',
+            params: { eventId: String(eventId), eventName: eventName }
           });
         }
       }, 1200);
@@ -177,17 +178,17 @@ export default function EventsScreen() {
       // Call API to register user in partner_event_users
       await joinPartnerEvent(event.id, token);
 
-      // Redirect to create-barathon
+      // Redirect to partner-event-map
       router.push({
-        pathname: '/create-barathon',
-        params: { eventCode: event.code }
+        pathname: '/partner-event-map',
+        params: { eventId: String(event.id), eventName: event.name }
       });
     } catch (err: any) {
       console.error('[Events] Error joining event:', err);
-      // Fallback: still redirect to create-barathon even if join record fails (e.g. unique constraint or connection glitch)
+      // Fallback: still redirect even if join record fails
       router.push({
-        pathname: '/create-barathon',
-        params: { eventCode: event.code }
+        pathname: '/partner-event-map',
+        params: { eventId: String(event.id), eventName: event.name }
       });
     }
   };

@@ -274,7 +274,7 @@ def get_map_filters(
     return combined
 
 
-@router.get("/{event_id}/spots", response_model=list[PartnerEventSpotRead])
+@router.get("/partner-events/{event_id}/spots", response_model=list[PartnerEventSpotRead])
 def get_partner_event_spots(
     event_id: int,
     db: Session = Depends(get_db),
