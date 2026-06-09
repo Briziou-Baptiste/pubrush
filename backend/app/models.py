@@ -319,6 +319,9 @@ class PartnerEvent(Base):
     code: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    start_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    end_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    requires_ticket: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     barathons: Mapped[list["Barathon"]] = relationship(back_populates="partner_event")
@@ -355,5 +358,19 @@ class EventMapFilter(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     event_id: Mapped[int] = mapped_column(ForeignKey("partner_events.id", ondelete="CASCADE"), nullable=False, index=True)
     filter_id: Mapped[int] = mapped_column(ForeignKey("map_filters.id", ondelete="CASCADE"), nullable=False, index=True)
+
+
+class EventTicket(Base):
+    __tablename__ = "event_tickets"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    event_id: Mapped[int] = mapped_column(ForeignKey("partner_events.id", ondelete="CASCADE"), nullable=False, index=True)
+    ticket_code: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
+    is_used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    used_by_user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    used_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    event: Mapped["PartnerEvent"] = relationship()
+    used_by_user: Mapped[Optional["User"]] = relationship(foreign_keys=[used_by_user_id])
 
 

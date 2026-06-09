@@ -88,7 +88,7 @@ def test_password_reset_flow(mock_send_email, client, db_session, test_user):
     assert "access_token" in response.json()
 
 
-def test_admin_endpoints_security(client, user_auth_headers, admin_auth_headers, test_user_2):
+def test_admin_endpoints_security(client, user_auth_headers, admin_auth_headers, test_user, test_user_2):
     # 1. Access without token -> 401
     response = client.get("/admin/stats")
     assert response.status_code == 401
@@ -146,6 +146,69 @@ def test_admin_endpoints_security(client, user_auth_headers, admin_auth_headers,
     events_list = response.json()
     assert len(events_list) >= 1
     assert any(e["id"] == event_id for e in events_list)
+
+    # Admin can create private event -> 200
+    payload_event_private = {
+        "name": "Soirée Privée",
+        "code": "PVT2026",
+        "description": "Description privée",
+        "is_active": True,
+        "requires_ticket": True
+    }
+    response = client.post("/admin/partner-events", json=payload_event_private, headers=admin_auth_headers)
+    assert response.status_code == 200
+    event_pvt = response.json()
+    assert event_pvt["requires_ticket"] is True
+    pvt_event_id = event_pvt["id"]
+
+    # Standard user can fetch active partner events list -> 200 (shows is_unlocked == False for the private one)
+    response = client.get("/partner-events", headers=user_auth_headers)
+    assert response.status_code == 200
+    events_list_2 = response.json()
+    matching_events = [e for e in events_list_2 if e["id"] == pvt_event_id]
+    assert len(matching_events) == 1
+    assert matching_events[0]["is_unlocked"] is False
+
+    # Admin generates tickets -> 200
+    response = client.post(f"/admin/partner-events/{pvt_event_id}/tickets/generate", json={"count": 5}, headers=admin_auth_headers)
+    assert response.status_code == 200
+    tickets = response.json()
+    assert len(tickets) == 5
+    ticket_code = tickets[0]["ticket_code"]
+
+    # Admin can list tickets -> 200
+    response = client.get(f"/admin/partner-events/{pvt_event_id}/tickets", headers=admin_auth_headers)
+    assert response.status_code == 200
+    tickets_list = response.json()
+    assert len(tickets_list) == 5
+    assert any(t["ticket_code"] == ticket_code and t["is_used"] is False for t in tickets_list)
+
+    # Standard user redeems ticket -> 200
+    response = client.post("/partner-events/redeem-ticket", json={"ticket_code": ticket_code}, headers=user_auth_headers)
+    assert response.status_code == 200
+    redeem_data = response.json()
+    assert redeem_data["is_unlocked"] is True
+
+    # Standard user fetches active partner events list -> 200 (shows is_unlocked == True now!)
+    response = client.get("/partner-events", headers=user_auth_headers)
+    assert response.status_code == 200
+    events_list_3 = response.json()
+    matching_events_3 = [e for e in events_list_3 if e["id"] == pvt_event_id]
+    assert len(matching_events_3) == 1
+    assert matching_events_3[0]["is_unlocked"] is True
+
+    # Admin lists tickets again -> shows ticket is used by the test user
+    response = client.get(f"/admin/partner-events/{pvt_event_id}/tickets", headers=admin_auth_headers)
+    assert response.status_code == 200
+    tickets_list_2 = response.json()
+    used_tickets = [t for t in tickets_list_2 if t["ticket_code"] == ticket_code]
+    assert len(used_tickets) == 1
+    assert used_tickets[0]["is_used"] is True
+    assert used_tickets[0]["used_by_username"] == test_user.username
+
+    # Clean up event
+    response = client.delete(f"/admin/partner-events/{pvt_event_id}", headers=admin_auth_headers)
+    assert response.status_code == 200
 
     # Admin can create map filter -> 200
     payload_filter = {

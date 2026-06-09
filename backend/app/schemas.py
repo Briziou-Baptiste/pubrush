@@ -319,6 +319,10 @@ class PartnerEventRead(BaseModel):
     code: str
     description: Optional[str] = None
     is_active: bool
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    requires_ticket: bool = False
+    is_unlocked: bool = True
 
     model_config = {
         "from_attributes": True

@@ -260,3 +260,66 @@
 .linkBtnUnlinked {
   @apply flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer bg-slate-900 border border-slate-800 text-slate-400 hover:text-white;
 }
+
+/* Tickets & Dates */
+.ticketBadge {
+  @apply px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border bg-amber-500/10 border-amber-500/20 text-amber-400;
+}
+
+.eventDates {
+  @apply text-slate-400 text-[11px] mt-1.5 flex items-center gap-1;
+}
+
+.ticketsBtn {
+  @apply inline-flex items-center gap-1 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer bg-transparent border-none;
+}
+
+.modalCardLarge {
+  @apply w-full max-w-3xl bg-slate-900 border border-slate-900 rounded-3xl p-6 shadow-2xl relative;
+  animation: zoomIn 0.2s ease-out;
+}
+
+.ticketGrid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6 mt-6;
+}
+
+.ticketLeftCol {
+  @apply flex flex-col justify-between;
+}
+
+.ticketRightCol {
+  @apply flex flex-col;
+}
+
+.ticketSubTitle {
+  @apply text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5;
+}
+
+.ticketForm {
+  @apply space-y-4;
+}
+
+.btnGenerate {
+  @apply w-full px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-violet-600 hover:from-rose-600 hover:to-violet-700 disabled:opacity-50 text-sm font-bold text-white transition-all cursor-pointer border-none shadow-lg shadow-rose-500/10;
+}
+
+.btnDownload {
+  @apply w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-800 text-sm font-bold text-white transition-all cursor-pointer;
+}
+
+.ticketsScrollable {
+  @apply space-y-2 max-h-80 overflow-y-auto pr-1;
+}
+
+.ticketItem {
+  @apply flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-900/80;
+}
+
+.ticketUsedBadge {
+  @apply px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border bg-rose-500/10 border-rose-500/20 text-rose-400;
+}
+
+.ticketUnusedBadge {
+  @apply px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border bg-emerald-500/10 border-emerald-500/20 text-emerald-400;
+}
+

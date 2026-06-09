@@ -36,8 +36,18 @@ export default function AdminEventsAndFilters() {
     name: "",
     code: "",
     description: "",
-    is_active: true
+    is_active: true,
+    start_date: "",
+    end_date: "",
+    requires_ticket: false
   });
+
+  // Ticket Modal States
+  const [ticketModalOpen, setTicketModalOpen] = useState(false);
+  const [ticketEvent, setTicketEvent] = useState<any | null>(null);
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [generateCount, setGenerateCount] = useState<number>(50);
+  const [loadingTickets, setLoadingTickets] = useState(false);
 
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [editingFilter, setEditingFilter] = useState<any | null>(null);
@@ -83,7 +93,15 @@ export default function AdminEventsAndFilters() {
   // ==========================================
   const openCreateEventModal = () => {
     setEditingEvent(null);
-    setEventForm({ name: "", code: "", description: "", is_active: true });
+    setEventForm({
+      name: "",
+      code: "",
+      description: "",
+      is_active: true,
+      start_date: "",
+      end_date: "",
+      requires_ticket: false
+    });
     setEventModalOpen(true);
   };
 
@@ -93,7 +111,10 @@ export default function AdminEventsAndFilters() {
       name: event.name,
       code: event.code,
       description: event.description || "",
-      is_active: event.is_active
+      is_active: event.is_active,
+      start_date: event.start_date ? event.start_date.substring(0, 16) : "",
+      end_date: event.end_date ? event.end_date.substring(0, 16) : "",
+      requires_ticket: event.requires_ticket || false
     });
     setEventModalOpen(true);
   };
@@ -101,11 +122,16 @@ export default function AdminEventsAndFilters() {
   const handleEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const formattedForm = {
+        ...eventForm,
+        start_date: eventForm.start_date ? eventForm.start_date : null,
+        end_date: eventForm.end_date ? eventForm.end_date : null
+      };
       if (editingEvent) {
-        await api.updateEvent(editingEvent.id, eventForm);
+        await api.updateEvent(editingEvent.id, formattedForm);
         showMessage("Événement mis à jour avec succès.");
       } else {
-        await api.createEvent(eventForm);
+        await api.createEvent(formattedForm);
         showMessage("Événement créé avec succès.");
       }
       setEventModalOpen(false);
@@ -113,6 +139,54 @@ export default function AdminEventsAndFilters() {
     } catch (err: any) {
       showMessage(err.message || "Erreur lors de la sauvegarde.", "error");
     }
+  };
+
+  const openTicketModal = async (event: any) => {
+    setTicketEvent(event);
+    setTicketModalOpen(true);
+    setLoadingTickets(true);
+    try {
+      const ticketsData = await api.getEventTickets(event.id);
+      setTickets(ticketsData);
+    } catch (err: any) {
+      showMessage(err.message || "Erreur de chargement des tickets.", "error");
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
+
+  const handleGenerateTickets = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketEvent) return;
+    setLoadingTickets(true);
+    try {
+      await api.generateEventTickets(ticketEvent.id, generateCount);
+      showMessage(`${generateCount} tickets générés avec succès.`);
+      const ticketsData = await api.getEventTickets(ticketEvent.id);
+      setTickets(ticketsData);
+    } catch (err: any) {
+      showMessage(err.message || "Erreur lors de la génération.", "error");
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
+
+  const downloadTicketsCSV = () => {
+    if (!ticketEvent || tickets.length === 0) return;
+    const headers = "Code,Statut,Utilisé par,Utilisé le\n";
+    const rows = tickets.map(t => 
+      `"${t.ticket_code}","${t.is_used ? 'Utilisé' : 'Disponible'}","${t.used_by_username || ''}","${t.used_at || ''}"`
+    ).join("\n");
+    
+    const blob = new Blob([headers + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `tickets_${ticketEvent.code}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleDeleteEvent = async (id: number) => {
@@ -280,8 +354,21 @@ export default function AdminEventsAndFilters() {
                 <div>
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className={styles.codeTag}>CODE: {event.code}</span>
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className={styles.codeTag}>CODE: {event.code}</span>
+                        {event.requires_ticket && (
+                          <span className={styles.ticketBadge}>Ticket Requis</span>
+                        )}
+                      </div>
                       <h3 className={styles.eventName}>{event.name}</h3>
+                      {(event.start_date || event.end_date) && (
+                        <p className={styles.eventDates}>
+                          <Calendar className="w-3.5 h-3.5 inline mr-1 text-slate-500" />
+                          {event.start_date ? new Date(event.start_date).toLocaleDateString("fr-FR", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Début indéfini"}
+                          {" au "}
+                          {event.end_date ? new Date(event.end_date).toLocaleDateString("fr-FR", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Fin indéfinie"}
+                        </p>
+                      )}
                     </div>
 
                     <span className={event.is_active ? styles.activeBadge : styles.inactiveBadge}>
@@ -312,13 +399,25 @@ export default function AdminEventsAndFilters() {
 
                 {/* Event action footer */}
                 <div className={styles.cardDivider}>
-                  <button
-                    onClick={() => setLinkingEvent(event)}
-                    className={styles.linkFiltersBtn}
-                  >
-                    <Link2 className="w-3.5 h-3.5" />
-                    Associer filtres
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setLinkingEvent(event)}
+                      className={styles.linkFiltersBtn}
+                    >
+                      <Link2 className="w-3.5 h-3.5" />
+                      Associer filtres
+                    </button>
+
+                    {event.requires_ticket && (
+                      <button
+                        onClick={() => openTicketModal(event)}
+                        className={styles.ticketsBtn}
+                      >
+                        <Code className="w-3.5 h-3.5" />
+                        Gérer Tickets
+                      </button>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-2">
                     <button
@@ -455,6 +554,41 @@ export default function AdminEventsAndFilters() {
                     <option value="false">Inactif</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={styles.formLabel}>Date de début</label>
+                  <input 
+                    type="datetime-local" 
+                    value={eventForm.start_date || ""}
+                    onChange={(e) => setEventForm({ ...eventForm, start_date: e.target.value })}
+                    className={styles.formInput}
+                  />
+                </div>
+
+                <div>
+                  <label className={styles.formLabel}>Date de fin</label>
+                  <input 
+                    type="datetime-local" 
+                    value={eventForm.end_date || ""}
+                    onChange={(e) => setEventForm({ ...eventForm, end_date: e.target.value })}
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 py-1.5">
+                <input 
+                  type="checkbox" 
+                  id="requires_ticket"
+                  checked={eventForm.requires_ticket}
+                  onChange={(e) => setEventForm({ ...eventForm, requires_ticket: e.target.checked })}
+                  className="w-4 h-4 accent-rose-500 rounded cursor-pointer"
+                />
+                <label htmlFor="requires_ticket" className="text-xs font-bold text-slate-300 cursor-pointer uppercase tracking-wider">
+                  Accès restreint par ticket payant (QR Code requis)
+                </label>
               </div>
 
               <div>
@@ -654,6 +788,127 @@ export default function AdminEventsAndFilters() {
             <div className="mt-6 pt-4 border-t border-slate-900/80 flex justify-end">
               <button
                 onClick={() => setLinkingEvent(null)}
+                className={styles.btnCancel}
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= 
+      /* TICKET MANAGER MODAL 
+      /* ========================================================================= */}
+      {ticketModalOpen && ticketEvent && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalCardLarge}>
+            <button
+              onClick={() => {
+                setTicketModalOpen(false);
+                setTicketEvent(null);
+                setTickets([]);
+              }}
+              className={styles.modalCloseSmall}
+            >
+              <X className="w-4.5 h-4.5" />
+            </button>
+
+            <h3 className={styles.modalTitle}>
+              <Code className="w-5.5 h-5.5 text-rose-500" />
+              Gestion des Tickets d'Accès
+            </h3>
+            <p className={styles.linkingSubtitle}>
+              Événement : <span className="text-rose-400 font-bold">{ticketEvent.name}</span>
+            </p>
+
+            <div className={styles.ticketGrid}>
+              {/* Left Column: Generate Tickets */}
+              <div className={styles.ticketLeftCol}>
+                <h4 className={styles.ticketSubTitle}>Générer de nouveaux codes</h4>
+                <form onSubmit={handleGenerateTickets} className={styles.ticketForm}>
+                  <div>
+                    <label className={styles.formLabel}>Nombre de tickets</label>
+                    <input 
+                      type="number"
+                      min={1}
+                      max={1000}
+                      value={generateCount}
+                      onChange={(e) => setGenerateCount(parseInt(e.target.value) || 1)}
+                      className={styles.formInput}
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loadingTickets}
+                    className={styles.btnGenerate}
+                  >
+                    {loadingTickets ? "Génération..." : "Générer les codes"}
+                  </button>
+                </form>
+
+                {tickets.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className={styles.ticketSubTitle}>Actions globales</h4>
+                    <button
+                      onClick={downloadTicketsCSV}
+                      className={styles.btnDownload}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Télécharger (CSV)
+                    </button>
+                    <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">
+                      Le fichier CSV contient tous les codes de tickets. Utilisez-le pour imprimer des planches de QR Codes pour votre partenaire.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Tickets List */}
+              <div className={styles.ticketRightCol}>
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className={styles.ticketSubTitle}>Liste des codes ({tickets.length})</h4>
+                  <span className="text-[10px] bg-slate-900 border border-slate-800 text-slate-400 px-2.5 py-0.5 rounded-full font-bold">
+                    {tickets.filter(t => t.is_used).length} utilisés
+                  </span>
+                </div>
+
+                <div className={styles.ticketsScrollable}>
+                  {loadingTickets && tickets.length === 0 ? (
+                    <p className="text-xs text-slate-500 italic py-4 text-center">Chargement...</p>
+                  ) : tickets.length === 0 ? (
+                    <p className="text-xs text-slate-500 italic py-4 text-center">Aucun ticket généré pour cet événement.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {tickets.map((t) => (
+                        <div key={t.id} className={styles.ticketItem}>
+                          <div>
+                            <span className="font-mono text-xs text-white select-all font-bold">{t.ticket_code}</span>
+                            {t.is_used && (
+                              <p className="text-[10px] text-slate-500 mt-0.5">
+                                Par {t.used_by_username} le {new Date(t.used_at).toLocaleDateString("fr-FR", { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            )}
+                          </div>
+                          <span className={t.is_used ? styles.ticketUsedBadge : styles.ticketUnusedBadge}>
+                            {t.is_used ? "Utilisé" : "Disponible"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-900/80 flex justify-end">
+              <button
+                onClick={() => {
+                  setTicketModalOpen(false);
+                  setTicketEvent(null);
+                  setTickets([]);
+                }}
                 className={styles.btnCancel}
               >
                 Fermer

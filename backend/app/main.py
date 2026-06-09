@@ -18,7 +18,7 @@ from app.api.routes.saved_barathons import router as saved_barathons_router
 from app.api.routes.partner_events import router as partner_events_router
 from app.core.lifespan import lifespan
 from app.db import get_db
-from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop, PartnerEvent, MapFilter
+from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop, PartnerEvent, MapFilter, EventTicket
 from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse, PartnerEventRead, MapFilterRead
 from app.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.services.email_service import send_reset_code_email
@@ -527,12 +527,18 @@ class AdminPartnerEventCreate(BaseModel):
     code: str = Field(..., min_length=1, max_length=50)
     description: Optional[str] = None
     is_active: bool = True
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    requires_ticket: bool = False
 
 class AdminPartnerEventUpdate(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    requires_ticket: Optional[bool] = None
 
 class AdminMapFilterCreate(BaseModel):
     key: str = Field(..., min_length=1, max_length=50)
@@ -564,15 +570,18 @@ def admin_get_partner_events(
     
     result = []
     for e in events:
-        result.append({
-            "id": e.id,
-            "name": e.name,
-            "code": e.code,
-            "description": e.description,
-            "is_active": e.is_active,
-            "created_at": e.created_at,
-            "filters": [{"id": f.id, "key": f.key, "label": f.label} for f in e.filters]
-        })
+      result.append({
+          "id": e.id,
+          "name": e.name,
+          "code": e.code,
+          "description": e.description,
+          "is_active": e.is_active,
+          "start_date": e.start_date.isoformat() if e.start_date else None,
+          "end_date": e.end_date.isoformat() if e.end_date else None,
+          "requires_ticket": e.requires_ticket,
+          "created_at": e.created_at,
+          "filters": [{"id": f.id, "key": f.key, "label": f.label} for f in e.filters]
+      })
     return result
 
 
@@ -590,7 +599,10 @@ def admin_create_partner_event(
         name=payload.name.strip(),
         code=payload.code.strip().upper(),
         description=payload.description.strip() if payload.description else None,
-        is_active=payload.is_active
+        is_active=payload.is_active,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        requires_ticket=payload.requires_ticket
     )
     db.add(event)
     db.commit()
@@ -622,6 +634,12 @@ def admin_update_partner_event(
         event.description = payload.description.strip() if payload.description else None
     if payload.is_active is not None:
         event.is_active = payload.is_active
+    if payload.start_date is not None:
+        event.start_date = payload.start_date
+    if payload.end_date is not None:
+        event.end_date = payload.end_date
+    if payload.requires_ticket is not None:
+        event.requires_ticket = payload.requires_ticket
         
     db.commit()
     db.refresh(event)
@@ -641,6 +659,72 @@ def admin_delete_partner_event(
     db.delete(event)
     db.commit()
     return {"message": "Événement partenaire supprimé avec succès."}
+
+
+class AdminGenerateTicketsPayload(BaseModel):
+    count: int = Field(..., ge=1, le=1000)
+
+
+@app.post("/admin/partner-events/{event_id}/tickets/generate")
+def admin_generate_partner_event_tickets(
+    event_id: int,
+    payload: AdminGenerateTicketsPayload,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    event = db.get(PartnerEvent, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement partenaire introuvable.")
+    
+    import secrets
+    import string
+    chars = string.ascii_uppercase + string.digits
+    generated_tickets = []
+    
+    for _ in range(payload.count):
+        while True:
+            code1 = "".join(secrets.choice(chars) for _ in range(4))
+            code2 = "".join(secrets.choice(chars) for _ in range(4))
+            code = f"PR-{code1}-{code2}"
+            existing = db.scalar(select(EventTicket).where(EventTicket.ticket_code == code))
+            if not existing:
+                break
+        
+        ticket = EventTicket(event_id=event_id, ticket_code=code)
+        db.add(ticket)
+        generated_tickets.append(ticket)
+        
+    db.commit()
+    return [{"id": t.id, "ticket_code": t.ticket_code, "is_used": t.is_used} for t in generated_tickets]
+
+
+@app.get("/admin/partner-events/{event_id}/tickets")
+def admin_list_partner_event_tickets(
+    event_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    event = db.get(PartnerEvent, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement partenaire introuvable.")
+        
+    tickets = db.scalars(
+        select(EventTicket)
+        .options(selectinload(EventTicket.used_by_user))
+        .where(EventTicket.event_id == event_id)
+        .order_by(EventTicket.id.desc())
+    ).all()
+    
+    result = []
+    for t in tickets:
+        result.append({
+            "id": t.id,
+            "ticket_code": t.ticket_code,
+            "is_used": t.is_used,
+            "used_by_username": t.used_by_user.username if t.used_by_user else None,
+            "used_at": t.used_at.isoformat() if t.used_at else None
+        })
+    return result
 
 
 @app.get("/admin/map-filters")

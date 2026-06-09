@@ -85,14 +85,14 @@ export const api = {
     return request('/admin/partner-events');
   },
 
-  async createEvent(payload: { name: string; code: string; description?: string; is_active: boolean }) {
+  async createEvent(payload: { name: string; code: string; description?: string; is_active: boolean; start_date?: string | null; end_date?: string | null; requires_ticket?: boolean }) {
     return request('/admin/partner-events', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
   },
 
-  async updateEvent(eventId: number, payload: { name?: string; code?: string; description?: string; is_active?: boolean }) {
+  async updateEvent(eventId: number, payload: { name?: string; code?: string; description?: string; is_active?: boolean; start_date?: string | null; end_date?: string | null; requires_ticket?: boolean }) {
     return request(`/admin/partner-events/${eventId}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
@@ -102,6 +102,17 @@ export const api = {
   async deleteEvent(eventId: number) {
     return request(`/admin/partner-events/${eventId}`, {
       method: 'DELETE',
+    });
+  },
+
+  async getEventTickets(eventId: number) {
+    return request(`/admin/partner-events/${eventId}/tickets`);
+  },
+
+  async generateEventTickets(eventId: number, count: number) {
+    return request(`/admin/partner-events/${eventId}/tickets/generate`, {
+      method: 'POST',
+      body: JSON.stringify({ count }),
     });
   },
 

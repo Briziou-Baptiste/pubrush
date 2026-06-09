@@ -408,4 +408,17 @@ export async function fetchPartnerEvents(token: string): Promise<any[]> {
   return handleResponse<any[]>(response);
 }
 
+export async function redeemTicketCode(ticketCode: string, token: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/partner-events/redeem-ticket`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ ticket_code: ticketCode }),
+  });
+  return handleResponse<any>(response);
+}
+
+
 
