@@ -329,6 +329,10 @@ class PartnerEvent(Base):
         secondary="event_map_filters",
         back_populates="events"
     )
+    spots: Mapped[list["PartnerEventSpot"]] = relationship(
+        back_populates="event",
+        cascade="all, delete-orphan"
+    )
 
 
 class MapFilter(Base):
@@ -387,6 +391,35 @@ class PartnerEventUser(Base):
 
     event: Mapped["PartnerEvent"] = relationship()
     user: Mapped["User"] = relationship()
+
+
+class PartnerEventSpot(Base):
+    __tablename__ = "partner_event_spots"
+    __table_args__ = (
+        CheckConstraint(
+            "latitude >= -90 AND latitude <= 90",
+            name="chk_partner_event_spots_latitude",
+        ),
+        CheckConstraint(
+            "longitude >= -180 AND longitude <= 180",
+            name="chk_partner_event_spots_longitude",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    event_id: Mapped[int] = mapped_column(
+        ForeignKey("partner_events.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    spot_type: Mapped[str] = mapped_column(String(50), nullable=False)  # 'bar', 'security', 'water', 'first_aid', 'other'
+    latitude: Mapped[float] = mapped_column(Numeric(9, 6), nullable=False)
+    longitude: Mapped[float] = mapped_column(Numeric(9, 6), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    event: Mapped["PartnerEvent"] = relationship(back_populates="spots")
 
 
 

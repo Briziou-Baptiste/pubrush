@@ -6,9 +6,9 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from app.db import get_db
-from app.models import PartnerEvent, MapFilter, User, EventTicket, PartnerEventUser
+from app.models import PartnerEvent, MapFilter, User, EventTicket, PartnerEventUser, PartnerEventSpot
 from app.api.deps.auth import get_current_user
-from app.schemas import PartnerEventRead, MapFilterRead
+from app.schemas import PartnerEventRead, MapFilterRead, PartnerEventSpotRead
 
 router = APIRouter(tags=["partner-events"])
 
@@ -272,3 +272,39 @@ def get_map_filters(
             combined.append(f)
 
     return combined
+
+
+@router.get("/{event_id}/spots", response_model=list[PartnerEventSpotRead])
+def get_partner_event_spots(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    event = db.get(PartnerEvent, event_id)
+    if not event or not event.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Événement partenaire introuvable ou inactif."
+        )
+
+    # If it requires a ticket, verify that the ticket is used by current user
+    if event.requires_ticket:
+        ticket = db.scalar(
+            select(EventTicket).where(
+                EventTicket.event_id == event.id,
+                EventTicket.used_by_user_id == current_user.id,
+                EventTicket.is_used == True
+            )
+        )
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cet événement nécessite un ticket d'accès valide."
+            )
+
+    spots = db.scalars(
+        select(PartnerEventSpot)
+        .where(PartnerEventSpot.event_id == event_id)
+        .order_by(PartnerEventSpot.name.asc())
+    ).all()
+    return list(spots)

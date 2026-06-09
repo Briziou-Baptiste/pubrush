@@ -18,8 +18,8 @@ from app.api.routes.saved_barathons import router as saved_barathons_router
 from app.api.routes.partner_events import router as partner_events_router
 from app.core.lifespan import lifespan
 from app.db import get_db
-from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop, PartnerEvent, MapFilter, EventTicket, PartnerEventUser
-from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse, PartnerEventRead, MapFilterRead
+from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop, PartnerEvent, MapFilter, EventTicket, PartnerEventUser, PartnerEventSpot
+from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse, PartnerEventRead, MapFilterRead, PartnerEventSpotRead, PartnerEventSpotCreate
 from app.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.services.email_service import send_reset_code_email
 
@@ -865,5 +865,68 @@ def admin_unlink_filter_from_event(
         "name": event.name,
         "filters": [{"id": f.id, "key": f.key, "label": f.label} for f in event.filters]
     }
+
+
+@app.get("/admin/partner-events/{event_id}/spots", response_model=list[PartnerEventSpotRead])
+def admin_get_event_spots(
+    event_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    event = db.get(PartnerEvent, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement partenaire introuvable.")
+    spots = db.scalars(
+        select(PartnerEventSpot)
+        .where(PartnerEventSpot.event_id == event_id)
+        .order_by(PartnerEventSpot.id.desc())
+    ).all()
+    return list(spots)
+
+
+@app.post("/admin/partner-events/{event_id}/spots", response_model=PartnerEventSpotRead)
+def admin_create_event_spot(
+    event_id: int,
+    payload: PartnerEventSpotCreate,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    event = db.get(PartnerEvent, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement partenaire introuvable.")
+    
+    spot = PartnerEventSpot(
+        event_id=event_id,
+        name=payload.name.strip(),
+        spot_type=payload.spot_type.strip(),
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        description=payload.description.strip() if payload.description else None
+    )
+    db.add(spot)
+    db.commit()
+    db.refresh(spot)
+    return spot
+
+
+@app.delete("/admin/partner-events/{event_id}/spots/{spot_id}")
+def admin_delete_event_spot(
+    event_id: int,
+    spot_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
+    spot = db.scalar(
+        select(PartnerEventSpot).where(
+            PartnerEventSpot.id == spot_id,
+            PartnerEventSpot.event_id == event_id
+        )
+    )
+    if not spot:
+        raise HTTPException(status_code=404, detail="Point partenaire introuvable.")
+    db.delete(spot)
+    db.commit()
+    return {"message": "Point partenaire supprimé avec succès."}
+
 
 

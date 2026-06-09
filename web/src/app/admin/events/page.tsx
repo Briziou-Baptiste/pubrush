@@ -16,7 +16,8 @@ import {
   Code,
   X,
   QrCode,
-  Ticket
+  Ticket,
+  MapPin
 } from "lucide-react";
 import { api } from "../api";
 import styles from "./events.module.css";
@@ -54,6 +55,20 @@ export default function AdminEventsAndFilters() {
   // QR Code Modal States
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrModalEvent, setQrModalEvent] = useState<any | null>(null);
+
+  // Partner Spots Modal States
+  const [spotsModalOpen, setSpotsModalOpen] = useState(false);
+  const [spotsEvent, setSpotsEvent] = useState<any | null>(null);
+  const [spots, setSpots] = useState<any[]>([]);
+  const [loadingSpots, setLoadingSpots] = useState(false);
+  const [spotForm, setSpotForm] = useState({
+    name: "",
+    spot_type: "bar",
+    latitude: "",
+    longitude: "",
+    description: ""
+  });
+
 
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [editingFilter, setEditingFilter] = useState<any | null>(null);
@@ -205,6 +220,86 @@ export default function AdminEventsAndFilters() {
       showMessage(err.message || "Erreur lors de la suppression.", "error");
     }
   };
+
+  const openSpotsModal = async (event: any) => {
+    setSpotsEvent(event);
+    setSpotForm({
+      name: "",
+      spot_type: "bar",
+      latitude: "",
+      longitude: "",
+      description: ""
+    });
+    setSpotsModalOpen(true);
+    setLoadingSpots(true);
+    try {
+      const spotsData = await api.getEventSpots(event.id);
+      setSpots(spotsData);
+    } catch (err: any) {
+      showMessage(err.message || "Erreur de chargement des points partenaires.", "error");
+    } finally {
+      setLoadingSpots(false);
+    }
+  };
+
+  const handleSpotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!spotsEvent) return;
+    
+    const latNum = parseFloat(spotForm.latitude);
+    const lngNum = parseFloat(spotForm.longitude);
+    if (isNaN(latNum) || latNum < -90 || latNum > 90) {
+      showMessage("La latitude doit être comprise entre -90 et 90.", "error");
+      return;
+    }
+    if (isNaN(lngNum) || lngNum < -180 || lngNum > 180) {
+      showMessage("La longitude doit être comprise entre -180 et 180.", "error");
+      return;
+    }
+
+    setLoadingSpots(true);
+    try {
+      await api.createEventSpot(spotsEvent.id, {
+        name: spotForm.name,
+        spot_type: spotForm.spot_type,
+        latitude: latNum,
+        longitude: lngNum,
+        description: spotForm.description || undefined
+      });
+      showMessage("Point partenaire ajouté avec succès.");
+      setSpotForm({
+        name: "",
+        spot_type: "bar",
+        latitude: "",
+        longitude: "",
+        description: ""
+      });
+      const spotsData = await api.getEventSpots(spotsEvent.id);
+      setSpots(spotsData);
+    } catch (err: any) {
+      showMessage(err.message || "Erreur lors de l'ajout.", "error");
+    } finally {
+      setLoadingSpots(false);
+    }
+  };
+
+  const handleDeleteSpot = async (spotId: number) => {
+    if (!spotsEvent) return;
+    if (!confirm("Voulez-vous vraiment supprimer ce point partenaire ?")) return;
+
+    setLoadingSpots(true);
+    try {
+      await api.deleteEventSpot(spotsEvent.id, spotId);
+      showMessage("Point partenaire supprimé.");
+      const spotsData = await api.getEventSpots(spotsEvent.id);
+      setSpots(spotsData);
+    } catch (err: any) {
+      showMessage(err.message || "Erreur lors de la suppression.", "error");
+    } finally {
+      setLoadingSpots(false);
+    }
+  };
+
 
   // ==========================================
   // FILTER OPERATIONS
@@ -426,6 +521,14 @@ export default function AdminEventsAndFilters() {
                     )}
                     
                     <button
+                      onClick={() => openSpotsModal(event)}
+                      className={styles.actionBtn}
+                      title="Gérer les points partenaires"
+                    >
+                      <MapPin className="w-4 h-4" />
+                    </button>
+
+                    <button
                       onClick={() => {
                         setQrModalEvent(event);
                         setQrModalOpen(true);
@@ -435,6 +538,7 @@ export default function AdminEventsAndFilters() {
                     >
                       <QrCode className="w-4 h-4" />
                     </button>
+
 
                     <button
                       onClick={() => openEditEventModal(event)}
@@ -988,6 +1092,189 @@ export default function AdminEventsAndFilters() {
           </div>
         </div>
       )}
+
+      {/* ========================================================================= 
+      /* PARTNER SPOTS MANAGER MODAL 
+      /* ========================================================================= */}
+      {spotsModalOpen && spotsEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-4xl bg-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+            <button
+              onClick={() => {
+                setSpotsModalOpen(false);
+                setSpotsEvent(null);
+                setSpots([]);
+              }}
+              className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white cursor-pointer transition-colors"
+            >
+              <X className="w-4.5 h-4.5" />
+            </button>
+
+            <h3 className="text-xl font-black text-white mb-2 flex items-center gap-2.5">
+              <MapPin className="w-5.5 h-5.5 text-rose-500" />
+              Points d'Intérêt & Partenaires
+            </h3>
+            <p className="text-xs text-slate-400 mb-6">
+              Événement : <span className="text-rose-400 font-bold">{spotsEvent.name}</span>
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden min-h-0 flex-grow">
+              {/* Left Column: Add Spot Form */}
+              <div className="flex flex-col justify-between py-1 overflow-y-auto pr-1">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Ajouter un point sur la carte</h4>
+                  <form onSubmit={handleSpotSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nom du point</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={spotForm.name}
+                        onChange={(e) => setSpotForm({ ...spotForm, name: e.target.value })}
+                        placeholder="ex: Le Grand Bar Partenaire, Poste Secours Ouest..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Latitude</label>
+                        <input 
+                          type="number"
+                          step="any"
+                          required
+                          value={spotForm.latitude}
+                          onChange={(e) => setSpotForm({ ...spotForm, latitude: e.target.value })}
+                          placeholder="ex: 43.6047"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Longitude</label>
+                        <input 
+                          type="number"
+                          step="any"
+                          required
+                          value={spotForm.longitude}
+                          onChange={(e) => setSpotForm({ ...spotForm, longitude: e.target.value })}
+                          placeholder="ex: 1.4442"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Type de point</label>
+                        <select 
+                          value={spotForm.spot_type}
+                          onChange={(e) => setSpotForm({ ...spotForm, spot_type: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 transition-colors"
+                        >
+                          <option value="bar">🍻 Bar Partenaire</option>
+                          <option value="security">🛡️ Poste de sécurité</option>
+                          <option value="water">💧 Point d'eau</option>
+                          <option value="first_aid">🏥 Premiers secours</option>
+                          <option value="other">📍 Autre point</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Description / Avantages</label>
+                      <textarea 
+                        rows={3}
+                        value={spotForm.description}
+                        onChange={(e) => setSpotForm({ ...spotForm, description: e.target.value })}
+                        placeholder="ex: -10% sur les consos, présence d'un secouriste..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors resize-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loadingSpots}
+                      className="w-full px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-violet-600 hover:from-rose-600 hover:to-violet-700 disabled:opacity-50 text-sm font-bold text-white transition-all cursor-pointer border-none shadow-lg shadow-rose-500/10"
+                    >
+                      {loadingSpots ? "Ajout en cours..." : "Ajouter le point"}
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Right Column: Spots List */}
+              <div className="flex flex-col overflow-hidden py-1">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Points enregistrés ({spots.length})</h4>
+                </div>
+
+                <div className="space-y-2 overflow-y-auto pr-1 flex-grow">
+                  {loadingSpots && spots.length === 0 ? (
+                    <p className="text-xs text-slate-500 italic py-4 text-center">Chargement des points...</p>
+                  ) : spots.length === 0 ? (
+                    <p className="text-xs text-slate-500 italic py-4 text-center">Aucun point d'intérêt enregistré pour cet événement.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {spots.map((spot) => (
+                        <div key={spot.id} className="flex items-start justify-between p-3.5 rounded-xl bg-slate-950/50 border border-slate-850 hover:border-slate-800 transition-colors">
+                          <div className="space-y-1 flex-grow">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-black text-white">{spot.name}</span>
+                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border ${
+                                spot.spot_type === 'bar' ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' :
+                                spot.spot_type === 'security' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
+                                spot.spot_type === 'water' ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400' :
+                                spot.spot_type === 'first_aid' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+                                'bg-slate-800 border-slate-700 text-slate-400'
+                              }`}>
+                                {spot.spot_type === 'bar' ? '🍻 Bar' :
+                                 spot.spot_type === 'security' ? '🛡️ Sécurité' :
+                                 spot.spot_type === 'water' ? '💧 Eau' :
+                                 spot.spot_type === 'first_aid' ? '🏥 Secours' :
+                                 '📍 Autre'}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 font-mono">
+                              Lat: {spot.latitude.toFixed(5)} | Lng: {spot.longitude.toFixed(5)}
+                            </p>
+                            {spot.description && (
+                              <p className="text-xs text-slate-400 bg-slate-950/60 p-2 rounded-lg border border-slate-900 mt-1">
+                                {spot.description}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSpot(spot.id)}
+                            className="p-1.5 rounded-lg bg-rose-500/5 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 hover:text-rose-300 transition-colors cursor-pointer shrink-0 ml-2"
+                            title="Supprimer ce point"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-800/80 flex justify-end">
+              <button
+                onClick={() => {
+                  setSpotsModalOpen(false);
+                  setSpotsEvent(null);
+                  setSpots([]);
+                }}
+                className="px-4 py-2.5 rounded-xl border border-slate-800 text-sm font-bold text-slate-300 hover:text-white transition-all cursor-pointer bg-transparent"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

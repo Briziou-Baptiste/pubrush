@@ -153,4 +153,22 @@ export const api = {
       method: 'DELETE',
     });
   },
+
+  async getEventSpots(eventId: number) {
+    return request(`/admin/partner-events/${eventId}/spots`);
+  },
+
+  async createEventSpot(eventId: number, payload: { name: string; spot_type: string; latitude: number; longitude: number; description?: string }) {
+    return request(`/admin/partner-events/${eventId}/spots`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async deleteEventSpot(eventId: number, spotId: number) {
+    return request(`/admin/partner-events/${eventId}/spots/${spotId}`, {
+      method: 'DELETE',
+    });
+  },
 };
+
