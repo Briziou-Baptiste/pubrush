@@ -78,6 +78,8 @@ class BarathonStopRead(BaseModel):
     latitude: float
     longitude: float
     stop_order: int
+    is_completed: bool
+    completed_at: Optional[datetime] = None
 
     model_config = {
         "from_attributes": True
@@ -163,6 +165,8 @@ class ActiveBarathonStopRead(BaseModel):
     latitude: float
     longitude: float
     stop_order: int
+    is_completed: bool
+    completed_at: Optional[datetime] = None
 
     model_config = {
         "from_attributes": True
