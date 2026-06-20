@@ -268,3 +268,66 @@ def test_admin_endpoints_security(client, user_auth_headers, admin_auth_headers,
     response = client.delete(f"/admin/partner-events/{event_id}", headers=admin_auth_headers)
     assert response.status_code == 200
 
+
+def test_admin_stats_endpoints(client, admin_auth_headers, user_auth_headers, db_session, test_user):
+    # Test GET /admin/stats/users-registration
+    response = client.get("/admin/stats/users-registration?period=day", headers=admin_auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    if len(data) > 0:
+        # Check that formatting is XX/XX (digit/digit)
+        assert "/" in data[0]["label"]
+        parts = data[0]["label"].split("/")
+        assert len(parts) == 2
+        assert parts[0].isdigit() and parts[1].isdigit()
+
+    response = client.get("/admin/stats/users-registration?period=month", headers=admin_auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    if len(data) > 0:
+        # Check that formatting is XX/XX (digit/digit)
+        assert "/" in data[0]["label"]
+        parts = data[0]["label"].split("/")
+        assert len(parts) == 2
+        assert parts[0].isdigit() and parts[1].isdigit()
+
+    # Test GET /admin/stats/app-usage
+    response = client.get("/admin/stats/app-usage?period=day", headers=admin_auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    if len(data) > 0:
+        assert "/" in data[0]["label"]
+
+    # Test GET /admin/partner-events/{event_id}/stats
+    # Create a test event first
+    payload_event = {
+        "name": "Event Stats Test",
+        "code": "STATSTEST",
+        "description": "Desc",
+        "is_active": True
+    }
+    resp = client.post("/admin/partner-events", json=payload_event, headers=admin_auth_headers)
+    assert resp.status_code == 200
+    event_id = resp.json()["id"]
+
+    # Join the event to record stats
+    response = client.post(f"/partner-events/{event_id}/join", headers=user_auth_headers)
+    assert response.status_code == 200
+
+    response = client.get(f"/admin/partner-events/{event_id}/stats", headers=admin_auth_headers)
+    assert response.status_code == 200
+    event_stats = response.json()
+    assert isinstance(event_stats, list)
+    assert len(event_stats) > 0
+    assert "/" in event_stats[0]["label"]
+    parts = event_stats[0]["label"].split("/")
+    assert len(parts) == 2
+    assert parts[0].isdigit() and parts[1].isdigit()
+
+    # Clean up
+    client.delete(f"/admin/partner-events/{event_id}", headers=admin_auth_headers)
+
+

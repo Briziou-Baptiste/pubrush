@@ -470,6 +470,20 @@ def get_global_stats(
     }
 
 
+def parse_label_datetime(label):
+    if isinstance(label, datetime):
+        return label
+    if isinstance(label, str):
+        try:
+            return datetime.fromisoformat(label)
+        except ValueError:
+            try:
+                return datetime.strptime(label.split(".")[0], "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                return datetime.strptime(label[:10], "%Y-%m-%d")
+    return label
+
+
 @app.get("/admin/stats/users-registration")
 def get_users_registration_stats(
     period: str = "day",
@@ -501,11 +515,11 @@ def get_users_registration_stats(
     
     data = []
     for r in results:
-        label_dt = r.label
+        label_dt = parse_label_datetime(r.label)
         if period == "day":
-            label_str = label_dt.strftime("%d %b")
+            label_str = label_dt.strftime("%d/%m")
         elif period == "month":
-            label_str = label_dt.strftime("%b %y")
+            label_str = label_dt.strftime("%m/%y")
         else:
             label_str = label_dt.strftime("%Y")
         data.append({"label": label_str, "value": r.count})
@@ -544,11 +558,11 @@ def get_app_usage_stats(
     
     temp_dict = {}
     for r in results:
-        label_dt = r.label
+        label_dt = parse_label_datetime(r.label)
         if period == "day":
-            label_str = label_dt.strftime("%d %b")
+            label_str = label_dt.strftime("%d/%m")
         elif period == "month":
-            label_str = label_dt.strftime("%b %y")
+            label_str = label_dt.strftime("%m/%y")
         else:
             label_str = label_dt.strftime("%Y")
             
@@ -583,8 +597,8 @@ def get_event_stats(
     data = []
     cumulative = 0
     for r in results:
-        label_dt = r.label
-        label_str = label_dt.strftime("%d %b")
+        label_dt = parse_label_datetime(r.label)
+        label_str = label_dt.strftime("%d/%m")
         cumulative += r.count
         data.append({"label": label_str, "value": cumulative})
         

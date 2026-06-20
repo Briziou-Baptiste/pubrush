@@ -16,12 +16,42 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 
-# Enforce foreign key constraints under SQLite
+# Enforce foreign key constraints under SQLite and register date_trunc custom function
 @event.listens_for(engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
+
+    def sqlite_date_trunc(lookup_type, date_str):
+        if not date_str:
+            return None
+        from datetime import datetime
+        try:
+            # SQLite datetime strings may contain milliseconds or timezone info
+            clean_str = date_str.split(".")[0].replace("Z", "")
+            if "T" in clean_str:
+                dt = datetime.strptime(clean_str, "%Y-%m-%dT%H:%M:%S")
+            else:
+                dt = datetime.strptime(clean_str, "%Y-%m-%d %H:%M:%S")
+        except Exception:
+            try:
+                dt = datetime.strptime(date_str[:10], "%Y-%m-%d")
+            except Exception:
+                return date_str
+
+        if lookup_type == "day":
+            truncated = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif lookup_type == "month":
+            truncated = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        elif lookup_type == "year":
+            truncated = dt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        else:
+            truncated = dt
+        return truncated.strftime("%Y-%m-%d %H:%M:%S")
+
+    dbapi_connection.create_function("date_trunc", 2, sqlite_date_trunc)
+
 
 TestingSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=engine, future=True
