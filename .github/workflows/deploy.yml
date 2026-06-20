@@ -118,8 +118,9 @@ jobs:
           cd mobile
           npm ci
 
-      - name: Publier la mise à jour EAS Update
+      - name: Publier la mise à jour EAS Update (iOS & Android)
         run: |
           cd mobile
-          eas update --branch preview --message "Mise à jour automatique - Build #${{ github.run_number }}" --platform all --non-interactive
+          eas update --branch preview --message "Mise à jour automatique (iOS) - Build #${{ github.run_number }}" --platform ios --non-interactive
+          eas update --branch preview --message "Mise à jour automatique (Android) - Build #${{ github.run_number }}" --platform android --non-interactive
 
