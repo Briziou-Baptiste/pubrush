@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Region } from 'react-native-maps';
 
-import { getBarathonById, getMyActiveBarathon, stopBarathon } from '../services/activeBarathon.service';
+import { getBarathonById, getMyActiveBarathon, stopBarathon, completeBarathonStop } from '../services/activeBarathon.service';
 import { ActiveBarathonData } from '../types/activeBarathon.types';
 import { useActiveBarathonTracking } from '../hooks/useActiveBarathonTracking';
 import { styles } from '../styles/activeBarathon.styles';
@@ -73,6 +73,17 @@ export default function ActiveBarathonScreen() {
       travel_time_between_bars_minutes: 0,
       stops: [],
     },
+    onStopCompleted: (stopId) => {
+      setBarathon((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          stops: prev.stops.map((s) =>
+            s.id === stopId ? { ...s, is_completed: true } : s
+          ),
+        };
+      });
+    },
   });
 
   useEffect(() => {
@@ -97,17 +108,22 @@ export default function ActiveBarathonScreen() {
           // Stop GPS tracking
           await tracking.stopTracking();
 
+          const totalStops = barathon.stops.length;
+          const completedStopsCount = data.stops
+            ? data.stops.filter((s: any) => s.is_completed).length
+            : barathon.stops.filter((s) => s.is_completed).length;
+
           // Redirect to summary
           router.replace({
             pathname: '/barathon-stop-summary',
             params: {
               barathonId: String(barathon.id),
               barathonName: barathon.name,
-              totalStops: String(barathon.stops.length),
-              completedStops: String(tracking.state.activeStopIndex),
+              totalStops: String(totalStops),
+              completedStops: String(completedStopsCount),
               startDateTimeIso: barathon.start_datetime,
               endDateTimeIso: data.ended_at || data.end_datetime || new Date().toISOString(),
-              stopsJson: JSON.stringify(barathon.stops),
+              stopsJson: JSON.stringify(data.stops || barathon.stops),
               source: 'active',
             },
           });
@@ -195,11 +211,26 @@ export default function ActiveBarathonScreen() {
       try {
         setStopping(true);
 
-        await stopBarathon(barathon.id);
-          await tracking.stopTracking();
+        const currentStop = barathon.stops[tracking.state.activeStopIndex];
+        const shouldCompleteCurrent =
+          isLastStop ||
+          tracking.state.phase === 'in_stop' ||
+          tracking.state.phase === 'overtime';
+
+        if (currentStop && !currentStop.is_completed && shouldCompleteCurrent) {
+          try {
+            await completeBarathonStop(barathon.id, currentStop.id);
+            currentStop.is_completed = true;
+          } catch (err) {
+            console.error('Failed to complete current stop before ending:', err);
+          }
+        }
+
+        const stopResult = await stopBarathon(barathon.id);
+        await tracking.stopTracking();
           
         const totalStops = barathon.stops.length;
-        const completedStops = tracking.state.activeStopIndex;
+        const completedStopsCount = barathon.stops.filter((s) => s.is_completed).length;
 
         router.replace({
           pathname: '/barathon-stop-summary',
@@ -207,11 +238,11 @@ export default function ActiveBarathonScreen() {
             barathonId: String(barathon.id),
             barathonName: barathon.name,
             totalStops: String(totalStops),
-            completedStops: String(completedStops),
+            completedStops: String(completedStopsCount),
             startDateTimeIso: barathon.start_datetime,
-            endDateTimeIso: new Date().toISOString(),
+            endDateTimeIso: stopResult?.ended_at || new Date().toISOString(),
             stopsJson: JSON.stringify(barathon.stops),
-              source: 'active',
+            source: 'active',
           },
         });
       } catch (error) {

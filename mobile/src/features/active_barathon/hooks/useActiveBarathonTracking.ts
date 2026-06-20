@@ -20,9 +20,10 @@ import { openWalkingDirectionsInGoogleMaps } from '../services/activeBarathonNav
 
 type Params = {
   barathon: ActiveBarathonData;
+  onStopCompleted?: (stopId: number) => void;
 };
 
-export function useActiveBarathonTracking({ barathon }: Params) {
+export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params) {
   const maxBarSeconds = useMemo(
     () => secondsFromMinutes(barathon.max_time_in_bar_minutes),
     [barathon.max_time_in_bar_minutes]
@@ -236,6 +237,7 @@ export function useActiveBarathonTracking({ barathon }: Params) {
 
       try {
         await completeBarathonStop(barathon.id, activeStop.id);
+        onStopCompleted?.(activeStop.id);
 
         if (timerRef.current) {
           clearInterval(timerRef.current);
@@ -356,6 +358,15 @@ export function useActiveBarathonTracking({ barathon }: Params) {
   }
 
   async function goToNextStop() {
+    if (activeStop && !activeStop.is_completed) {
+      try {
+        await completeBarathonStop(barathon.id, activeStop.id);
+        onStopCompleted?.(activeStop.id);
+      } catch (error) {
+        console.error('[goToNextStop] Failed to complete stop:', error);
+      }
+    }
+
     await cancelStopNotifications(notificationIdsRef.current);
 
     notificationIdsRef.current = {

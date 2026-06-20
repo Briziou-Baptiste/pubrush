@@ -5,6 +5,7 @@ export type ActiveBarathonStop = {
   latitude: number;
   longitude: number;
   stop_order: number;
+  is_completed?: boolean;
 };
 
 export type ActiveBarathonData = {
