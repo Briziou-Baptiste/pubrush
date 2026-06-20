@@ -1,21 +1,24 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
-  SafeAreaView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCurrentUserId } from '../../../lib/authStorage';
 import BarathonCard from '../../barathon_past_planned/components/BarathonCard';
 import { BarathonListItem } from '../../barathon_past_planned/types/barathon.types';
 import { styles } from '../styles/planned.styles';
 import ChangeStartTimeModal from '../components/ChangeStartTimeModal';
-import { updateBarathonStartDatetime, deleteBarathon, getMyUpcomingBarathons, startBarathon } from '../services/planned.service';
+import ManageParticipantsModal from '../components/ManageParticipantsModal';
+import { updateBarathonStartDatetime, deleteBarathon, getMyUpcomingBarathons } from '../services/planned.service';
+import { parseApiDate } from '../../../lib/dateUtils';
 
 export default function PlannedScreen() {
     const [barathons, setBarathons] = useState<BarathonListItem[]>([]);
@@ -24,13 +27,18 @@ export default function PlannedScreen() {
     const [deletingBarathonId, setDeletingBarathonId] = useState<number | null>(null);
     const [selectedBarathon, setSelectedBarathon] = useState<BarathonListItem | null>(null);
     const [changeTimeModalVisible, setChangeTimeModalVisible] = useState(false);
+    const [participantsModalVisible, setParticipantsModalVisible] = useState(false);
     const [updatingStartTime, setUpdatingStartTime] = useState(false);
-    const [startingBarathonId, setStartingBarathonId] = useState<number | null>(null);
-    
+    const [startingBarathonId] = useState<number | null>(null);
     useEffect(() => {
         loadCurrentUserId();
-        loadData();
     }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            loadData();
+        }, [])
+    );
 
   async function loadCurrentUserId() {
     try {
@@ -57,7 +65,8 @@ export default function PlannedScreen() {
   }
 
     function handleAddParticipants(barathon: BarathonListItem) {
-        console.log('Ajouter participants', barathon.id);
+      setSelectedBarathon(barathon);
+      setParticipantsModalVisible(true);
     }
 
     function handleDelete(barathon: BarathonListItem) {
@@ -103,14 +112,7 @@ export default function PlannedScreen() {
       setSelectedBarathon(barathon);
       setChangeTimeModalVisible(true);
     }
-    function handleOpenDetails(barathonId: number) {
-      router.push({
-        pathname: '/barathon-details',
-        params: {
-          barathonId: String(barathonId),
-        },
-      });
-    }
+
     async function handleConfirmChangeStartTime(newDate: Date) {
       if (!selectedBarathon) {
         return;
@@ -124,16 +126,21 @@ export default function PlannedScreen() {
           newDate.toISOString()
         );
 
-        setBarathons((prev) =>
-          prev.map((item) =>
+        setBarathons((prev) => {
+          const updatedList = prev.map((item) =>
             item.id === selectedBarathon.id
               ? {
                   ...item,
                   ...updated,
                 }
               : item
-          )
-        );
+          );
+          return updatedList.sort(
+            (a, b) =>
+              parseApiDate(a.start_datetime).getTime() -
+              parseApiDate(b.start_datetime).getTime()
+          );
+        });
 
         setChangeTimeModalVisible(false);
         setSelectedBarathon(null);
@@ -228,6 +235,27 @@ export default function PlannedScreen() {
           setSelectedBarathon(null);
         }}
         onConfirm={handleConfirmChangeStartTime}
+      />
+      <ManageParticipantsModal
+        visible={participantsModalVisible}
+        barathon={selectedBarathon}
+        currentUserId={currentUserId ?? -1}
+        onClose={() => {
+          setParticipantsModalVisible(false);
+          setSelectedBarathon(null);
+        }}
+        onUpdated={(updatedBarathon) => {
+          setBarathons((prev) =>
+            prev.map((item) =>
+              item.id === updatedBarathon.id
+                ? {
+                    ...item,
+                    participants_count: updatedBarathon.participants.length,
+                  }
+                : item
+            )
+          );
+        }}
       />
     </SafeAreaView>
   );

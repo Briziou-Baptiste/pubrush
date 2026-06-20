@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -20,6 +21,7 @@ import {
   addParticipantsToBarathon,
   getBarathonDetails,
   searchUsers,
+  removeParticipantFromBarathon,
 } from '../services/barathonRecap.service';
 import {
   CreateBarathonPayload,
@@ -326,12 +328,52 @@ export default function BarathonRecapScreen() {
     setResults([]);
   }
 
-  function handleRemoveParticipant(userId: number) {
+  async function handleRemoveParticipant(userId: number) {
     if (creatorUserId === userId) {
       return;
     }
 
-    setParticipants((prev) => prev.filter((participant) => participant.id !== userId));
+    const isExisting = initialParticipantIds.includes(userId);
+
+    if (isDetailsMode && isExisting) {
+      const participant = participants.find((p) => p.id === userId);
+      const username = participant?.username || 'cet utilisateur';
+
+      Alert.alert(
+        'Retirer le participant',
+        `Es-tu sûr de vouloir retirer ${username} de ce barathon ?`,
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Retirer',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                setSubmitting(true);
+                const updated = (await removeParticipantFromBarathon(
+                  Number(params.barathonId),
+                  userId
+                )) as any;
+
+                const normalizedParticipants = updated.participants.map((p: any) => p.user);
+                setParticipants(normalizedParticipants);
+                setInitialParticipantIds(normalizedParticipants.map((p: any) => p.id));
+                Alert.alert('Succès', 'Participant retiré.');
+              } catch (error) {
+                Alert.alert(
+                  'Erreur',
+                  error instanceof Error ? error.message : "Impossible de retirer l'utilisateur."
+                );
+              } finally {
+                setSubmitting(false);
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      setParticipants((prev) => prev.filter((participant) => participant.id !== userId));
+    }
   }
 
   const startDate = useMemo(() => {
@@ -481,15 +523,15 @@ export default function BarathonRecapScreen() {
     }
   }
 
-  async function handleAddParticipantsOnExistingBarathon() {
+  const handleAddParticipantsOnExistingBarathon = useCallback(async (): Promise<boolean> => {
     if (!params.barathonId) {
       Alert.alert('Erreur', 'Barathon introuvable.');
-      return;
+      return false;
     }
 
     if (addedParticipantIds.length === 0) {
       Alert.alert('Erreur', 'Aucun nouveau participant à ajouter.');
-      return;
+      return false;
     }
 
     try {
@@ -504,15 +546,64 @@ export default function BarathonRecapScreen() {
       setInitialParticipantIds(normalizedParticipants.map((participant) => participant.id));
 
       Alert.alert('Succès', 'Participants ajoutés.');
+      return true;
     } catch (error) {
       Alert.alert(
         'Erreur',
         error instanceof Error ? error.message : 'Impossible d’ajouter les participants.'
       );
+      return false;
     } finally {
       setSubmitting(false);
     }
-  }
+  }, [params.barathonId, addedParticipantIds]);
+
+  const handleBack = useCallback(async () => {
+    if (isDetailsMode && addedParticipantIds.length > 0) {
+      Alert.alert(
+        'Ajouts non validés',
+        "Tu as ajouté des participants mais tu n'as pas validé l'ajout. Que souhaites-tu faire ?",
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Ne pas ajouter',
+            style: 'destructive',
+            onPress: () => {
+              router.back();
+            },
+          },
+          {
+            text: "Valider l'ajout",
+            onPress: async () => {
+              const success = await handleAddParticipantsOnExistingBarathon();
+              if (success) {
+                router.back();
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      router.back();
+    }
+  }, [isDetailsMode, addedParticipantIds, handleAddParticipantsOnExistingBarathon]);
+
+  useEffect(() => {
+    const backAction = () => {
+      if (isDetailsMode && addedParticipantIds.length > 0) {
+        handleBack();
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [isDetailsMode, addedParticipantIds, handleBack]);
 
   if (loadingBarathon) {
     return (
@@ -531,7 +622,7 @@ export default function BarathonRecapScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Text style={styles.backButtonText}>Retour</Text>
         </TouchableOpacity>
 
@@ -612,7 +703,7 @@ export default function BarathonRecapScreen() {
 
             {expenses.length === 0 ? (
               <Text style={{ color: '#6B7280', fontSize: 14, textAlign: 'center', marginVertical: 12 }}>
-                Aucune dépense n'a été enregistrée pour ce barathon.
+                {"Aucune dépense n'a été enregistrée pour ce barathon."}
               </Text>
             ) : (
               <View>

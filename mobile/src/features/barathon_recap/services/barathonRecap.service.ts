@@ -39,3 +39,12 @@ export async function addParticipantsToBarathon(
     body: JSON.stringify(payload),
   });
 }
+
+export async function removeParticipantFromBarathon(
+  barathonId: number,
+  userId: number
+) {
+  return authenticatedJsonRequest(`/barathons/${barathonId}/participants/${userId}`, {
+    method: 'DELETE',
+  });
+}

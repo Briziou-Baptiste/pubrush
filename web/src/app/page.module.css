@@ -211,7 +211,7 @@
 }
 
 .searchControls {
-  @apply absolute top-[230px] left-3.5 right-3.5 z-20 space-y-2.5;
+  @apply absolute top-[140px] left-3.5 right-3.5 z-20 space-y-2.5;
 }
 
 .searchBar {

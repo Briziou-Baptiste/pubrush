@@ -30,12 +30,14 @@ const DEFAULT_REGION = {
 export default function PartnerEventMapScreen() {
   const { eventId, eventName } = useLocalSearchParams<{ eventId: string; eventName: string }>();
   const mapRef = useRef<MapView | null>(null);
+  const justPressedMarker = useRef(false);
 
   const [spots, setSpots] = useState<any[]>([]);
   const [mapFilters, setMapFilters] = useState<any[]>([]);
   const [selectedFilterKeys, setSelectedFilterKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [selectedSpot, setSelectedSpot] = useState<any | null>(null);
 
   const {
     location,
@@ -170,6 +172,18 @@ export default function PartnerEventMapScreen() {
     );
   };
 
+  const handleSpotPress = (spot: any) => {
+    justPressedMarker.current = true;
+    setSelectedSpot(spot);
+    mapRef.current?.animateCamera({
+      center: {
+        latitude: spot.latitude,
+        longitude: spot.longitude,
+      },
+      zoom: 17,
+    }, { duration: 450 });
+  };
+
   const centerOnUser = () => {
     if (!location) {
       Alert.alert('Localisation', 'Position indisponible pour le moment.');
@@ -236,12 +250,19 @@ export default function PartnerEventMapScreen() {
           showsUserLocation={permissionGranted}
           showsMyLocationButton={false}
           toolbarEnabled={false}
+          onPress={() => {
+            if (justPressedMarker.current) {
+              justPressedMarker.current = false;
+              return;
+            }
+            setSelectedSpot(null);
+          }}
         >
           {visibleSpots.map((spot) => (
             <Marker
               key={spot.id}
               coordinate={{ latitude: spot.latitude, longitude: spot.longitude }}
-              onPress={() => handleOpenDirections(spot)}
+              onPress={() => handleSpotPress(spot)}
             >
               <View style={[styles.customMarker, { backgroundColor: getMarkerColor(spot.spot_type) }]}>
                 <Text style={styles.markerEmoji}>{getMarkerEmoji(spot.spot_type)}</Text>
@@ -315,13 +336,53 @@ export default function PartnerEventMapScreen() {
         </View>
 
         {/* Floating Location Control Button */}
-        <View style={styles.locationControlWrapper}>
+        <View style={[
+          styles.locationControlWrapper,
+          { bottom: selectedSpot ? (Platform.OS === 'ios' ? 245 : 225) : (Platform.OS === 'ios' ? 40 : 30) }
+        ]}>
           <LocationButton
             onPress={centerOnUser}
             heading={heading}
             disabled={!permissionGranted || loadingLocation}
           />
         </View>
+
+        {/* Spot Details Card */}
+        {selectedSpot && (
+          <View style={styles.spotDetailsCard}>
+            <View style={styles.spotDetailsHeader}>
+              <View style={styles.spotTitleContainer}>
+                <View style={[styles.spotBadge, { backgroundColor: getMarkerColor(selectedSpot.spot_type) }]}>
+                  <Text style={styles.spotBadgeEmoji}>{getMarkerEmoji(selectedSpot.spot_type)}</Text>
+                </View>
+                <Text style={styles.spotTitle} numberOfLines={1}>{selectedSpot.name}</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.spotCloseButton} 
+                onPress={() => setSelectedSpot(null)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close-circle" size={24} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[
+              styles.spotDescription,
+              !selectedSpot.description && styles.spotDescriptionPlaceholder
+            ]}>
+              {selectedSpot.description || "Aucune description fournie pour ce lieu."}
+            </Text>
+
+            <TouchableOpacity 
+              style={styles.directionsButton}
+              onPress={() => handleOpenDirections(selectedSpot)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="navigate-circle-outline" size={20} color="#FFFFFF" />
+              <Text style={styles.directionsButtonText}>Allez vers Google Maps</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
       </View>
     </View>

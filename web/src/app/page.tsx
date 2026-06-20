@@ -283,7 +283,7 @@ export default function Home() {
             <div className={styles.topFloatingCard}>
               <div>
                 <h4 className={styles.cardTitle}>PubRush</h4>
-                <p className={styles.cardSubtitle}>Nom du barathon : Test</p>
+                <p className={styles.cardSubtitle}>Nom du barathon : PubRush</p>
                 <p className={styles.cardMeta}>Date de début : 09/06/2026 à 09:41</p>
               </div>
               <div className={styles.cardBtn}>

@@ -52,6 +52,7 @@ export default function RootLayout() {
       apiBaseUrl: API_BASE_URL,
       token,
       onMessage: (message: WSMessage) => {
+          console.log('[WS][LAYOUT] Message received:', message);
           if (message.type === 'BARATHON_STARTED' && message.barathon_id) {
             router.replace({
               pathname: '/active-barathon',
@@ -61,7 +62,13 @@ export default function RootLayout() {
           }
 
         if (message.type === 'BARATHON_STOPPED' || message.type === 'BARATHON_FINISHED') {
-          router.replace('/planned');
+          router.replace({
+            pathname: '/barathon-stop-summary',
+            params: {
+              barathonId: String(message.barathon_id),
+              source: 'active',
+            },
+          });
           return;
         }
 

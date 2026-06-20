@@ -40,14 +40,15 @@ export default function DashboardChart({
 
   // Find maximum value for scaling
   const maxValue = useMemo(() => {
-    if (data.length === 0) return 10;
+    if (data.length === 0) return 4;
     let max = 0;
     data.forEach((item) => {
       keys.forEach((key) => {
         if (item[key] > max) max = item[key];
       });
     });
-    return max === 0 ? 10 : Math.ceil(max * 1.15); // Add 15% headroom
+    const calculated = max === 0 ? 4 : Math.ceil(max * 1.15); // Add 15% headroom
+    return Math.max(4, calculated);
   }, [data, keys]);
 
   // Compute X and Y coordinates for all points
@@ -55,7 +56,14 @@ export default function DashboardChart({
     if (data.length === 0) return [];
     
     return data.map((item, idx) => {
-      const x = paddingLeft + (idx / (data.length - 1 || 1)) * chartWidth;
+      let x = 0;
+      if (type === "bar") {
+        const slotWidth = chartWidth / data.length;
+        x = paddingLeft + (idx + 0.5) * slotWidth;
+      } else {
+        x = paddingLeft + (idx / (data.length - 1 || 1)) * chartWidth;
+      }
+
       const ys = keys.map((key) => {
         const value = item[key] ?? 0;
         const y = svgHeight - paddingBottom - (value / maxValue) * chartHeight;
@@ -63,7 +71,7 @@ export default function DashboardChart({
       });
       return { x, ys, raw: item };
     });
-  }, [data, keys, maxValue, chartWidth, chartHeight]);
+  }, [data, keys, maxValue, chartWidth, chartHeight, type]);
 
   // Handle Mouse Hover/Move for interactive Tooltip
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
@@ -73,14 +81,28 @@ export default function DashboardChart({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
+    const scaleX = rect.width ? svgWidth / rect.width : 1;
+    const scaleY = rect.height ? svgHeight / rect.height : 1;
+
+    const svgMouseX = mouseX * scaleX;
+    const svgMouseY = mouseY * scaleY;
+
     // Convert mouseX to index in data
-    const relativeX = mouseX - paddingLeft;
-    const indexRatio = relativeX / chartWidth;
-    let idx = Math.round(indexRatio * (data.length - 1));
+    const relativeX = svgMouseX - paddingLeft;
+    let idx = 0;
+    if (type === "bar") {
+      const slotWidth = chartWidth / data.length;
+      idx = Math.floor(relativeX / slotWidth);
+    } else {
+      const indexRatio = relativeX / chartWidth;
+      idx = Math.round(indexRatio * (data.length - 1));
+    }
     idx = Math.max(0, Math.min(data.length - 1, idx));
 
     setHoveredIdx(idx);
-    setTooltipPos({ x: mouseX, y: mouseY - 15 });
+    
+    const tooltipX = points[idx] ? points[idx].x : svgMouseX;
+    setTooltipPos({ x: tooltipX, y: svgMouseY - 15 });
   };
 
   const handleMouseLeave = () => {
@@ -105,6 +127,14 @@ export default function DashboardChart({
     const bottomY = svgHeight - paddingBottom;
     return `${linePath} L ${lastPoint.x} ${bottomY} L ${firstPoint.x} ${bottomY} Z`;
   };
+
+  const tooltipTransform = useMemo(() => {
+    if (hoveredIdx === null || data.length === 0) return "translate(-50%, -100%)";
+    const ratio = hoveredIdx / (data.length - 1 || 1);
+    if (ratio < 0.2) return "translate(-15%, -100%)";
+    if (ratio > 0.8) return "translate(-85%, -100%)";
+    return "translate(-50%, -100%)";
+  }, [hoveredIdx, data.length]);
 
   return (
     <div ref={containerRef} className={styles.chartContainer}>
@@ -153,33 +183,40 @@ export default function DashboardChart({
             </defs>
 
             {/* Horizontal Grid Lines */}
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-              const y = paddingTop + ratio * chartHeight;
-              const value = Math.round(maxValue * (1 - ratio));
-              return (
-                <g key={idx}>
-                  <line
-                    x1={paddingLeft}
-                    y1={y}
-                    x2={svgWidth - paddingRight}
-                    y2={y}
-                    stroke="#1e293b"
-                    strokeWidth="1"
-                    strokeDasharray="4,4"
-                  />
-                  <text
-                    x={paddingLeft - 8}
-                    y={y + 3}
-                    fill="#475569"
-                    fontSize="9"
-                    fontWeight="bold"
-                    textAnchor="end"
-                  >
-                    {value}
-                  </text>
-                </g>
-              );
-            })}
+            {(() => {
+              const printedValues = new Set<number>();
+              return [0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                const y = paddingTop + ratio * chartHeight;
+                const value = Math.round(maxValue * (1 - ratio));
+                const showLabel = !printedValues.has(value);
+                printedValues.add(value);
+                return (
+                  <g key={idx}>
+                    <line
+                      x1={paddingLeft}
+                      y1={y}
+                      x2={svgWidth - paddingRight}
+                      y2={y}
+                      stroke="#1e293b"
+                      strokeWidth="1"
+                      strokeDasharray="4,4"
+                    />
+                    {showLabel && (
+                      <text
+                        x={paddingLeft - 8}
+                        y={y + 3}
+                        fill="#475569"
+                        fontSize="9"
+                        fontWeight="bold"
+                        textAnchor="end"
+                      >
+                        {value}
+                      </text>
+                    )}
+                  </g>
+                );
+              });
+            })()}
 
             {/* X Axis Labels */}
             {points.map((p, idx) => {
@@ -222,6 +259,19 @@ export default function DashboardChart({
                     strokeLinejoin="round"
                     style={{ pointerEvents: "none" }}
                   />
+                  {/* Dots for all points */}
+                  {points.map((p, idx) => (
+                    <circle
+                      key={idx}
+                      cx={p.x}
+                      cy={p.ys[keyIdx]}
+                      r="3.5"
+                      fill={colors[keyIdx]}
+                      stroke="#0f172a"
+                      strokeWidth="1.5"
+                      style={{ pointerEvents: "none" }}
+                    />
+                  ))}
                 </g>
               ))}
 
@@ -293,7 +343,7 @@ export default function DashboardChart({
             style={{
               left: `${(tooltipPos.x / svgWidth) * 100}%`,
               top: `${(tooltipPos.y / svgHeight) * 100}%`,
-              transform: "translate(-50%, -100%)",
+              transform: tooltipTransform,
               minWidth: "120px",
             }}
           >

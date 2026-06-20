@@ -176,16 +176,28 @@ export default function BarathonCard({
           <Text style={styles.infoValue}>{item.stops.length}</Text>
         </View>
 
-        <View style={styles.infoBlock}>
-          <Text style={styles.infoLabel}>Participants</Text>
-          <Text style={styles.infoValue}>{item.participants_count}</Text>
-        </View>
+        {variant === 'planned' ? (
+          <TouchableOpacity
+            style={[styles.infoBlock, styles.infoBlockPressable]}
+            onPress={() => onAddParticipants?.(item)}
+            activeOpacity={0.85}
+            disabled={isDeleting}
+          >
+            <Text style={styles.infoLabel}>Participants</Text>
+            <Text style={styles.infoValue}>{item.participants_count}</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.infoBlock}>
+            <Text style={styles.infoLabel}>Participants</Text>
+            <Text style={styles.infoValue}>{item.participants_count}</Text>
+          </View>
+        )}
       </View>
 
       {variant === 'planned' && countdown.visible ? (
         <View style={[styles.countdownBox, countdownStyle]}>
           <Text style={[styles.countdownLabel, countdownTextStyle]}>
-            Délai restant avant expiration
+            {countdown.title}
           </Text>
           <Text style={[styles.countdownValue, countdownTextStyle]}>
             {countdown.label}

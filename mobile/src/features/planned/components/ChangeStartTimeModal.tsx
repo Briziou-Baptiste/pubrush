@@ -13,6 +13,7 @@ import DateTimePicker, {
 
 import { BarathonListItem } from '../../barathon_past_planned/types/barathon.types';
 import { styles } from '../styles/changeStartTimeModal.styles';
+import { parseApiDate } from '../../../lib/dateUtils';
 
 type ChangeStartTimeModalProps = {
   visible: boolean;
@@ -42,18 +43,34 @@ export default function ChangeStartTimeModal({
       return new Date();
     }
 
-    return new Date(barathon.start_datetime);
+    return parseApiDate(barathon.start_datetime);
   }, [barathon]);
 
   const [tempDate, setTempDate] = useState<Date>(initialDate);
+  const [showAndroidPicker, setShowAndroidPicker] = useState(false);
 
   useEffect(() => {
     setTempDate(initialDate);
+    setShowAndroidPicker(false);
   }, [initialDate, visible]);
 
-  function handlePickerChange(_: DateTimePickerEvent, selectedDate?: Date) {
+  function mergeDateWithTime(dateSource: Date, timeSource: Date): Date {
+    const merged = new Date(dateSource);
+    merged.setHours(timeSource.getHours());
+    merged.setMinutes(timeSource.getMinutes());
+    merged.setSeconds(0);
+    merged.setMilliseconds(0);
+    return merged;
+  }
+
+  function handlePickerChange(event: DateTimePickerEvent, selectedDate?: Date) {
+    if (Platform.OS === 'android') {
+      setShowAndroidPicker(false);
+    }
+
     if (selectedDate) {
-      setTempDate(selectedDate);
+      const merged = mergeDateWithTime(initialDate, selectedDate);
+      setTempDate(merged);
     }
   }
 
@@ -63,7 +80,7 @@ export default function ChangeStartTimeModal({
     }
 
     const now = new Date();
-    const originalDate = new Date(barathon.start_datetime);
+    const originalDate = parseApiDate(barathon.start_datetime);
 
     if (isSameLocalDay(originalDate, now) && tempDate.getTime() < now.getTime()) {
       return {
@@ -114,7 +131,7 @@ export default function ChangeStartTimeModal({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>Changer l'heure</Text>
+          <Text style={styles.title}>{"Changer l'heure"}</Text>
 
           {barathon ? (
             <>
@@ -122,21 +139,51 @@ export default function ChangeStartTimeModal({
 
               <Text style={styles.currentText}>
                 Heure actuelle :{' '}
-                {new Date(barathon.start_datetime).toLocaleTimeString('fr-FR', {
+                {parseApiDate(barathon.start_datetime).toLocaleTimeString('fr-FR', {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
               </Text>
 
-              <View style={styles.pickerWrapper}>
-                <DateTimePicker
-                  value={tempDate}
-                  mode="time"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  is24Hour
-                  onChange={handlePickerChange}
-                />
-              </View>
+              {Platform.OS === 'ios' ? (
+                <View style={styles.pickerWrapper}>
+                  <DateTimePicker
+                    value={tempDate}
+                    mode="time"
+                    display="spinner"
+                    is24Hour
+                    onChange={handlePickerChange}
+                  />
+                </View>
+              ) : (
+                <View style={styles.pickerWrapper}>
+                  <TouchableOpacity
+                    style={styles.timeSelectButton}
+                    onPress={() => setShowAndroidPicker(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.timeSelectButtonText}>
+                      {tempDate.toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </Text>
+                    <Text style={styles.timeSelectHelperText}>
+                      {"Appuyer pour modifier l'heure"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showAndroidPicker && (
+                    <DateTimePicker
+                      value={tempDate}
+                      mode="time"
+                      display="default"
+                      is24Hour
+                      onChange={handlePickerChange}
+                    />
+                  )}
+                </View>
+              )}
 
               <Text style={styles.previewText}>
                 Nouvelle heure :{' '}

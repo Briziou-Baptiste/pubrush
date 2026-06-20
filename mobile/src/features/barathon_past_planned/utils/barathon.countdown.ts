@@ -1,3 +1,5 @@
+import { parseApiDate } from '../../../lib/dateUtils';
+
 export type CountdownLevel = 'normal' | 'warning' | 'danger';
 
 type StartCountdownResult = {
@@ -48,7 +50,7 @@ export function getStartGraceCountdown(
   startDatetime: string,
   nowMs: number
 ): StartCountdownResult {
-  const start = new Date(startDatetime).getTime();
+  const start = parseApiDate(startDatetime).getTime();
 
   if (!isValidTimestamp(start) || !isValidTimestamp(nowMs)) {
     return {

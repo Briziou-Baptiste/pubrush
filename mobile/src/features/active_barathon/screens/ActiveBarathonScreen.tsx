@@ -11,7 +11,7 @@ import { styles } from '../styles/activeBarathon.styles';
 import ActiveBarathonHeader from '../components/ActiveBarathonHeader';
 import ActiveBarathonMap from '../components/ActiveBarathonMap';
 import ActiveBarathonBottomPanel from '../components/ActiveBarathonBottomPanel';
-import { fetchMyRoleInBarathon } from '../../../lib/api';
+import { fetchMyRoleInBarathon, fetchBarathon } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
 
 export default function ActiveBarathonScreen() {
@@ -74,6 +74,54 @@ export default function ActiveBarathonScreen() {
       stops: [],
     },
   });
+
+  useEffect(() => {
+    if (!barathon?.id) {
+      return;
+    }
+
+    console.log('[POLLING] Setting up status polling interval for barathon ID:', barathon.id);
+
+    const interval = setInterval(async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token) return;
+
+        console.log('[POLLING] Querying status for barathon ID:', barathon.id);
+        const data = await fetchBarathon(barathon.id, token);
+        console.log('[POLLING] Status returned:', data?.status);
+
+        if (data && (data.status === 'stopped' || data.status === 'completed')) {
+          console.log('[POLLING] Redirecting to summary...');
+          
+          // Stop GPS tracking
+          await tracking.stopTracking();
+
+          // Redirect to summary
+          router.replace({
+            pathname: '/barathon-stop-summary',
+            params: {
+              barathonId: String(barathon.id),
+              barathonName: barathon.name,
+              totalStops: String(barathon.stops.length),
+              completedStops: String(tracking.state.activeStopIndex),
+              startDateTimeIso: barathon.start_datetime,
+              endDateTimeIso: data.ended_at || data.end_datetime || new Date().toISOString(),
+              stopsJson: JSON.stringify(barathon.stops),
+              source: 'active',
+            },
+          });
+        }
+      } catch (error) {
+        console.error('[POLLING] Failed to poll barathon status:', error);
+      }
+    }, 6000); // Poll every 6 seconds
+
+    return () => {
+      console.log('[POLLING] Cleaning up status polling interval for barathon ID:', barathon.id);
+      clearInterval(interval);
+    };
+  }, [barathon?.id, barathon?.name, tracking.state.activeStopIndex]);
 
   const initialRegion: Region = useMemo(() => {
     if (!barathon || barathon.stops.length === 0) {

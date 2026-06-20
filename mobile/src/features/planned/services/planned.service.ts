@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { BarathonListItem } from '../../barathon_past_planned/types/barathon.types';
 import { authenticatedJsonRequest } from '../../../lib/apiClient';
+import { SearchUserResult } from '../../create_barathon/types/createBarathon.types';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.pubrush.com';
 
 export async function getMyUpcomingBarathons(): Promise<BarathonListItem[]> {
@@ -96,4 +97,47 @@ export async function startBarathon(barathonId: number) {
   return authenticatedJsonRequest(`/barathons/${barathonId}/start`, {
     method: 'POST',
   });
+}
+
+export async function getBarathonDetails(barathonId: number): Promise<any> {
+  return authenticatedJsonRequest<any>(`/barathons/${barathonId}`, {
+    method: 'GET',
+  });
+}
+
+export async function searchUsers(query: string): Promise<SearchUserResult[]> {
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return [];
+
+  return authenticatedJsonRequest<SearchUserResult[]>(
+    `/users/search?q=${encodeURIComponent(cleanQuery)}`,
+    {
+      method: 'GET',
+    }
+  );
+}
+
+export async function addParticipantsToBarathon(
+  barathonId: number,
+  userIds: number[]
+): Promise<any> {
+  return authenticatedJsonRequest<any>(
+    `/barathons/${barathonId}/participants`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ participant_user_ids: userIds }),
+    }
+  );
+}
+
+export async function removeParticipantFromBarathon(
+  barathonId: number,
+  userId: number
+): Promise<any> {
+  return authenticatedJsonRequest<any>(
+    `/barathons/${barathonId}/participants/${userId}`,
+    {
+      method: 'DELETE',
+    }
+  );
 }
