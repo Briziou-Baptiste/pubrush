@@ -219,3 +219,38 @@ def test_assign_roles_and_start(client, user_auth_headers, test_user, test_user_
     role_res = client.get(f"/barathons/{barathon_id}/my-role", headers=user_auth_headers)
     assert role_res.status_code == 200
     assert role_res.json()["role"] == test_roles[0].name
+
+
+def test_remove_participant(client, user_auth_headers, user_2_auth_headers, test_user, test_user_2):
+    # 1. Create a barathon with test_user_2
+    payload = {
+        "name": "Barathon with friends",
+        "start_datetime": (datetime.utcnow() + timedelta(days=1)).isoformat(),
+        "end_datetime": (datetime.utcnow() + timedelta(days=1, hours=4)).isoformat(),
+        "travel_time_between_bars_minutes": 10,
+        "max_time_in_bar_minutes": 30,
+        "participant_user_ids": [test_user_2.id],
+        "stops": []
+    }
+    create_res = client.post("/barathons", json=payload, headers=user_auth_headers)
+    assert create_res.status_code == 201
+    barathon = create_res.json()
+    barathon_id = barathon["id"]
+    assert len(barathon["participants"]) == 2
+
+    # 2. Third-party (user_2) tries to remove the creator -> gets 403
+    res_403 = client.delete(f"/barathons/{barathon_id}/participants/{test_user.id}", headers=user_2_auth_headers)
+    assert res_403.status_code == 403
+
+    # 3. Creator tries to remove themselves (the creator) -> gets 400
+    res_400 = client.delete(f"/barathons/{barathon_id}/participants/{test_user.id}", headers=user_auth_headers)
+    assert res_400.status_code == 400
+    assert "Impossible de retirer le créateur" in res_400.json()["detail"]
+
+    # 4. Creator removes test_user_2 -> gets 200
+    res_success = client.delete(f"/barathons/{barathon_id}/participants/{test_user_2.id}", headers=user_auth_headers)
+    assert res_success.status_code == 200
+    updated_barathon = res_success.json()
+    assert len(updated_barathon["participants"]) == 1
+    assert updated_barathon["participants"][0]["user"]["id"] == test_user.id
+

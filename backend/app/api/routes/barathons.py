@@ -383,6 +383,67 @@ def add_participants_to_barathon(
     return updated_barathon
 
 
+@router.delete("/{barathon_id}/participants/{user_id}", response_model=BarathonRead)
+def remove_participant_from_barathon(
+    barathon_id: int,
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    barathon = db.scalar(
+        select(Barathon)
+        .options(
+            selectinload(Barathon.participants).selectinload(BarathonParticipant.user),
+            selectinload(Barathon.stops),
+        )
+        .where(Barathon.id == barathon_id)
+    )
+
+    if not barathon:
+        raise HTTPException(status_code=404, detail="Barathon introuvable.")
+
+    if barathon.created_by_user_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès interdit.")
+
+    if user_id == barathon.created_by_user_id:
+        raise HTTPException(
+            status_code=400, detail="Impossible de retirer le créateur du barathon."
+        )
+
+    participant = db.scalar(
+        select(BarathonParticipant).where(
+            BarathonParticipant.barathon_id == barathon_id,
+            BarathonParticipant.user_id == user_id,
+        )
+    )
+
+    if not participant:
+        raise HTTPException(
+            status_code=404, detail="Participant non trouvé dans ce barathon."
+        )
+
+    db.execute(
+        delete(BarathonParticipantRole).where(
+            BarathonParticipantRole.barathon_id == barathon_id,
+            BarathonParticipantRole.user_id == user_id,
+        )
+    )
+
+    db.delete(participant)
+    db.commit()
+
+    updated_barathon = db.scalar(
+        select(Barathon)
+        .options(
+            selectinload(Barathon.participants).selectinload(BarathonParticipant.user),
+            selectinload(Barathon.stops),
+        )
+        .where(Barathon.id == barathon_id)
+    )
+
+    return updated_barathon
+
+
 @router.post("/{barathon_id}/start", response_model=BarathonRead)
 async def start_barathon(
     barathon_id: int,
