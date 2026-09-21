@@ -29,6 +29,13 @@ import { createBarathonMapStyles as styles } from '../styles/createBarathonMap.s
 import { StopType } from '../types/createBarathon.types';
 import { fetchBarsSearch, fetchNearbyBars, fetchMapFilters } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
+import {
+  fetchWalkingRoute,
+  RouteSegment,
+  getRouteMidpoint,
+  optimizeStopOrder,
+  getStraightLineWalkingMinutes,
+} from '../services/routing.service';
 
 type SelectedPoint = {
   id: string;
@@ -93,6 +100,48 @@ export default function CreateBarathonMapScreen() {
   const [activeFilterKey, setActiveFilterKey] = useState<string>('bar');
   const [loadingFilters, setLoadingFilters] = useState(false);
   const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
+  const [routeSegments, setRouteSegments] = useState<Record<string, RouteSegment>>({});
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAllRouteSegments() {
+      if (points.length < 2) {
+        setRouteSegments({});
+        return;
+      }
+
+      const newSegments: Record<string, RouteSegment> = {};
+      let hasChange = false;
+
+      for (let i = 0; i < points.length - 1; i++) {
+        if (!active) return;
+        const from = points[i];
+        const to = points[i + 1];
+        const key = `${from.id}->${to.id}`;
+
+        const seg = await fetchWalkingRoute(
+          { latitude: Number(from.latitude), longitude: Number(from.longitude) },
+          { latitude: Number(to.latitude), longitude: Number(to.longitude) }
+        );
+
+        if (active) {
+          newSegments[key] = seg;
+          hasChange = true;
+        }
+      }
+
+      if (active && hasChange) {
+        setRouteSegments(newSegments);
+      }
+    }
+
+    void loadAllRouteSegments();
+
+    return () => {
+      active = false;
+    };
+  }, [points]);
 
   useEffect(() => {
     async function loadFilters() {
@@ -478,6 +527,38 @@ export default function CreateBarathonMapScreen() {
     closeModal();
   }
 
+  function movePointUp(index: number) {
+    if (index <= 0) return;
+    setPoints((prev) => {
+      const copy = [...prev];
+      const temp = copy[index - 1];
+      copy[index - 1] = copy[index];
+      copy[index] = temp;
+      return copy;
+    });
+  }
+
+  function movePointDown(index: number) {
+    if (index >= points.length - 1) return;
+    setPoints((prev) => {
+      const copy = [...prev];
+      const temp = copy[index + 1];
+      copy[index + 1] = copy[index];
+      copy[index] = temp;
+      return copy;
+    });
+  }
+
+  function handleOptimizeRoute() {
+    if (points.length <= 2) return;
+    const optimized = optimizeStopOrder(points);
+    setPoints(optimized);
+    Alert.alert(
+      '⚡ Parcours optimisé',
+      'L’ordre des étapes a été réorganisé pour minimiser le temps de marche total entre les bars !'
+    );
+  }
+
   function removePoint(id: string) {
     setPoints((prev) => prev.filter((p) => p.id !== id));
   }
@@ -519,6 +600,10 @@ export default function CreateBarathonMapScreen() {
   }
 
   function getEstimatedWalkingTimeMinutes(from: SelectedPoint, to: SelectedPoint) {
+    const key = `${from.id}->${to.id}`;
+    if (routeSegments[key]?.durationMinutes) {
+      return routeSegments[key].durationMinutes;
+    }
     const distanceKm = getDistanceInKm(from, to);
     const timeHours = distanceKm / WALKING_SPEED_KMH;
     return Math.max(1, Math.round(timeHours * 60));
@@ -537,9 +622,14 @@ export default function CreateBarathonMapScreen() {
   }
 
   const allPolylines = useMemo(() => {
-    return points.slice(0, -1).map((point, index) => {
+    if (points.length < 2) return [];
+
+    const elements: React.ReactElement[] = [];
+
+    points.slice(0, -1).forEach((point, index) => {
       const nextPoint = points[index + 1];
-      const key = `polyline-${point.id}-${nextPoint.id}`;
+      const segmentKey = `${point.id}->${nextPoint.id}`;
+      const segment = routeSegments[segmentKey];
 
       const lat1 = Number(point.latitude);
       const lng1 = Number(point.longitude);
@@ -547,22 +637,77 @@ export default function CreateBarathonMapScreen() {
       const lng2 = Number(nextPoint.longitude);
 
       if (Number.isNaN(lat1) || Number.isNaN(lng1) || Number.isNaN(lat2) || Number.isNaN(lng2)) {
-        return null;
+        return;
       }
 
-      return (
+      const coords =
+        segment?.coordinates && segment.coordinates.length >= 2
+          ? segment.coordinates
+          : [
+              { latitude: lat1, longitude: lng1 },
+              { latitude: lat2, longitude: lng2 },
+            ];
+
+      // 1. Glow halo behind the route
+      elements.push(
         <Polyline
-          key={key}
-          coordinates={[
-            { latitude: lat1, longitude: lng1 },
-            { latitude: lat2, longitude: lng2 },
-          ]}
-          strokeColor="#22C55E" // Solid direct green line, 100% native
+          key={`glow-${segmentKey}`}
+          coordinates={coords}
+          strokeColor="rgba(16, 185, 129, 0.25)"
+          strokeWidth={8}
+        />
+      );
+
+      // 2. High-contrast street pedestrian route
+      elements.push(
+        <Polyline
+          key={`route-${segmentKey}`}
+          coordinates={coords}
+          strokeColor="#10B981"
           strokeWidth={4}
         />
       );
-    }).filter(Boolean);
-  }, [points]);
+
+      // 3. Midpoint floating badge with real minutes & meters
+      const midpoint = getRouteMidpoint(coords);
+      if (midpoint && segment) {
+        const distLabel =
+          segment.distanceMeters >= 1000
+            ? `${(segment.distanceMeters / 1000).toFixed(1)} km`
+            : `${segment.distanceMeters} m`;
+
+        elements.push(
+          <Marker
+            key={`badge-${segmentKey}`}
+            coordinate={midpoint}
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={false}
+          >
+            <View
+              style={{
+                backgroundColor: 'rgba(17, 24, 39, 0.92)',
+                borderColor: '#10B981',
+                borderWidth: 1.5,
+                borderRadius: 14,
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                shadowColor: '#000',
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 4,
+              }}
+            >
+              <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>
+                🚶 {segment.durationMinutes} min • {distLabel}
+              </Text>
+            </View>
+          </Marker>
+        );
+      }
+    });
+
+    return elements;
+  }, [points, routeSegments]);
 
   const getStopTypeLabel = (typeKey: string) => {
     const filter = mapFilters.find((f) => f.key === typeKey);
@@ -852,7 +997,18 @@ export default function CreateBarathonMapScreen() {
 
 
       <View style={styles.bottomSheet}>
-        <Text style={styles.sheetTitle}>Lieux sélectionnés</Text>
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>Lieux sélectionnés ({points.length})</Text>
+          {points.length >= 3 && (
+            <TouchableOpacity
+              style={styles.optimizeButton}
+              onPress={handleOptimizeRoute}
+            >
+              <Ionicons name="flash" size={12} color="#B45309" />
+              <Text style={styles.optimizeButtonText}>⚡ Optimiser</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         <ScrollView
           style={styles.pointsList}
@@ -869,19 +1025,57 @@ export default function CreateBarathonMapScreen() {
           ) : (
             points.map((point, index) => {
               const nextPoint = points[index + 1];
+              const segmentKey = nextPoint ? `${point.id}->${nextPoint.id}` : null;
+              const segment = segmentKey ? routeSegments[segmentKey] : null;
+
               const estimatedMinutes = nextPoint
-                ? getEstimatedWalkingTimeMinutes(point, nextPoint)
+                ? (segment?.durationMinutes || getEstimatedWalkingTimeMinutes(point, nextPoint))
                 : null;
 
               const tone = estimatedMinutes
                 ? getTravelTimeTone(estimatedMinutes)
                 : null;
 
+              const distanceLabel = segment?.distanceMeters
+                ? (segment.distanceMeters >= 1000
+                    ? ` • ${(segment.distanceMeters / 1000).toFixed(1)} km`
+                    : ` • ${segment.distanceMeters} m`)
+                : '';
+
               return (
                 <View key={point.id}>
                   <View style={styles.pointCard}>
                     <View style={styles.pointCardHeader}>
-                      <Text style={styles.pointIndex}>Étape {index + 1}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={styles.pointIndex}>Étape {index + 1}</Text>
+                        <View style={styles.stepOrderControls}>
+                          <TouchableOpacity
+                            onPress={() => movePointUp(index)}
+                            disabled={index === 0}
+                            style={[styles.orderButton, index === 0 && styles.orderButtonDisabled]}
+                          >
+                            <Ionicons
+                              name="chevron-up"
+                              size={14}
+                              color={index === 0 ? '#9CA3AF' : '#111827'}
+                            />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => movePointDown(index)}
+                            disabled={index === points.length - 1}
+                            style={[
+                              styles.orderButton,
+                              index === points.length - 1 && styles.orderButtonDisabled,
+                            ]}
+                          >
+                            <Ionicons
+                              name="chevron-down"
+                              size={14}
+                              color={index === points.length - 1 ? '#9CA3AF' : '#111827'}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
 
                       <TouchableOpacity onPress={() => removePoint(point.id)}>
                         <Text style={styles.removeText}>Supprimer</Text>
@@ -903,9 +1097,9 @@ export default function CreateBarathonMapScreen() {
 
                       <View style={styles.travelTextWrapper}>
                         <Text style={styles.travelLine}>
-                          <Text style={styles.travelLabel}>Temps estimé : </Text>
+                          <Text style={styles.travelLabel}>Temps de marche réel : </Text>
                           <Text style={[styles.travelValue, { color: tone.color }]}>
-                            {estimatedMinutes} min
+                            {estimatedMinutes} min{distanceLabel}
                           </Text>
                         </Text>
                       </View>

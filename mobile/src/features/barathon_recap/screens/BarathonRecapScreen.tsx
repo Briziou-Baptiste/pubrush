@@ -31,6 +31,7 @@ import {
 } from '../../create_barathon/types/createBarathon.types';
 import { getCurrentUser, getAccessToken } from '../../../lib/authStorage';
 import { fetchBarathonExpenses } from '../../../lib/api';
+import { fetchWalkingRoute, RouteSegment } from '../../create_barathon/services/routing.service';
 
 type ExistingParticipant = {
   id: number;
@@ -415,17 +416,66 @@ export default function BarathonRecapScreen() {
       }));
   }, [stops]);
 
+  const [streetRouteCoordinates, setStreetRouteCoordinates] = useState<
+    { latitude: number; longitude: number }[]
+  >([]);
+
   useEffect(() => {
-    if (routeCoordinates.length > 0) {
+    let active = true;
+
+    async function loadFullStreetRoute() {
+      if (stops.length < 2) {
+        setStreetRouteCoordinates([]);
+        return;
+      }
+
+      const sortedStops = [...stops].sort((a, b) => a.stopOrder - b.stopOrder);
+      const allCoords: { latitude: number; longitude: number }[] = [];
+
+      for (let i = 0; i < sortedStops.length - 1; i++) {
+        if (!active) return;
+        const from = sortedStops[i];
+        const to = sortedStops[i + 1];
+
+        const seg = await fetchWalkingRoute(
+          { latitude: from.latitude, longitude: from.longitude },
+          { latitude: to.latitude, longitude: to.longitude }
+        );
+
+        if (active) {
+          if (allCoords.length > 0) {
+            allCoords.push(...seg.coordinates.slice(1));
+          } else {
+            allCoords.push(...seg.coordinates);
+          }
+        }
+      }
+
+      if (active && allCoords.length >= 2) {
+        setStreetRouteCoordinates(allCoords);
+      }
+    }
+
+    void loadFullStreetRoute();
+
+    return () => {
+      active = false;
+    };
+  }, [stops]);
+
+  useEffect(() => {
+    const coordsToFit =
+      streetRouteCoordinates.length > 0 ? streetRouteCoordinates : routeCoordinates;
+    if (coordsToFit.length > 0) {
       const t = setTimeout(() => {
-        mapRef.current?.fitToCoordinates(routeCoordinates, {
+        mapRef.current?.fitToCoordinates(coordsToFit, {
           edgePadding: { top: 60, right: 60, bottom: 60, left: 60 },
           animated: true,
         });
       }, 600);
       return () => clearTimeout(t);
     }
-  }, [routeCoordinates]);
+  }, [routeCoordinates, streetRouteCoordinates]);
 
   const initialRegion: Region = useMemo(() => {
     if (stops.length === 0) {
@@ -904,13 +954,21 @@ export default function BarathonRecapScreen() {
               pitchEnabled={false}
               toolbarEnabled={false}
             >
-              {routeCoordinates.length >= 2 ? (
-                <Polyline
-                  key="recap-polyline"
-                  coordinates={routeCoordinates}
-                  strokeWidth={4}
-                  strokeColor="#22C55E"
-                />
+              {(streetRouteCoordinates.length >= 2 ? streetRouteCoordinates : routeCoordinates).length >= 2 ? (
+                <>
+                  <Polyline
+                    key="recap-glow-polyline"
+                    coordinates={streetRouteCoordinates.length >= 2 ? streetRouteCoordinates : routeCoordinates}
+                    strokeWidth={8}
+                    strokeColor="rgba(16, 185, 129, 0.25)"
+                  />
+                  <Polyline
+                    key="recap-polyline"
+                    coordinates={streetRouteCoordinates.length >= 2 ? streetRouteCoordinates : routeCoordinates}
+                    strokeWidth={4}
+                    strokeColor="#10B981"
+                  />
+                </>
               ) : null}
 
               {[...stops]

@@ -277,4 +277,42 @@ export const createBarathonMapStyles = StyleSheet.create({
       backgroundColor: '#9CA3AF',
       opacity: 0.7,
     },
+    sheetHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    optimizeButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FEF3C7',
+      borderColor: '#F59E0B',
+      borderWidth: 1,
+      borderRadius: 14,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      gap: 4,
+    },
+    optimizeButtonText: {
+      color: '#B45309',
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    stepOrderControls: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    orderButton: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: '#E5E7EB',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    orderButtonDisabled: {
+      opacity: 0.3,
+    },
 });
