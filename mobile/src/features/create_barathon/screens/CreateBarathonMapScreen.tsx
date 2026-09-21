@@ -103,6 +103,7 @@ export default function CreateBarathonMapScreen() {
   const [loadingFilters, setLoadingFilters] = useState(false);
   const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
   const [routeSegments, setRouteSegments] = useState<Record<string, RouteSegment>>({});
+  const [isRouteListCollapsed, setIsRouteListCollapsed] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -1113,9 +1114,24 @@ export default function CreateBarathonMapScreen() {
         </View>
       )}
 
-      <View style={styles.bottomSheet}>
-        <View style={styles.sheetHeader}>
-          <Text style={styles.sheetTitle}>Lieux sélectionnés ({points.length})</Text>
+      <View style={[styles.bottomSheet, isRouteListCollapsed && { maxHeight: 130, paddingBottom: 10 }]}>
+        <TouchableOpacity
+          style={styles.sheetHeader}
+          activeOpacity={0.75}
+          onPress={() => setIsRouteListCollapsed((prev) => !prev)}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+            <Ionicons
+              name={isRouteListCollapsed ? 'chevron-up-circle' : 'chevron-down-circle'}
+              size={18}
+              color="#2563EB"
+            />
+            <Text style={[styles.sheetTitle, { marginBottom: 0 }]} numberOfLines={1}>
+              {isRouteListCollapsed
+                ? `Parcours (${points.length}) • Déplier`
+                : `Lieux sélectionnés (${points.length})`}
+            </Text>
+          </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             {points.length <= 1 && suggestions.length >= 2 && (
               <TouchableOpacity
@@ -1137,13 +1153,14 @@ export default function CreateBarathonMapScreen() {
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        </TouchableOpacity>
 
-        <ScrollView
-          style={styles.pointsList}
-          contentContainerStyle={styles.pointsListContent}
-          showsVerticalScrollIndicator={false}
-        >
+        {!isRouteListCollapsed && (
+          <ScrollView
+            style={styles.pointsList}
+            contentContainerStyle={styles.pointsListContent}
+            showsVerticalScrollIndicator={false}
+          >
           {points.length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyTitle}>Aucun lieu sélectionné</Text>
@@ -1266,8 +1283,9 @@ export default function CreateBarathonMapScreen() {
             })
           )}
         </ScrollView>
+        )}
 
-        {cannotCreateBarathon && (
+        {cannotCreateBarathon && !isRouteListCollapsed && (
           <View style={styles.guidanceCard}>
             <Ionicons name="information-circle" size={15} color="#2563EB" />
             <Text style={styles.guidanceText}>

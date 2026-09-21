@@ -164,6 +164,7 @@ export default function BarathonRecapScreen() {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [balances, setBalances] = useState<any[]>([]);
   const [debts, setDebts] = useState<DebtSettlement[]>([]);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
 
   useEffect(() => {
     void initScreen();
@@ -971,16 +972,38 @@ export default function BarathonRecapScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Parcours</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Parcours ({stops.length} étapes)</Text>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+                backgroundColor: '#EFF6FF',
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: '#BFDBFE',
+              }}
+              activeOpacity={0.8}
+              onPress={() => setIsMapExpanded((prev) => !prev)}
+            >
+              <Ionicons name={isMapExpanded ? 'contract-outline' : 'expand-outline'} size={14} color="#2563EB" />
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#1D4ED8' }}>
+                {isMapExpanded ? 'Réduire' : 'Agrandir la carte'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-          <View style={styles.mapWrapper}>
+          <View style={[styles.mapWrapper, isMapExpanded && { height: 420 }]}>
             <MapView
               ref={mapRef}
-              style={styles.mapPreview}
+              style={[styles.mapPreview, isMapExpanded && { height: 420 }]}
               initialRegion={initialRegion}
-              scrollEnabled={false}
-              zoomEnabled={false}
-              rotateEnabled={false}
+              scrollEnabled={true}
+              zoomEnabled={true}
+              rotateEnabled={true}
               pitchEnabled={false}
               toolbarEnabled={false}
             >
@@ -1060,7 +1083,113 @@ export default function BarathonRecapScreen() {
                   );
                 })}
             </MapView>
+
+            {/* Floating Zoom Controls */}
+            <View style={{ position: 'absolute', right: 10, bottom: 10, gap: 6, zIndex: 10 }}>
+              <TouchableOpacity
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: '#FFFFFF',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  shadowColor: '#000',
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 4,
+                  borderWidth: 1,
+                  borderColor: '#E5E7EB',
+                }}
+                activeOpacity={0.85}
+                onPress={() => {
+                  if (mapRef.current) {
+                    mapRef.current.getCamera().then((cam) => {
+                      if (cam.altitude) {
+                        mapRef.current?.animateCamera({ altitude: Math.max(100, cam.altitude * 0.5) }, { duration: 250 });
+                      } else {
+                        mapRef.current?.animateToRegion({
+                          latitude: initialRegion.latitude,
+                          longitude: initialRegion.longitude,
+                          latitudeDelta: Math.max(0.002, initialRegion.latitudeDelta * 0.5),
+                          longitudeDelta: Math.max(0.002, initialRegion.longitudeDelta * 0.5),
+                        }, 250);
+                      }
+                    }).catch(() => {});
+                  }
+                }}
+              >
+                <Ionicons name="add" size={20} color="#111827" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: '#FFFFFF',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  shadowColor: '#000',
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 4,
+                  borderWidth: 1,
+                  borderColor: '#E5E7EB',
+                }}
+                activeOpacity={0.85}
+                onPress={() => {
+                  if (mapRef.current) {
+                    mapRef.current.getCamera().then((cam) => {
+                      if (cam.altitude) {
+                        mapRef.current?.animateCamera({ altitude: cam.altitude * 2 }, { duration: 250 });
+                      } else {
+                        mapRef.current?.animateToRegion({
+                          latitude: initialRegion.latitude,
+                          longitude: initialRegion.longitude,
+                          latitudeDelta: initialRegion.latitudeDelta * 2,
+                          longitudeDelta: initialRegion.longitudeDelta * 2,
+                        }, 250);
+                      }
+                    }).catch(() => {});
+                  }
+                }}
+              >
+                <Ionicons name="remove" size={20} color="#111827" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: '#FFFFFF',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  shadowColor: '#000',
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 4,
+                  borderWidth: 1,
+                  borderColor: '#E5E7EB',
+                }}
+                activeOpacity={0.85}
+                onPress={() => {
+                  if (mapRef.current && stops.length > 0) {
+                    mapRef.current.fitToCoordinates(
+                      stops.map((s) => ({ latitude: s.latitude, longitude: s.longitude })),
+                      { edgePadding: { top: 40, right: 40, bottom: 40, left: 40 }, animated: true }
+                    );
+                  }
+                }}
+              >
+                <Ionicons name="scan-outline" size={17} color="#2563EB" />
+              </TouchableOpacity>
+            </View>
           </View>
+          <Text style={{ fontSize: 11, color: '#6B7280', textAlign: 'center', marginTop: 6 }}>
+            Pincez l'écran ou utilisez les boutons + / - pour zoomer sur le trajet piéton.
+          </Text>
 
           <View style={styles.stopList}>
             {[...stops]
