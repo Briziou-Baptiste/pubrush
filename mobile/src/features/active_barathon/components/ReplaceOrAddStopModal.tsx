@@ -37,7 +37,22 @@ type BarCandidate = {
   street?: string | null;
   city?: string | null;
   estimated_minutes?: number | null;
+  distanceMeters?: number;
 };
+
+function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
 
 export default function ReplaceOrAddStopModal({
   visible,
@@ -70,15 +85,23 @@ export default function ReplaceOrAddStopModal({
 
       const data = await fetchNearbyBars(centerLat, centerLon, 15, token);
       if (Array.isArray(data)) {
-        const formatted: BarCandidate[] = data.map((b: any) => ({
-          name: b.name,
-          latitude: Number(b.latitude || b.lat),
-          longitude: Number(b.longitude || b.lon),
-          stop_type: b.stop_type || 'bar',
-          street: b.street || null,
-          city: b.city || null,
-          estimated_minutes: b.estimated_minutes,
-        }));
+        const formatted: BarCandidate[] = data.map((b: any) => {
+          const lat = Number(b.latitude || b.lat);
+          const lon = Number(b.longitude || b.lon);
+          const dist = getDistanceMeters(centerLat, centerLon, lat, lon);
+          const estMin = Math.max(1, Math.round(dist / 80));
+          return {
+            name: b.name,
+            latitude: lat,
+            longitude: lon,
+            stop_type: b.stop_type || 'bar',
+            street: b.street || null,
+            city: b.city || null,
+            estimated_minutes: b.estimated_minutes ?? estMin,
+            distanceMeters: dist,
+          };
+        });
+        formatted.sort((a, b) => (a.distanceMeters ?? 0) - (b.distanceMeters ?? 0));
         setBars(formatted);
       }
     } catch (err) {
@@ -117,15 +140,23 @@ export default function ReplaceOrAddStopModal({
 
         const data = await fetchBarsSearch(searchQuery.trim(), centerLat, centerLon, token);
         if (Array.isArray(data)) {
-          const formatted: BarCandidate[] = data.map((b: any) => ({
-            name: b.name,
-            latitude: Number(b.latitude || b.lat),
-            longitude: Number(b.longitude || b.lon),
-            stop_type: b.stop_type || 'bar',
-            street: b.street || null,
-            city: b.city || null,
-            estimated_minutes: b.estimated_minutes,
-          }));
+          const formatted: BarCandidate[] = data.map((b: any) => {
+            const lat = Number(b.latitude || b.lat);
+            const lon = Number(b.longitude || b.lon);
+            const dist = getDistanceMeters(centerLat, centerLon, lat, lon);
+            const estMin = Math.max(1, Math.round(dist / 80));
+            return {
+              name: b.name,
+              latitude: lat,
+              longitude: lon,
+              stop_type: b.stop_type || 'bar',
+              street: b.street || null,
+              city: b.city || null,
+              estimated_minutes: b.estimated_minutes ?? estMin,
+              distanceMeters: dist,
+            };
+          });
+          formatted.sort((a, b) => (a.distanceMeters ?? 0) - (b.distanceMeters ?? 0));
           setBars(formatted);
         }
       } catch (err) {
@@ -356,6 +387,7 @@ export default function ReplaceOrAddStopModal({
             ) : (
               bars.map((item, index) => {
                 const isSelected = selectedBar?.name === item.name && selectedBar?.latitude === item.latitude;
+                const isBar = (item.stop_type || 'bar') === 'bar';
                 return (
                   <TouchableOpacity
                     key={`${item.name}-${index}`}
@@ -370,12 +402,20 @@ export default function ReplaceOrAddStopModal({
                         color={isSelected ? '#2563EB' : '#9CA3AF'}
                       />
                     </View>
+                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isBar ? '#FEF3C7' : '#EFF6FF', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                      <Ionicons
+                        name={isBar ? 'beer' : 'restaurant'}
+                        size={14}
+                        color={isBar ? '#D97706' : '#2563EB'}
+                      />
+                    </View>
                     <View style={styles.barItemContent}>
                       <Text style={[styles.barItemName, isSelected && styles.barItemNameSelected]}>
                         {item.name}
                       </Text>
                       <Text style={styles.barItemAddress} numberOfLines={1}>
-                        {item.street ? `${item.street}${item.city ? ', ' + item.city : ''}` : 'Bar à proximité'}
+                        {item.distanceMeters !== undefined ? `${item.distanceMeters} m • ` : ''}
+                        {item.street ? `${item.street}${item.city ? ', ' + item.city : ''}` : (isBar ? 'Bar' : 'Restaurant')}
                       </Text>
                     </View>
                     {item.estimated_minutes !== undefined && item.estimated_minutes !== null && (

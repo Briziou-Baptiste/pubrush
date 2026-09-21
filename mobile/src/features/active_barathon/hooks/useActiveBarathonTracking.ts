@@ -46,6 +46,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     overtimeNotificationId: null,
   });
 
+  const consecutiveExitCountRef = useRef(0);
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasStartedTimerForCurrentStopRef = useRef(false);
@@ -63,7 +64,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
 
   const nextStop: ActiveBarathonStop | null =
     barathon.stops[state.activeStopIndex + 1] ?? null;
-    const stopDeadlineRef = useRef<number | null>(null);
+  const stopDeadlineRef = useRef<number | null>(null);
   const activeStopLocation: LatLng | null = activeStop
     ? {
         latitude: activeStop.latitude,
@@ -78,6 +79,13 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
 
     return Math.round(getDistanceMeters(state.currentLocation, activeStopLocation));
   }, [state.currentLocation, activeStopLocation]);
+
+  const estimatedWalkMinutes = useMemo(() => {
+    if (distanceToActiveStopMeters === null) {
+      return null;
+    }
+    return Math.max(1, Math.round(distanceToActiveStopMeters / 80));
+  }, [distanceToActiveStopMeters]);
 
   useEffect(() => {
     void ensureNotificationPermissions();
@@ -162,14 +170,22 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
 
       // Entrée dans la zone du bar : on démarre uniquement si le timer n'a pas déjà été lancé
       if (!hasStarted && distance <= ENTER_RADIUS_METERS) {
+        consecutiveExitCountRef.current = 0;
         void startStopTimer();
         return;
       }
 
-      // Sortie de la zone du bar : on reset uniquement si le timer a déjà commencé
-      // et qu'on n'est pas en overtime
-      if (hasStarted && !isOvertime && distance >= EXIT_RADIUS_METERS) {
-        void resetStopTimerAndGoBackToRoute();
+      // Sortie de la zone du bar : hystérésis pour éviter qu'un décrochage GPS indoor n'annule le chrono
+      if (hasStarted && !isOvertime) {
+        if (distance >= EXIT_RADIUS_METERS) {
+          consecutiveExitCountRef.current += 1;
+          if (consecutiveExitCountRef.current >= 4) {
+            void resetStopTimerAndGoBackToRoute();
+            consecutiveExitCountRef.current = 0;
+          }
+        } else {
+          consecutiveExitCountRef.current = 0;
+        }
       }
     }, [
       state.currentLocation,
@@ -207,25 +223,36 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     locationSubscriptionRef.current = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 1000,
-        distanceInterval: 1,
+        timeInterval: 1500,
+        distanceInterval: 3,
       },
       (location) => {
-        console.log('WATCH POSITION EVENT', {
-          lat: location.coords.latitude,
-          lng: location.coords.longitude,
-        });
-
         const newPosition = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         };
 
-        setState((prev) => ({
-          ...prev,
-          currentLocation: newPosition,
-          visitedPath: [...prev.visitedPath, newPosition],
-        }));
+        setState((prev) => {
+          const lastPos = prev.visitedPath[prev.visitedPath.length - 1];
+          let shouldAdd = true;
+          if (lastPos) {
+            const dist = getDistanceMeters(lastPos, newPosition);
+            if (dist < 15) {
+              shouldAdd = false;
+            }
+          }
+          const updatedVisited = shouldAdd
+            ? (prev.visitedPath.length >= 400
+                ? [...prev.visitedPath.slice(-350), newPosition]
+                : [...prev.visitedPath, newPosition])
+            : prev.visitedPath;
+
+          return {
+            ...prev,
+            currentLocation: newPosition,
+            visitedPath: updatedVisited,
+          };
+        });
       }
     );
   }
@@ -352,6 +379,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     };
 
     hasStartedTimerForCurrentStopRef.current = false;
+    consecutiveExitCountRef.current = 0;
 
     setState((prev) => ({
       ...prev,
@@ -377,6 +405,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     };
 
     hasStartedTimerForCurrentStopRef.current = false;
+    consecutiveExitCountRef.current = 0;
     currentStopIdRef.current = barathon.stops[targetIndex]?.id ?? null;
 
     setState((prev) => {
@@ -424,6 +453,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     };
 
     hasStartedTimerForCurrentStopRef.current = false;
+    consecutiveExitCountRef.current = 0;
 
     setState((prev) => {
       const nextIndex = prev.activeStopIndex + 1;
@@ -481,6 +511,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     activeStop,
     nextStop,
     distanceToActiveStopMeters,
+    estimatedWalkMinutes,
     openInGoogleMaps,
     stopTracking,
     goToNextStop,

@@ -23,6 +23,7 @@ import {
   getCachedBarathon,
   queueOfflineAction,
   flushOfflineActionsQueue,
+  getOfflineActionsQueue,
 } from '../services/offlineSync.service';
 
 export default function ActiveBarathonScreen() {
@@ -39,8 +40,15 @@ export default function ActiveBarathonScreen() {
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
   const [friendLocations, setFriendLocations] = useState<Record<number, ParticipantLocation>>({});
   const [isSousSolMode, setIsSousSolMode] = useState(false);
+  const [pendingOfflineCount, setPendingOfflineCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<number | undefined>(undefined);
   const lastLocationSentRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
+
+  useEffect(() => {
+    getOfflineActionsQueue()
+      .then((q) => setPendingOfflineCount(q.length))
+      .catch(() => {});
+  }, [isSousSolMode]);
     
   useEffect(() => {
     void loadBarathon();
@@ -513,10 +521,12 @@ export default function ActiveBarathonScreen() {
             stepLabel={`Étape ${tracking.state.activeStopIndex + 1} / ${barathon.stops.length}`}
             phaseLabel={phaseLabel}
             remainingSeconds={tracking.state.remainingSeconds}
+            totalBarSeconds={barathon.max_time_in_bar_minutes * 60}
             onRolesPress={() => setRolesModalVisible(true)}
             onInvitePress={() => setInviteModalVisible(true)}
             onStopPress={() => setStopModalVisible(true)}
             isSousSolMode={isSousSolMode}
+            pendingOfflineActionsCount={pendingOfflineCount}
             onExpensesPress={
               isMaitreDesComptes
                 ? () =>
@@ -535,11 +545,13 @@ export default function ActiveBarathonScreen() {
         <View style={styles.bottomOverlay}>
           <ActiveBarathonBottomPanel
             stopName={tracking.activeStop?.name ?? 'Aucun stop'}
+            stopType={tracking.activeStop?.stop_type}
             distanceLabel={
               tracking.distanceToActiveStopMeters !== null
                 ? `${tracking.distanceToActiveStopMeters} m`
                 : '--'
             }
+            estimatedMinutes={tracking.estimatedWalkMinutes}
             onOpenGoogleMaps={tracking.openInGoogleMaps}
             onNextStep={handleNextStep}
             onReplacePress={() => {

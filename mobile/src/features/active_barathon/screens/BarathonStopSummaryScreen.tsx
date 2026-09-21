@@ -251,11 +251,45 @@ export default function BarathonStopSummaryScreen() {
     return `${hours}h ${minutes}min`;
   }, [startDateTimeIso, endDateTimeIso]);
 
+  const totalDistanceKm = useMemo(() => {
+    if (stops.length < 2) return 0;
+    let d = 0;
+    for (let i = 0; i < stops.length - 1; i++) {
+      const lat1 = Number(stops[i].latitude);
+      const lon1 = Number(stops[i].longitude);
+      const lat2 = Number(stops[i + 1].latitude);
+      const lon2 = Number(stops[i + 1].longitude);
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      d += R * c;
+    }
+    return Number(d.toFixed(1));
+  }, [stops]);
+
+  const isSuccessfulRun = completedPercentage >= 70;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.headerCard}>
-          <Text style={styles.title}>Barathon arrêté</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <Ionicons
+              name={isSuccessfulRun ? 'trophy' : 'flag'}
+              size={24}
+              color={isSuccessfulRun ? '#D97706' : '#2563EB'}
+            />
+            <Text style={styles.title}>
+              {isSuccessfulRun ? 'Tournée accomplie !' : 'Barathon terminé'}
+            </Text>
+          </View>
           <Text style={styles.subtitle}>{barathonName}</Text>
         </View>
 
@@ -273,6 +307,13 @@ export default function BarathonStopSummaryScreen() {
             <Text style={styles.label}>Temps passé</Text>
             <Text style={styles.value}>{durationText}</Text>
           </View>
+
+          {totalDistanceKm > 0 && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Distance à pied</Text>
+              <Text style={styles.value}>~{totalDistanceKm} km</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.card}>

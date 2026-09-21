@@ -9,12 +9,14 @@ type Props = {
   stepLabel: string;
   phaseLabel: string;
   remainingSeconds: number;
+  totalBarSeconds?: number;
   onStopPress?: () => void;
   onExpensesPress?: () => void;
   onRolesPress?: () => void;
   onInvitePress?: () => void;
   isSousSolMode?: boolean;
   onSousSolPress?: () => void;
+  pendingOfflineActionsCount?: number;
 };
 
 export default function ActiveBarathonHeader({
@@ -22,26 +24,35 @@ export default function ActiveBarathonHeader({
   stepLabel,
   phaseLabel,
   remainingSeconds,
+  totalBarSeconds,
   onStopPress,
   onExpensesPress,
   onRolesPress,
   onInvitePress,
   isSousSolMode,
   onSousSolPress,
+  pendingOfflineActionsCount = 0,
 }: Props) {
   const tone = getTimerTone(remainingSeconds);
 
+  // Calculate percentage of time elapsed in bar
+  const progressPercent =
+    totalBarSeconds && totalBarSeconds > 0
+      ? Math.max(0, Math.min(100, Math.round((remainingSeconds / totalBarSeconds) * 100)))
+      : 100;
+
   return (
     <View style={styles.headerCard}>
-      {/* Ligne du haut */}
+      {/* Ligne du haut : Titre + Actions */}
       <View style={styles.headerTopRow}>
         <View style={styles.headerTextBlock}>
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
           <Text style={styles.subtitle}>{stepLabel}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 5, flexWrap: 'wrap' }}>
             <Text style={[styles.phaseText, { marginTop: 0 }]}>{phaseLabel}</Text>
+
             {isSousSolMode && (
               <TouchableOpacity
                 style={[styles.offlineBadge, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}
@@ -51,82 +62,116 @@ export default function ActiveBarathonHeader({
                   (() => {
                     Alert.alert(
                       'Mode Sous-sol Actif',
-                      'Pas de réseau 4G détecté (cave ou sous-sol). Tes actions et le chrono continuent en local et seront synchronisés automatiquement à la sortie !'
+                      `Pas de réseau 4G détecté (cave ou sous-sol). Tes actions (${pendingOfflineActionsCount} enregistrée(s)) et le chrono continuent en local et seront synchronisés automatiquement à la sortie !`
                     );
                   })
                 }
               >
                 <Ionicons name="flashlight-outline" size={13} color="#D97706" />
-                <Text style={styles.offlineBadgeText}>Sous-sol</Text>
+                <Text style={styles.offlineBadgeText}>
+                  Sous-sol{pendingOfflineActionsCount > 0 ? ` (${pendingOfflineActionsCount})` : ''}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
-        <View style={{ alignItems: 'stretch', gap: 6 }}>
+        {/* Boutons d'action en haut à droite */}
+        <View style={{ alignItems: 'flex-end', gap: 8 }}>
+          {/* Bouton sécurisé Arrêter isolé */}
+          {onStopPress && (
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: '#FEE2E2',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 8,
+              }}
+              activeOpacity={0.8}
+              onPress={onStopPress}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <Ionicons name="power-outline" size={13} color="#DC2626" />
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#DC2626' }}>Quitter</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Boutons d'équipe compacts */}
           <View style={{ flexDirection: 'row', gap: 6 }}>
             {onInvitePress && (
               <TouchableOpacity
-                style={[styles.rolesButton, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}
+                style={[styles.rolesButton, { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 7 }]}
                 activeOpacity={0.85}
                 onPress={onInvitePress}
               >
-                <Ionicons name="qr-code-outline" size={14} color="#FFFFFF" />
-                <Text style={styles.rolesButtonText}>Inviter</Text>
+                <Ionicons name="qr-code-outline" size={13} color="#FFFFFF" />
+                <Text style={[styles.rolesButtonText, { fontSize: 12 }]}>Inviter</Text>
               </TouchableOpacity>
             )}
 
             {onRolesPress && (
               <TouchableOpacity
-                style={[styles.rolesButton, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}
+                style={[styles.rolesButton, { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: '#7C3AED' }]}
                 activeOpacity={0.85}
                 onPress={onRolesPress}
               >
-                <Ionicons name="ribbon-outline" size={14} color="#FFFFFF" />
-                <Text style={styles.rolesButtonText}>Rôles</Text>
+                <Ionicons name="ribbon-outline" size={13} color="#FFFFFF" />
+                <Text style={[styles.rolesButtonText, { fontSize: 12 }]}>Rôles</Text>
               </TouchableOpacity>
             )}
 
-            {onStopPress && (
+            {onExpensesPress && (
               <TouchableOpacity
-                style={styles.stopButton}
+                style={[styles.expensesButton, { marginTop: 0, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 7 }]}
                 activeOpacity={0.85}
-                onPress={onStopPress}
+                onPress={onExpensesPress}
               >
-                <Text style={styles.stopButtonText}>Arrêter</Text>
+                <Ionicons name="wallet-outline" size={13} color="#FFFFFF" />
+                <Text style={[styles.expensesButtonText, { fontSize: 12 }]}>Comptes</Text>
               </TouchableOpacity>
             )}
           </View>
-
-          {onExpensesPress && (
-            <TouchableOpacity
-              style={[styles.expensesButton, { marginTop: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }]}
-              activeOpacity={0.85}
-              onPress={onExpensesPress}
-            >
-              <Ionicons name="wallet-outline" size={15} color="#FFFFFF" />
-              <Text style={styles.expensesButtonText}>Comptes</Text>
-            </TouchableOpacity>
-          )}
         </View>
       </View>
 
-      {/* Chrono */}
+      {/* Chrono avec jauge de progression visuelle */}
       <View style={styles.timerContainer}>
-        <Text style={styles.timerLabel}>Chrono bar</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <Text style={styles.timerLabel}>Temps au bar</Text>
+          <Text
+            style={[
+              { fontSize: 24, fontWeight: '900', letterSpacing: 0.5 },
+              tone === 'normal'
+                ? styles.timerGreen
+                : tone === 'warning'
+                ? styles.timerOrange
+                : styles.timerRed,
+            ]}
+          >
+            {formatRemainingTime(remainingSeconds)}
+          </Text>
+        </View>
 
-        <Text
-          style={[
-            styles.timerValue,
-            tone === 'normal'
-              ? styles.timerGreen
-              : tone === 'warning'
-              ? styles.timerOrange
-              : styles.timerRed,
-          ]}
-        >
-          {formatRemainingTime(remainingSeconds)}
-        </Text>
+        {/* Barre de progression visuelle */}
+        <View style={styles.timerProgressTrack}>
+          <View
+            style={[
+              styles.timerProgressFill,
+              {
+                width: `${progressPercent}%`,
+                backgroundColor:
+                  tone === 'normal'
+                    ? '#22C55E'
+                    : tone === 'warning'
+                    ? '#F59E0B'
+                    : '#EF4444',
+              },
+            ]}
+          />
+        </View>
       </View>
     </View>
   );
