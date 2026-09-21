@@ -17,8 +17,7 @@ import {
   Keyboard,
   ScrollView
 } from 'react-native';
-import { router } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { fetchPartnerEvents, redeemTicketCode, joinPartnerEvent } from '../../../lib/api';

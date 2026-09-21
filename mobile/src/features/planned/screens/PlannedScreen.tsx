@@ -1,6 +1,4 @@
-import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { router, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,

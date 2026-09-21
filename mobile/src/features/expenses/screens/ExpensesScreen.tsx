@@ -8,8 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { router, useFocusEffect } from 'expo-router';
 
 import { fetchMyBarathonBalances, BarathonBalance } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
