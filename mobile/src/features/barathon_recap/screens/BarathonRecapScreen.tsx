@@ -973,35 +973,61 @@ export default function BarathonRecapScreen() {
 
               {[...stops]
                 .sort((a, b) => a.stopOrder - b.stopOrder)
-                .map((stop, index) => (
-                  <Marker
-                    key={stop.id}
-                    coordinate={{
-                      latitude: stop.latitude,
-                      longitude: stop.longitude,
-                    }}
-                    title={`Étape ${index + 1} - ${stop.name}`}
-                    description={stop.stopType === 'bar' ? 'Bar' : 'Restaurant'}
-                  />
-                ))}
+                .map((stop, index) => {
+                  const isBar = stop.stopType === 'bar';
+                  return (
+                    <Marker
+                      key={stop.id}
+                      coordinate={{
+                        latitude: stop.latitude,
+                        longitude: stop.longitude,
+                      }}
+                      pinColor={isBar ? 'orange' : 'red'}
+                      title={`Étape ${index + 1} • ${isBar ? '🍻' : '🍔'} ${stop.name}`}
+                      description={isBar ? '🍻 Bar' : '🍔 Restaurant'}
+                    />
+                  );
+                })}
             </MapView>
           </View>
 
           <View style={styles.stopList}>
             {[...stops]
               .sort((a, b) => a.stopOrder - b.stopOrder)
-              .map((stop, index) => (
-                <View key={stop.id} style={styles.stopCard}>
-                  <Text style={styles.stopIndex}>Étape {index + 1}</Text>
-                  <Text style={styles.stopName}>{stop.name}</Text>
-                  <Text style={styles.stopType}>
-                    {stop.stopType === 'bar' ? 'Bar' : 'Restaurant'}
-                  </Text>
-                  <Text style={styles.stopCoords}>
-                    {stop.latitude.toFixed(5)} / {stop.longitude.toFixed(5)}
-                  </Text>
-                </View>
-              ))}
+              .map((stop, index) => {
+                const isBar = stop.stopType === 'bar';
+                return (
+                  <View key={stop.id} style={styles.stopCard}>
+                    <Text style={styles.stopIndex}>Étape {index + 1}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, gap: 8 }}>
+                      <Text style={[styles.stopName, { flex: 1, marginTop: 0 }]}>{stop.name}</Text>
+                      <View
+                        style={{
+                          backgroundColor: isBar ? '#FEF3C7' : '#FEE2E2',
+                          borderColor: isBar ? '#FCD34D' : '#FCA5A5',
+                          borderWidth: 1,
+                          borderRadius: 8,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: '700',
+                            color: isBar ? '#92400E' : '#991B1B',
+                          }}
+                        >
+                          {isBar ? '🍻 Bar' : '🍔 Restaurant'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.stopCoords}>
+                      {stop.latitude.toFixed(5)} / {stop.longitude.toFixed(5)}
+                    </Text>
+                  </View>
+                );
+              })}
           </View>
         </View>
 

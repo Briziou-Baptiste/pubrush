@@ -287,7 +287,7 @@ def search_google_places(q: str, lat: Optional[float], lon: Optional[float], key
 def get_straight_line_walking_minutes(lat1: float, lon1: float, lat2: float, lon2: float) -> int:
     """
     Computes straight-line (Haversine) distance and translates it to walking minutes
-    based on a realistic urban pedestrian speed of 4.0 km/h.
+    based on a realistic urban pedestrian speed of 4.8 km/h.
     """
     R_earth = 6371.0  # Earth radius in km
     dlat = math.radians(lat2 - lat1)
@@ -295,7 +295,7 @@ def get_straight_line_walking_minutes(lat1: float, lon1: float, lat2: float, lon
     a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     dist_km = R_earth * c
-    hours = dist_km / 4.0  # 4.0 km/h walking speed (realistic urban profile matching Google Maps)
+    hours = dist_km / 4.8  # 4.8 km/h walking speed (brisk urban profile matching Google Maps)
     return max(1, int(round(hours * 60.0)))
 
 def compute_real_walking_times(lat: float, lon: float, candidates: list[BarSearchResult]) -> list[BarSearchResult]:
@@ -331,9 +331,9 @@ def compute_real_walking_times(lat: float, lon: float, candidates: list[BarSearc
         for idx, c in enumerate(osrm_candidates):
             duration_sec = source_durations[idx + 1]
             if duration_sec is not None:
-                # Scale OSRM default speed (5 km/h) to 4.0 km/h by multiplying by 1.25 (aligns perfectly with Google Maps)
-                duration_adjusted = duration_sec * 1.25
-                c.estimated_minutes = max(1, int(round(duration_adjusted / 60.0)))
+                # OSRM foot routing uses realistic pedestrian network speeds (~4.8-5 km/h).
+                # Use raw duration without artificial penalty multipliers.
+                c.estimated_minutes = max(1, int(round(duration_sec / 60.0)))
 
     except Exception as e:
         print(f"Error calling OSRM Table API: {e}")
@@ -358,8 +358,8 @@ def get_nearby_bars(
     if cache_key in NEARBY_CACHE:
         return NEARBY_CACHE[cache_key]
 
-    # Calculate travel distance limit: 4 km/h = ~66.67 meters per minute
-    radius = int(66.67 * max_travel_time_minutes)
+    # Calculate travel distance limit: 4.8 km/h = 80 meters per minute
+    radius = int(80.0 * max_travel_time_minutes)
 
     # Fetch custom query from DB if filter_key is provided
     osm_query = None
@@ -481,7 +481,7 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
                 stop_type = filter_key
             else:
                 amenity = tags.get("amenity", "")
-                stop_type = "bar" if amenity in ["bar", "pub"] else "food"
+                stop_type = "bar" if amenity in ["bar", "pub", "biergarten"] else "food"
             
             street = tags.get("addr:street")
             city = tags.get("addr:city")

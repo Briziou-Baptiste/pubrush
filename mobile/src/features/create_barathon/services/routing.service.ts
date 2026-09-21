@@ -39,7 +39,7 @@ export function getHaversineDistanceKm(from: LatLng, to: LatLng): number {
  */
 export function getStraightLineWalkingMinutes(from: LatLng, to: LatLng): number {
   const distKm = getHaversineDistanceKm(from, to);
-  return Math.max(1, Math.round((distKm / 4.0) * 60));
+  return Math.max(1, Math.round((distKm / 4.8) * 60));
 }
 
 /**
@@ -84,14 +84,14 @@ export async function fetchWalkingRoute(from: LatLng, to: LatLng): Promise<Route
       longitude: lon,
     }));
 
-    // Adjust 5.0 km/h OSRM pace to realistic 4.0 km/h urban pedestrian pace (x1.25)
+    // Exact optimized pedestrian footway duration (matching Google Maps pace)
     const rawDurationSec = Number(route.duration) || 0;
-    const adjustedMinutes = Math.max(1, Math.round((rawDurationSec * 1.25) / 60));
+    const walkingMinutes = Math.max(1, Math.round(rawDurationSec / 60));
     const distanceMeters = Math.round(Number(route.distance) || fallbackDistanceMeters);
 
     const result: RouteSegment = {
       coordinates: coordinates.length >= 2 ? coordinates : [from, to],
-      durationMinutes: adjustedMinutes,
+      durationMinutes: walkingMinutes,
       distanceMeters,
     };
 

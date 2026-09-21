@@ -52,7 +52,7 @@ const DEFAULT_REGION: Region = {
   longitudeDelta: 0.08,
 };
 
-const WALKING_SPEED_KMH = 4.0;
+const WALKING_SPEED_KMH = 4.8;
 
 export default function CreateBarathonMapScreen() {
   const mapRef = useRef<MapView | null>(null);
@@ -728,18 +728,19 @@ export default function CreateBarathonMapScreen() {
   const allMarkers = useMemo(() => {
     const list: React.ReactElement[] = [];
 
-    // 1. Confirmed step markers (Red)
+    // 1. Confirmed step markers (Orange for Bars, Red for Restaurants)
     points.forEach((p, index) => {
       const lat = Number(p.latitude);
       const lng = Number(p.longitude);
       if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+        const isBar = p.stopType === 'bar';
         list.push(
           <Marker
             key={`step-marker-${p.id}`}
             coordinate={{ latitude: lat, longitude: lng }}
-            pinColor="red" // Explicitly red, 100% iOS/Android compatible under Fabric
-            title={`Étape ${index + 1} - ${p.name}`}
-            description={`${getStopTypeLabel(p.stopType)} • ${lat.toFixed(5)} / ${lng.toFixed(5)}`}
+            pinColor={isBar ? 'orange' : 'red'}
+            title={`Étape ${index + 1} • ${isBar ? '🍻' : '🍔'} ${p.name}`}
+            description={`${isBar ? '🍻 Bar' : '🍔 Restaurant'} • Étape confirmée`}
           />
         );
       }
@@ -754,26 +755,28 @@ export default function CreateBarathonMapScreen() {
           <Marker
             key="pending-point-marker"
             coordinate={{ latitude: lat, longitude: lng }}
-            pinColor="green" // Explicitly green, 100% iOS/Android compatible under Fabric
+            pinColor="green"
             title="Point sélectionné"
+            description="Toucher pour configurer l'étape"
           />
         );
       }
     }
 
-    // 3. Suggestions markers (Purple) - Only display if we have at least one point
+    // 3. Suggestions markers (Yellow for Bars, Purple for Restaurants) - Only display if we have at least one point
     if (points.length > 0) {
       suggestions.forEach((item) => {
         const lat = Number(item.latitude);
         const lng = Number(item.longitude);
         if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+          const isBar = item.stopType === 'bar';
           list.push(
             <Marker
               key={`suggestion-marker-${item.name}-${lat}-${lng}`}
               coordinate={{ latitude: lat, longitude: lng }}
-              pinColor="purple" // Explicitly purple, 100% iOS/Android compatible under Fabric
-              title={item.name}
-              description={`🚶 ${item.estimatedMinutes} min • ${getStopTypeLabel(item.stopType)} • Appuyer pour ajouter`}
+              pinColor={isBar ? 'yellow' : 'purple'}
+              title={`${isBar ? '🍻' : '🍔'} ${item.name}`}
+              description={`🚶 ${item.estimatedMinutes} min • ${isBar ? '🍻 Bar' : '🍔 Restaurant'} • Toucher pour ajouter`}
               onCalloutPress={() => handleConfirmAddSuggestedPoint(item)}
             />
           );
@@ -802,8 +805,8 @@ export default function CreateBarathonMapScreen() {
                 latitude: Number(points[points.length - 1].latitude),
                 longitude: Number(points[points.length - 1].longitude),
               }}
-              // Radius calculation: 4 km/h = ~66.67 meters per minute
-              radius={allowedTravelTimeMinutes * 66.67}
+              // Radius calculation: 4.8 km/h = 80 meters per minute
+              radius={allowedTravelTimeMinutes * 80}
               fillColor="rgba(59, 130, 246, 0.15)"
               strokeColor="rgba(59, 130, 246, 0.4)"
               strokeWidth={2}
@@ -962,25 +965,50 @@ export default function CreateBarathonMapScreen() {
               }}
               keyboardShouldPersistTaps="handled"
             >
-              {searchResults.map((result, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={{
-                    paddingVertical: 12,
-                    paddingHorizontal: 14,
-                    borderBottomWidth: idx === searchResults.length - 1 ? 0 : 1,
-                    borderBottomColor: '#F3F4F6',
-                  }}
-                  onPress={() => handleSelectSearchResult(result)}
-                >
-                  <Text style={{ fontWeight: '700', color: '#111827', fontSize: 14 }}>
-                    {result.name}
-                  </Text>
-                  <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 2 }}>
-                    {result.city ? `${result.city}, ` : ''}{result.country || ''} • {result.stopType === 'bar' ? '🍻 Bar' : '🍔 Resto'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {searchResults.map((result, idx) => {
+                const isBar = result.stopType === 'bar';
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 14,
+                      borderBottomWidth: idx === searchResults.length - 1 ? 0 : 1,
+                      borderBottomColor: '#F3F4F6',
+                    }}
+                    onPress={() => handleSelectSearchResult(result)}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <Text style={{ fontWeight: '700', color: '#111827', fontSize: 14, flex: 1 }}>
+                        {result.name}
+                      </Text>
+                      <View
+                        style={{
+                          backgroundColor: isBar ? '#FEF3C7' : '#FEE2E2',
+                          borderColor: isBar ? '#FCD34D' : '#FCA5A5',
+                          borderWidth: 1,
+                          borderRadius: 8,
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: '700',
+                            color: isBar ? '#92400E' : '#991B1B',
+                          }}
+                        >
+                          {isBar ? '🍻 Bar' : '🍔 Restaurant'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 4 }}>
+                      {result.city ? `${result.city}, ` : ''}{result.country || ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           )}
         </View>
@@ -1082,10 +1110,29 @@ export default function CreateBarathonMapScreen() {
                       </TouchableOpacity>
                     </View>
 
-                    <Text style={styles.pointName}>{point.name}</Text>
-                    <Text style={styles.pointType}>
-                      {point.stopType === 'bar' ? 'Bar' : 'Restaurant'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, gap: 8 }}>
+                      <Text style={[styles.pointName, { flex: 1, marginTop: 0 }]}>{point.name}</Text>
+                      <View
+                        style={{
+                          backgroundColor: point.stopType === 'bar' ? '#FEF3C7' : '#FEE2E2',
+                          borderColor: point.stopType === 'bar' ? '#FCD34D' : '#FCA5A5',
+                          borderWidth: 1,
+                          borderRadius: 8,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: '700',
+                            color: point.stopType === 'bar' ? '#92400E' : '#991B1B',
+                          }}
+                        >
+                          {point.stopType === 'bar' ? '🍻 Bar' : '🍔 Restaurant'}
+                        </Text>
+                      </View>
+                    </View>
                     <Text style={styles.pointCoords}>
                       {point.latitude.toFixed(5)} / {point.longitude.toFixed(5)}
                     </Text>

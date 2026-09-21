@@ -168,27 +168,39 @@ export default function HomeScreen() {
         <View
           style={{
             position: 'absolute',
-            top: 130,
-            alignSelf: 'center',
-            backgroundColor: 'rgba(17, 24, 39, 0.92)',
-            borderRadius: 24,
-            paddingVertical: 10,
-            paddingHorizontal: 18,
-            flexDirection: 'row',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.7)',
+            justifyContent: 'center',
             alignItems: 'center',
-            gap: 10,
-            shadowColor: '#000',
-            shadowOpacity: 0.25,
-            shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 6,
-            zIndex: 999,
+            zIndex: 9999,
           }}
         >
-          <ActivityIndicator size="small" color="#10B981" />
-          <Text style={{ fontSize: 13, color: '#FFFFFF', fontWeight: '700' }}>
-            Recherche de votre position GPS...
-          </Text>
+          <View
+            style={{
+              backgroundColor: '#1E293B',
+              borderRadius: 24,
+              paddingVertical: 28,
+              paddingHorizontal: 28,
+              alignItems: 'center',
+              maxWidth: 280,
+              shadowColor: '#000',
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 8,
+            }}
+          >
+            <ActivityIndicator size="large" color="#10B981" style={{ marginBottom: 16 }} />
+            <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF', textAlign: 'center', marginBottom: 6 }}>
+              Localisation en cours...
+            </Text>
+            <Text style={{ fontSize: 13, color: '#94A3B8', textAlign: 'center' }}>
+              Recherche de votre position GPS...
+            </Text>
+          </View>
         </View>
       )}
 
