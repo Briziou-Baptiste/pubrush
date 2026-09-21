@@ -31,6 +31,7 @@ import { fetchBarsSearch, fetchNearbyBars, fetchMapFilters } from '../../../lib/
 import { getAccessToken } from '../../../lib/authStorage';
 import {
   fetchWalkingRoute,
+  fetchWalkingRoutesInParallel,
   RouteSegment,
   getRouteMidpoint,
   optimizeStopOrder,
@@ -95,6 +96,7 @@ export default function CreateBarathonMapScreen() {
   } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [pointName, setPointName] = useState('');
+  const [selectedSuggestion, setSelectedSuggestion] = useState<any | null>(null);
   
   const [mapFilters, setMapFilters] = useState<any[]>([]);
   const [activeFilterKey, setActiveFilterKey] = useState<string>('bar');
@@ -111,28 +113,13 @@ export default function CreateBarathonMapScreen() {
         return;
       }
 
-      const newSegments: Record<string, RouteSegment> = {};
-      let hasChange = false;
-
-      for (let i = 0; i < points.length - 1; i++) {
-        if (!active) return;
-        const from = points[i];
-        const to = points[i + 1];
-        const key = `${from.id}->${to.id}`;
-
-        const seg = await fetchWalkingRoute(
-          { latitude: Number(from.latitude), longitude: Number(from.longitude) },
-          { latitude: Number(to.latitude), longitude: Number(to.longitude) }
-        );
-
+      try {
+        const updated = await fetchWalkingRoutesInParallel(points, routeSegments);
         if (active) {
-          newSegments[key] = seg;
-          hasChange = true;
+          setRouteSegments(updated);
         }
-      }
-
-      if (active && hasChange) {
-        setRouteSegments(newSegments);
+      } catch (err) {
+        console.error('[CreateMap] Failed to load routes in parallel:', err);
       }
     }
 
@@ -305,7 +292,7 @@ export default function CreateBarathonMapScreen() {
         const token = await getAccessToken();
         console.log('[loadSuggestions] token fetched:', !!token, 'active:', active);
         if (!token) {
-          Alert.alert("Debug Suggestions", "Erreur: token d'authentification manquant.");
+          console.warn('[loadSuggestions] Missing auth token.');
           return;
         }
         if (!active) {
@@ -324,7 +311,7 @@ export default function CreateBarathonMapScreen() {
         console.log('[loadSuggestions] response received count:', data?.length);
 
         if (!data || data.length === 0) {
-          Alert.alert("Debug Suggestions", "L'API a renvoyé 0 résultat (aucun lieu trouvé à proximité).");
+          console.log('[loadSuggestions] 0 venues returned.');
         }
 
         // If the query took too long and already timed out, or if this effect was cleaned up, ignore results
@@ -391,15 +378,9 @@ export default function CreateBarathonMapScreen() {
           .slice(0, 50);
 
         console.log('[loadSuggestions] setting suggestions count:', filtered.length);
-
-        if (data && data.length > 0 && filtered.length === 0) {
-          Alert.alert("Debug Suggestions", `L'API a renvoyé ${data.length} lieux à proximité, mais ils ont tous été filtrés comme doublons par rapport aux étapes existantes.`);
-        }
-
         setSuggestions(filtered);
       } catch (error: any) {
-        console.error('Failed to load suggestions:', error);
-        Alert.alert("Debug Suggestions (Erreur)", `Erreur lors de la requête: ${error?.message || String(error)}`);
+        console.warn('[loadSuggestions] Failed to load suggestions:', error);
       } finally {
         clearTimeout(timeoutId);
         if (active && !didTimeout) {
@@ -430,6 +411,7 @@ export default function CreateBarathonMapScreen() {
         longitude: item.longitude,
       },
     ]);
+    setSelectedSuggestion(null);
 
     mapRef.current?.animateCamera(
       {
@@ -440,19 +422,43 @@ export default function CreateBarathonMapScreen() {
     );
   }
 
-  function handleConfirmAddSuggestedPoint(item: any) {
-    const venueType = item.stopType === 'bar' ? 'le bar' : 'le restaurant';
+  function handleAutoGenerate() {
+    if (suggestions.length === 0) {
+      Alert.alert(
+        'Génération automatique',
+        'Aucun bar disponible dans ce rayon. Sélectionnez un premier bar ou augmentez le temps de marche maximal.'
+      );
+      return;
+    }
+
+    const candidates = suggestions.slice(0, 4);
+    if (candidates.length < 2) {
+      Alert.alert(
+        'Génération automatique',
+        'Il faut au moins 2 bars disponibles à proximité pour composer un parcours.'
+      );
+      return;
+    }
+
+    const baseStops: SelectedPoint[] = points.length > 0 ? [points[0]] : [];
+    const needed = Math.max(2, 4 - baseStops.length);
+
+    const newAdditions: SelectedPoint[] = candidates.slice(0, needed).map((c) => ({
+      id: `${Date.now()}-${Math.random()}`,
+      name: c.name,
+      stopType: c.stopType,
+      latitude: c.latitude,
+      longitude: c.longitude,
+    }));
+
+    const combined = [...baseStops, ...newAdditions];
+    const optimized = optimizeStopOrder(combined);
+    setPoints(optimized);
+    setSelectedSuggestion(null);
+
     Alert.alert(
-      "Ajouter l'étape",
-      `Veux-tu ajouter ${venueType} "${item.name}" comme étape (${item.estimatedMinutes} min de marche) ?`,
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Ajouter",
-          style: "default",
-          onPress: () => handleAddSuggestedPoint(item),
-        },
-      ]
+      'Parcours généré !',
+      `PubRush a composé un barathon de ${optimized.length} étapes optimisées pour minimiser votre marche.`
     );
   }
 
@@ -723,20 +729,31 @@ export default function CreateBarathonMapScreen() {
   const allMarkers = useMemo(() => {
     const list: React.ReactElement[] = [];
 
-    // 1. Confirmed step markers (Orange for Bars, Red for Restaurants)
+    // 1. Confirmed step markers (Numbered modern badges)
     points.forEach((p, index) => {
       const lat = Number(p.latitude);
       const lng = Number(p.longitude);
       if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
         const isBar = p.stopType === 'bar';
+        const pinBgColor = isBar ? '#D97706' : '#DC2626';
+
         list.push(
           <Marker
             key={`step-marker-${p.id}`}
             coordinate={{ latitude: lat, longitude: lng }}
-            pinColor={isBar ? 'orange' : 'red'}
+            anchor={{ x: 0.5, y: 1.0 }}
+            tracksViewChanges={false}
             title={`Étape ${index + 1} - ${p.name}`}
             description={`${isBar ? 'Bar' : 'Restaurant'} • Étape confirmée`}
-          />
+          >
+            <View style={styles.customStepMarker}>
+              <View style={[styles.stepPinBubble, { backgroundColor: pinBgColor }]}>
+                <Text style={styles.stepPinNumber}>{index + 1}</Text>
+                <Ionicons name={isBar ? 'beer' : 'restaurant'} size={12} color="#FFFFFF" />
+              </View>
+              <View style={[styles.stepPinTail, { borderTopColor: pinBgColor }]} />
+            </View>
+          </Marker>
         );
       }
     });
@@ -758,7 +775,7 @@ export default function CreateBarathonMapScreen() {
       }
     }
 
-    // 3. Suggestions markers (Yellow for Bars, Purple for Restaurants) - Only display if we have at least one point
+    // 3. Suggestions markers (Yellow for Bars, Purple for Restaurants)
     if (points.length > 0) {
       suggestions.forEach((item) => {
         const lat = Number(item.latitude);
@@ -771,8 +788,8 @@ export default function CreateBarathonMapScreen() {
               coordinate={{ latitude: lat, longitude: lng }}
               pinColor={isBar ? 'yellow' : 'purple'}
               title={`${item.name} (${isBar ? 'Bar' : 'Restaurant'})`}
-              description={`${item.estimatedMinutes} min de marche • ${isBar ? 'Bar' : 'Restaurant'} • Toucher pour ajouter`}
-              onCalloutPress={() => handleConfirmAddSuggestedPoint(item)}
+              description={`${item.estimatedMinutes} min de marche • Toucher pour afficher`}
+              onPress={() => setSelectedSuggestion(item)}
             />
           );
         }
@@ -841,19 +858,25 @@ export default function CreateBarathonMapScreen() {
       <View style={homeStyles.topBarWrapper}>
         <View style={homeStyles.topBar}>
           <View style={homeStyles.brandBlock}>
-            <Text style={homeStyles.brand}>PubRush</Text>
-            <Text style={homeStyles.brandSubtitle}>
-              Nom du barathon : {barathonName}
+            <View style={styles.stepperHeader}>
+              <View style={[styles.stepperBarMini, styles.stepperBarMiniActive]} />
+              <View style={[styles.stepperBarMini, styles.stepperBarMiniActive]} />
+              <View style={styles.stepperBarMini} />
+            </View>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: '#2563EB', marginBottom: 2 }}>
+              ÉTAPE 2 SUR 3 • CHOIX DES LIEUX
             </Text>
+            <Text style={homeStyles.brand}>{barathonName}</Text>
             <Text style={styles.metaText}>
-              Date de début : {dateLabel} à {timeLabel}
+              {dateLabel} à {timeLabel} • Max {allowedTravelTimeMinutes}m de marche / étape
             </Text>
           </View>
 
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.backButton}
+            style={[styles.backButton, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}
           >
+            <Ionicons name="arrow-back" size={14} color="#FFFFFF" />
             <Text style={styles.backButtonText}>Retour</Text>
           </TouchableOpacity>
         </View>
@@ -1027,18 +1050,93 @@ export default function CreateBarathonMapScreen() {
 
 
 
+      {/* Floating Suggestion Preview Card */}
+      {selectedSuggestion && (
+        <View style={styles.suggestionCard}>
+          <View style={styles.suggestionCardTop}>
+            <Text style={styles.suggestionCardTitle} numberOfLines={1}>
+              {selectedSuggestion.name}
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: selectedSuggestion.stopType === 'bar' ? '#FEF3C7' : '#FEE2E2',
+                borderColor: selectedSuggestion.stopType === 'bar' ? '#FCD34D' : '#FCA5A5',
+                borderWidth: 1,
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 2.5,
+              }}
+            >
+              <Ionicons
+                name={selectedSuggestion.stopType === 'bar' ? 'beer' : 'restaurant'}
+                size={11}
+                color={selectedSuggestion.stopType === 'bar' ? '#92400E' : '#991B1B'}
+              />
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: '700',
+                  color: selectedSuggestion.stopType === 'bar' ? '#92400E' : '#991B1B',
+                }}
+              >
+                {selectedSuggestion.stopType === 'bar' ? 'Bar' : 'Restaurant'}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.suggestionCardSub}>
+            À {selectedSuggestion.estimatedMinutes} min de marche du bar précédent
+            {selectedSuggestion.city ? ` • ${selectedSuggestion.city}` : ''}
+          </Text>
+
+          <View style={styles.suggestionCardActions}>
+            <TouchableOpacity
+              style={styles.suggestionAddBtn}
+              onPress={() => handleAddSuggestedPoint(selectedSuggestion)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="add" size={16} color="#FFFFFF" />
+              <Text style={styles.suggestionAddBtnText}>Ajouter au parcours</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.suggestionDismissBtn}
+              onPress={() => setSelectedSuggestion(null)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.suggestionDismissBtnText}>Fermer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <View style={styles.bottomSheet}>
         <View style={styles.sheetHeader}>
           <Text style={styles.sheetTitle}>Lieux sélectionnés ({points.length})</Text>
-          {points.length >= 3 && (
-            <TouchableOpacity
-              style={styles.optimizeButton}
-              onPress={handleOptimizeRoute}
-            >
-              <Ionicons name="flash" size={12} color="#B45309" />
-              <Text style={styles.optimizeButtonText}>Optimiser</Text>
-            </TouchableOpacity>
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {points.length <= 1 && suggestions.length >= 2 && (
+              <TouchableOpacity
+                style={styles.magicButton}
+                onPress={handleAutoGenerate}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="sparkles" size={12} color="#FFFFFF" />
+                <Text style={styles.magicButtonText}>🪄 Auto (4 bars)</Text>
+              </TouchableOpacity>
+            )}
+            {points.length >= 3 && (
+              <TouchableOpacity
+                style={styles.optimizeButton}
+                onPress={handleOptimizeRoute}
+              >
+                <Ionicons name="flash" size={12} color="#B45309" />
+                <Text style={styles.optimizeButtonText}>Optimiser</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         <ScrollView
@@ -1050,7 +1148,7 @@ export default function CreateBarathonMapScreen() {
             <View style={styles.emptyCard}>
               <Text style={styles.emptyTitle}>Aucun lieu sélectionné</Text>
               <Text style={styles.emptySubtitle}>
-                Appuie sur la carte pour ajouter un lieu.
+                Appuie sur la carte pour ajouter un lieu ou utilise la recherche ci-dessus.
               </Text>
             </View>
           ) : (
@@ -1169,30 +1267,42 @@ export default function CreateBarathonMapScreen() {
           )}
         </ScrollView>
 
-          <TouchableOpacity
-            style={[
-              styles.createButton,
-              cannotCreateBarathon && styles.createButtonDisabled,
-            ]}
-            disabled={cannotCreateBarathon}
-            onPress={() => {
-              if (cannotCreateBarathon) return;
+        {cannotCreateBarathon && (
+          <View style={styles.guidanceCard}>
+            <Ionicons name="information-circle" size={15} color="#2563EB" />
+            <Text style={styles.guidanceText}>
+              Ajoutez au moins 2 lieux pour calculer le trajet piéton et continuer.
+            </Text>
+          </View>
+        )}
 
-              router.push({
-                pathname: '/create-barathon-recap',
-                params: {
-                  name: barathonName,
-                  startDateTimeIso: params.startDateTimeIso,
-                  maxTimeInBar: params.maxTimeInBar,
-                  travelTime: params.travelTime,
-                  stopsJson: JSON.stringify(points),
-                  partnerEventId: params.partnerEventId || '',
-                },
-              });
-            }}
-          >
-            <Text style={styles.createButtonText}>Créer mon barathon</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.createButton,
+            cannotCreateBarathon && styles.createButtonDisabled,
+          ]}
+          disabled={cannotCreateBarathon}
+          onPress={() => {
+            if (cannotCreateBarathon) return;
+
+            router.push({
+              pathname: '/create-barathon-recap',
+              params: {
+                name: barathonName,
+                startDateTimeIso: params.startDateTimeIso,
+                maxTimeInBar: params.maxTimeInBar,
+                travelTime: params.travelTime,
+                stopsJson: JSON.stringify(points),
+                partnerEventId: params.partnerEventId || '',
+              },
+            });
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={styles.createButtonText}>Valider mon parcours</Text>
+            <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+          </View>
+        </TouchableOpacity>
       </View>
 
       <Modal
@@ -1210,13 +1320,9 @@ export default function CreateBarathonMapScreen() {
               <Text style={styles.modalTitle}>
                 Ajouter ce lieu au barathon ?
               </Text>
-
-              {pendingPoint && (
-                <Text style={styles.modalCoords}>
-                  {pendingPoint.latitude.toFixed(6)} /{' '}
-                  {pendingPoint.longitude.toFixed(6)}
-                </Text>
-              )}
+              <Text style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', marginBottom: 12 }}>
+                Précisez le type d'établissement pour l'intégrer au barathon.
+              </Text>
 
               <TextInput
                 value={pointName}

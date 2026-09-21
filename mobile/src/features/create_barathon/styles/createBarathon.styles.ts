@@ -230,5 +230,68 @@ export const styles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'center',
     },
+    stepperWrapper: {
+      marginBottom: 20,
+    },
+    stepperBar: {
+      flexDirection: 'row',
+      gap: 6,
+      marginBottom: 8,
+    },
+    stepperSegment: {
+      flex: 1,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: '#E2E8F0',
+    },
+    stepperSegmentActive: {
+      backgroundColor: '#2563EB',
+    },
+    stepperText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: '#2563EB',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    chipsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 10,
+    },
+    chip: {
+      backgroundColor: '#F1F5F9',
+      borderWidth: 1,
+      borderColor: '#E2E8F0',
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    chipActive: {
+      backgroundColor: '#2563EB',
+      borderColor: '#2563EB',
+    },
+    chipText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: '#475569',
+    },
+    chipTextActive: {
+      color: '#FFFFFF',
+      fontWeight: '700',
+    },
+    helperText: {
+      fontSize: 12,
+      color: '#64748B',
+      marginTop: 4,
+      marginBottom: 10,
+    },
+    inlineError: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#EF4444',
+      marginTop: 4,
+    },
 });
 

@@ -114,6 +114,55 @@ export function getRouteMidpoint(coordinates: LatLng[]): LatLng | null {
 }
 
 /**
+ * Efficiently computes walking routes for a list of points in parallel,
+ * reusing any already cached or known segments to avoid redundant network calls.
+ */
+export async function fetchWalkingRoutesInParallel(
+  points: { id: string; latitude: number; longitude: number }[],
+  existingSegments: Record<string, RouteSegment> = {}
+): Promise<Record<string, RouteSegment>> {
+  if (points.length < 2) {
+    return {};
+  }
+
+  const updatedSegments: Record<string, RouteSegment> = {};
+  const tasks: { key: string; from: LatLng; to: LatLng }[] = [];
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const from = points[i];
+    const to = points[i + 1];
+    const key = `${from.id}->${to.id}`;
+
+    if (existingSegments[key]) {
+      updatedSegments[key] = existingSegments[key];
+    } else {
+      tasks.push({
+        key,
+        from: { latitude: Number(from.latitude), longitude: Number(from.longitude) },
+        to: { latitude: Number(to.latitude), longitude: Number(to.longitude) },
+      });
+    }
+  }
+
+  if (tasks.length === 0) {
+    return updatedSegments;
+  }
+
+  const results = await Promise.all(
+    tasks.map(async (task) => {
+      const seg = await fetchWalkingRoute(task.from, task.to);
+      return { key: task.key, seg };
+    })
+  );
+
+  for (const res of results) {
+    updatedSegments[res.key] = res.seg;
+  }
+
+  return updatedSegments;
+}
+
+/**
  * Optimizes the order of stops to minimize the total walking distance (TSP - Traveling Salesperson).
  * Keeps the first stop (the starting bar) fixed, and calculates the optimal sequence for the rest.
  */

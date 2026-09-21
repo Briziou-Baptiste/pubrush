@@ -673,9 +673,26 @@ export default function BarathonRecapScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={[styles.backButton, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}
+          >
+            <Ionicons name="arrow-back" size={16} color="#FFFFFF" />
+            <Text style={styles.backButtonText}>Retour</Text>
+          </TouchableOpacity>
+
+          {!isDetailsMode && (
+            <View style={{ marginBottom: 18 }}>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: '#2563EB' }} />
+                <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: '#2563EB' }} />
+                <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: '#2563EB' }} />
+              </View>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#2563EB', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Étape 3 sur 3 • Récapitulatif & Finalisation
+              </Text>
+            </View>
+          )}
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Récapitulatif</Text>
@@ -988,6 +1005,7 @@ export default function BarathonRecapScreen() {
                 .sort((a, b) => a.stopOrder - b.stopOrder)
                 .map((stop, index) => {
                   const isBar = stop.stopType === 'bar';
+                  const pinBgColor = isBar ? '#D97706' : '#DC2626';
                   return (
                     <Marker
                       key={stop.id}
@@ -995,10 +1013,50 @@ export default function BarathonRecapScreen() {
                         latitude: stop.latitude,
                         longitude: stop.longitude,
                       }}
-                      pinColor={isBar ? 'orange' : 'red'}
+                      anchor={{ x: 0.5, y: 1.0 }}
+                      tracksViewChanges={false}
                       title={`Étape ${index + 1} - ${stop.name}`}
                       description={`${isBar ? 'Bar' : 'Restaurant'} • Étape`}
-                    />
+                    >
+                      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 3,
+                            backgroundColor: pinBgColor,
+                            paddingHorizontal: 7,
+                            paddingVertical: 3,
+                            borderRadius: 16,
+                            borderWidth: 1.5,
+                            borderColor: '#FFFFFF',
+                            shadowColor: '#000',
+                            shadowOpacity: 0.25,
+                            shadowRadius: 4,
+                            elevation: 4,
+                          }}
+                        >
+                          <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 12 }}>
+                            {index + 1}
+                          </Text>
+                          <Ionicons name={isBar ? 'beer' : 'restaurant'} size={11} color="#FFFFFF" />
+                        </View>
+                        <View
+                          style={{
+                            width: 0,
+                            height: 0,
+                            borderStyle: 'solid',
+                            borderLeftWidth: 4,
+                            borderRightWidth: 4,
+                            borderTopWidth: 5,
+                            borderLeftColor: 'transparent',
+                            borderRightColor: 'transparent',
+                            borderTopColor: pinBgColor,
+                            marginTop: -1,
+                          }}
+                        />
+                      </View>
+                    </Marker>
                   );
                 })}
             </MapView>
@@ -1043,8 +1101,8 @@ export default function BarathonRecapScreen() {
                         </Text>
                       </View>
                     </View>
-                    <Text style={styles.stopCoords}>
-                      {stop.latitude.toFixed(5)} / {stop.longitude.toFixed(5)}
+                    <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 3 }}>
+                      Arrêt n°{index + 1} • {isBar ? 'Bar' : 'Restaurant'}
                     </Text>
                   </View>
                 );

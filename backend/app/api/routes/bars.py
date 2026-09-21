@@ -6,6 +6,7 @@ import ssl
 import math
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -445,19 +446,40 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
     data_encoded = urllib.parse.urlencode({"data": overpass_query}).encode("utf-8")
     
     res_data = None
-    
-    for server_url in servers:
-        try:
-            res_data = _http_get_json(
-                server_url, 
+
+    # Try primary mirror first
+    try:
+        data = _http_get_json(
+            servers[0],
+            data_encoded=data_encoded,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=3,
+        )
+        if data and "elements" in data:
+            res_data = data
+    except Exception:
+        res_data = None
+
+    # If primary mirror is down/slow, query remaining backup mirrors concurrently
+    if not res_data and len(servers) > 1:
+        def _fetch_mirror(url: str):
+            return _http_get_json(
+                url,
                 data_encoded=data_encoded,
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-                timeout=5
+                timeout=4,
             )
-            if res_data:
-                break
-        except Exception:
-            continue
+
+        with ThreadPoolExecutor(max_workers=min(len(servers) - 1, 4)) as executor:
+            futures = {executor.submit(_fetch_mirror, url): url for url in servers[1:]}
+            for future in as_completed(futures):
+                try:
+                    backup_data = future.result()
+                    if backup_data and "elements" in backup_data:
+                        res_data = backup_data
+                        break
+                except Exception:
+                    continue
             
     if not res_data:
         try:
