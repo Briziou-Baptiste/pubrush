@@ -107,7 +107,7 @@ export const styles = StyleSheet.create({
     marginTop: Platform.OS === 'android' ? -1 : 0,
   },
   loadingWrapper: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(17, 24, 39, 0.75)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -120,7 +120,7 @@ export const styles = StyleSheet.create({
     marginTop: 12,
   },
   errorWrapper: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#111827',
     alignItems: 'center',
     justifyContent: 'center',

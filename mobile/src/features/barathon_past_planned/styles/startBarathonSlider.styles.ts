@@ -40,7 +40,7 @@ export const styles = StyleSheet.create({
   },
 
   trackFill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderRadius: TRACK_HEIGHT / 2,
     backgroundColor: '#5DDE9F',
       opacity: 0.5,
