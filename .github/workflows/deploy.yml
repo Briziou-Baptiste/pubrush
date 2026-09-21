@@ -116,7 +116,7 @@ jobs:
       - name: Installer les dépendances
         run: |
           cd mobile
-          npm ci
+          npm ci --legacy-peer-deps
 
       - name: Publier la mise à jour EAS Update (iOS & Android)
         run: |
