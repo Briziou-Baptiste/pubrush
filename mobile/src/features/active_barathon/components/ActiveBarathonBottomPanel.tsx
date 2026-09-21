@@ -1,4 +1,5 @@
 import { Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from '../styles/activeBarathon.styles';
 
@@ -41,7 +42,11 @@ export default function ActiveBarathonBottomPanel({
         <Text style={styles.value}>{distanceLabel}</Text>
       </View>
 
-      <TouchableOpacity style={styles.googleMapsButton} onPress={onOpenGoogleMaps} activeOpacity={0.85}>
+      <TouchableOpacity
+        style={styles.googleMapsButton}
+        onPress={onOpenGoogleMaps}
+        activeOpacity={0.85}
+      >
         <Text style={styles.googleMapsButtonText}>Ouvrir Google Maps</Text>
       </TouchableOpacity>
 
@@ -53,7 +58,10 @@ export default function ActiveBarathonBottomPanel({
               onPress={onReplacePress}
               activeOpacity={0.8}
             >
-              <Text style={styles.trajetReplaceButtonText}>🔄 Remplacer</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                <Ionicons name="swap-horizontal" size={15} color="#FFFFFF" />
+                <Text style={styles.trajetReplaceButtonText}>Remplacer</Text>
+              </View>
             </TouchableOpacity>
           )}
 
@@ -63,7 +71,10 @@ export default function ActiveBarathonBottomPanel({
               onPress={onAddStopPress}
               activeOpacity={0.8}
             >
-              <Text style={styles.trajetAddButtonText}>➕ Ajouter un bar</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                <Ionicons name="add" size={16} color="#FFFFFF" />
+                <Text style={styles.trajetAddButtonText}>Ajouter un bar</Text>
+              </View>
             </TouchableOpacity>
           )}
         </View>

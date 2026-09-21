@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import MapView, { Region } from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
 
 import HomeMenu from '../components/HomeMenu';
 import LocationButton from '../components/LocationButton';
@@ -218,7 +219,7 @@ export default function HomeScreen() {
             style={styles.menuButton}
             activeOpacity={0.85}
           >
-            <Text style={styles.menuButtonIcon}>☰</Text>
+            <Ionicons name="menu" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>

@@ -83,16 +83,24 @@ export default function SavedBarathonsScreen() {
   }
 
   function renderSavedBarathonCard({ item }: { item: SavedBarathon }) {
-    const stopsList = item.stops.map(s => s.name).join(' ➔ ');
+    const stopsList = item.stops.map(s => s.name).join('  →  ');
 
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.titleContainer}>
             <Text style={styles.barathonName}>{item.name}</Text>
-            <Text style={styles.metadataText}>
-              ⏱️ {item.max_time_in_bar_minutes}m par bar • 🚶‍♂️ {item.travel_time_between_bars_minutes}m trajet
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="time-outline" size={13} color="#64748B" />
+                <Text style={[styles.metadataText, { marginTop: 0 }]}>{item.max_time_in_bar_minutes}m / bar</Text>
+              </View>
+              <Text style={styles.metadataText}>•</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="walk-outline" size={13} color="#64748B" />
+                <Text style={[styles.metadataText, { marginTop: 0 }]}>{item.travel_time_between_bars_minutes}m trajet</Text>
+              </View>
+            </View>
           </View>
           <View style={styles.actionButtonsRow}>
             <TouchableOpacity
@@ -146,7 +154,7 @@ export default function SavedBarathonsScreen() {
           </View>
         ) : savedBarathons.length === 0 ? (
           <View style={styles.messageCard}>
-            <Text style={styles.emptyIcon}>💾</Text>
+            <Ionicons name="bookmark-outline" size={44} color="#94A3B8" style={{ marginBottom: 12 }} />
             <Text style={styles.emptyText}>Vous n'avez pas encore de barathon enregistré.</Text>
             <Text style={styles.emptySubtext}>
               Pour enregistrer un barathon, rendez-vous dans l'historique de vos barathons passés et cliquez sur l'un d'eux.

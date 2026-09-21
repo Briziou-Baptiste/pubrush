@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { AssignedBarathonRole } from '../../../lib/api';
 
@@ -26,15 +27,27 @@ export default function BarathonRolesModal({
   loading = false,
   currentUserId,
 }: Props) {
-  function getRoleEmoji(roleName: string) {
+  function renderRoleIcon(roleName: string) {
     const lower = roleName.toLowerCase();
-    if (lower.includes('compte')) return '💰';
-    if (lower.includes('temps') || lower.includes('chrono')) return '⏱️';
-    if (lower.includes('ambiance') || lower.includes('fête')) return '🎉';
-    if (lower.includes('sam') || lower.includes('conducteur')) return '🚗';
-    if (lower.includes('capitaine') || lower.includes('chef')) return '⭐';
-    if (lower.includes('photo') || lower.includes('souvenir')) return '📸';
-    return '👑';
+    if (lower.includes('compte') || lower.includes('argent')) {
+      return <Ionicons name="wallet-outline" size={20} color="#10B981" />;
+    }
+    if (lower.includes('temps') || lower.includes('chrono')) {
+      return <Ionicons name="time-outline" size={20} color="#3B82F6" />;
+    }
+    if (lower.includes('ambiance') || lower.includes('fête')) {
+      return <Ionicons name="sparkles-outline" size={20} color="#F59E0B" />;
+    }
+    if (lower.includes('sam') || lower.includes('conducteur')) {
+      return <Ionicons name="car-outline" size={20} color="#6366F1" />;
+    }
+    if (lower.includes('capitaine') || lower.includes('chef')) {
+      return <Ionicons name="star-outline" size={20} color="#EAB308" />;
+    }
+    if (lower.includes('photo') || lower.includes('souvenir')) {
+      return <Ionicons name="camera-outline" size={20} color="#EC4899" />;
+    }
+    return <Ionicons name="shield-checkmark-outline" size={20} color="#8B5CF6" />;
   }
 
   return (
@@ -48,7 +61,10 @@ export default function BarathonRolesModal({
         <View style={styles.modalCard}>
           <View style={styles.headerRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.title}>👑 Qui est le maître de quoi ?</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="ribbon-outline" size={22} color="#8B5CF6" />
+                <Text style={styles.title}>Qui est le maître de quoi ?</Text>
+              </View>
               <Text style={styles.subtitle}>
                 Rappel des missions et pouvoirs de chacun
               </Text>
@@ -62,7 +78,7 @@ export default function BarathonRolesModal({
             </View>
           ) : roles.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>🎭</Text>
+              <Ionicons name="people-outline" size={44} color="#A78BFA" />
               <Text style={styles.emptyTitle}>Aucun rôle configuré</Text>
               <Text style={styles.emptySubtitle}>
                 Ce barathon a été démarré sans attribution spécifique de rôles.
@@ -72,7 +88,6 @@ export default function BarathonRolesModal({
             <ScrollView style={styles.rolesList} showsVerticalScrollIndicator={false}>
               {roles.map((item) => {
                 const isMe = currentUserId !== undefined && item.user_id === currentUserId;
-                const emoji = getRoleEmoji(item.role_name);
 
                 return (
                   <View
@@ -80,7 +95,7 @@ export default function BarathonRolesModal({
                     style={[styles.roleCard, isMe && styles.roleCardHighlight]}
                   >
                     <View style={styles.emojiBadge}>
-                      <Text style={styles.emojiText}>{emoji}</Text>
+                      {renderRoleIcon(item.role_name)}
                     </View>
 
                     <View style={styles.roleContent}>

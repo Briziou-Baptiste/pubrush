@@ -93,7 +93,7 @@ export default function ActiveBarathonScreen() {
         setBarathon(cached);
         setIsSousSolMode(true);
         Alert.alert(
-          'Mode Sous-sol 🔦',
+          'Mode Sous-sol',
           'Impossible de joindre le serveur. Ton barathon a été chargé en mode local (sous-sol).'
         );
         return;
@@ -210,7 +210,7 @@ export default function ActiveBarathonScreen() {
             }
             if (user_id !== currentUserId) {
               Alert.alert(
-                'Étape modifiée 🔄',
+                'Étape modifiée',
                 `${username || 'Le maître du trajet'} a remplacé "${old_name}" par "${new_name}" (Raison: ${reason}).`
               );
             }
@@ -221,7 +221,7 @@ export default function ActiveBarathonScreen() {
             }
             if (user_id !== currentUserId) {
               Alert.alert(
-                'Nouvelle étape ajoutée ➕',
+                'Nouvelle étape ajoutée',
                 `${username || 'Le maître du trajet'} a ajouté "${added_stop?.name ?? 'un nouveau bar'}" au parcours.`
               );
             }
@@ -229,7 +229,7 @@ export default function ActiveBarathonScreen() {
             const newUser = message.payload?.user;
             if (newUser && newUser.id !== currentUserId) {
               Alert.alert(
-                'Nouveau participant ! 🎉',
+                'Nouveau participant !',
                 `${newUser.username}${newUser.is_guest ? ' (Invité)' : ''} a rejoint le barathon !`
               );
               if (token && currentBarathon.id) {

@@ -554,7 +554,7 @@ export default function CreateBarathonMapScreen() {
     const optimized = optimizeStopOrder(points);
     setPoints(optimized);
     Alert.alert(
-      '⚡ Parcours optimisé',
+      'Parcours optimisé',
       'L’ordre des étapes a été réorganisé pour minimiser le temps de marche total entre les bars !'
     );
   }
@@ -697,9 +697,12 @@ export default function CreateBarathonMapScreen() {
                 elevation: 4,
               }}
             >
-              <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>
-                🚶 {segment.durationMinutes} min • {distLabel}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                <Ionicons name="walk" size={10} color="#94A3B8" />
+                <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>
+                  {segment.durationMinutes} min • {distLabel}
+                </Text>
+              </View>
             </View>
           </Marker>
         );
@@ -711,18 +714,10 @@ export default function CreateBarathonMapScreen() {
 
   const getStopTypeLabel = (typeKey: string) => {
     const filter = mapFilters.find((f) => f.key === typeKey);
-    if (filter) {
-      let emoji = '📍';
-      if (filter.icon === 'beer') emoji = '🍻';
-      else if (filter.icon === 'restaurant') emoji = '🍔';
-      else if (filter.icon === 'medical') emoji = '🏥';
-      else if (filter.icon === 'flag') emoji = '🚩';
-      else if (filter.icon === 'pizza') emoji = '🍕';
-      return `${emoji} ${filter.label}`;
-    }
-    if (typeKey === 'bar') return '🍻 Bar';
-    if (typeKey === 'food') return '🍔 Restaurant';
-    return `📍 ${typeKey}`;
+    if (filter) return filter.label;
+    if (typeKey === 'bar') return 'Bar';
+    if (typeKey === 'food') return 'Restaurant';
+    return typeKey;
   };
 
   const allMarkers = useMemo(() => {
@@ -739,8 +734,8 @@ export default function CreateBarathonMapScreen() {
             key={`step-marker-${p.id}`}
             coordinate={{ latitude: lat, longitude: lng }}
             pinColor={isBar ? 'orange' : 'red'}
-            title={`Étape ${index + 1} • ${isBar ? '🍻' : '🍔'} ${p.name}`}
-            description={`${isBar ? '🍻 Bar' : '🍔 Restaurant'} • Étape confirmée`}
+            title={`Étape ${index + 1} - ${p.name}`}
+            description={`${isBar ? 'Bar' : 'Restaurant'} • Étape confirmée`}
           />
         );
       }
@@ -775,8 +770,8 @@ export default function CreateBarathonMapScreen() {
               key={`suggestion-marker-${item.name}-${lat}-${lng}`}
               coordinate={{ latitude: lat, longitude: lng }}
               pinColor={isBar ? 'yellow' : 'purple'}
-              title={`${isBar ? '🍻' : '🍔'} ${item.name}`}
-              description={`🚶 ${item.estimatedMinutes} min • ${isBar ? '🍻 Bar' : '🍔 Restaurant'} • Toucher pour ajouter`}
+              title={`${item.name} (${isBar ? 'Bar' : 'Restaurant'})`}
+              description={`${item.estimatedMinutes} min de marche • ${isBar ? 'Bar' : 'Restaurant'} • Toucher pour ajouter`}
               onCalloutPress={() => handleConfirmAddSuggestedPoint(item)}
             />
           );
@@ -984,14 +979,22 @@ export default function CreateBarathonMapScreen() {
                       </Text>
                       <View
                         style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
                           backgroundColor: isBar ? '#FEF3C7' : '#FEE2E2',
                           borderColor: isBar ? '#FCD34D' : '#FCA5A5',
                           borderWidth: 1,
                           borderRadius: 8,
                           paddingHorizontal: 8,
-                          paddingVertical: 2,
+                          paddingVertical: 2.5,
                         }}
                       >
+                        <Ionicons
+                          name={isBar ? 'beer' : 'restaurant'}
+                          size={11}
+                          color={isBar ? '#92400E' : '#991B1B'}
+                        />
                         <Text
                           style={{
                             fontSize: 11,
@@ -999,7 +1002,7 @@ export default function CreateBarathonMapScreen() {
                             color: isBar ? '#92400E' : '#991B1B',
                           }}
                         >
-                          {isBar ? '🍻 Bar' : '🍔 Restaurant'}
+                          {isBar ? 'Bar' : 'Restaurant'}
                         </Text>
                       </View>
                     </View>
@@ -1033,7 +1036,7 @@ export default function CreateBarathonMapScreen() {
               onPress={handleOptimizeRoute}
             >
               <Ionicons name="flash" size={12} color="#B45309" />
-              <Text style={styles.optimizeButtonText}>⚡ Optimiser</Text>
+              <Text style={styles.optimizeButtonText}>Optimiser</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -1114,6 +1117,9 @@ export default function CreateBarathonMapScreen() {
                       <Text style={[styles.pointName, { flex: 1, marginTop: 0 }]}>{point.name}</Text>
                       <View
                         style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
                           backgroundColor: point.stopType === 'bar' ? '#FEF3C7' : '#FEE2E2',
                           borderColor: point.stopType === 'bar' ? '#FCD34D' : '#FCA5A5',
                           borderWidth: 1,
@@ -1122,6 +1128,11 @@ export default function CreateBarathonMapScreen() {
                           paddingVertical: 3,
                         }}
                       >
+                        <Ionicons
+                          name={point.stopType === 'bar' ? 'beer' : 'restaurant'}
+                          size={12}
+                          color={point.stopType === 'bar' ? '#92400E' : '#991B1B'}
+                        />
                         <Text
                           style={{
                             fontSize: 11,
@@ -1129,7 +1140,7 @@ export default function CreateBarathonMapScreen() {
                             color: point.stopType === 'bar' ? '#92400E' : '#991B1B',
                           }}
                         >
-                          {point.stopType === 'bar' ? '🍻 Bar' : '🍔 Restaurant'}
+                          {point.stopType === 'bar' ? 'Bar' : 'Restaurant'}
                         </Text>
                       </View>
                     </View>

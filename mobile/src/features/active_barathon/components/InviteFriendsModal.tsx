@@ -39,7 +39,7 @@ export default function InviteFriendsModal({
   async function handleShare() {
     try {
       await Share.share({
-        message: `🍻 Rejoins notre barathon "${barathonName}" sur PubRush en 1 seconde sans créer de compte !\n\nLien direct : ${joinUrl}\nCode : ${cleanCode}`,
+        message: `Rejoins notre barathon "${barathonName}" sur PubRush en 1 seconde sans créer de compte !\n\nLien direct : ${joinUrl}\nCode : ${cleanCode}`,
         url: joinUrl,
         title: `Invitation PubRush : ${barathonName}`,
       });
@@ -60,7 +60,10 @@ export default function InviteFriendsModal({
           {/* Header */}
           <View style={styles.headerRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.title}>🎟️ Inviter des amis</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="qr-code-outline" size={20} color="#2563EB" />
+                <Text style={styles.title}>Inviter des amis</Text>
+              </View>
               <Text style={styles.subtitle}>
                 Rejoindre en 1 seconde sans créer de compte !
               </Text>
@@ -112,9 +115,12 @@ export default function InviteFriendsModal({
             <Text style={styles.shareButtonText}>Partager le lien (WhatsApp, SMS...)</Text>
           </TouchableOpacity>
 
-          <Text style={styles.footerNote}>
-            📱 Vos amis accèdent directement à une page Web mobile avec la carte, le chrono et leur rôle !
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12 }}>
+            <Ionicons name="phone-portrait-outline" size={14} color="#64748B" />
+            <Text style={[styles.footerNote, { marginTop: 0 }]}>
+              Vos amis accèdent directement à une page Web mobile avec la carte, le chrono et leur rôle !
+            </Text>
+          </View>
         </View>
       </View>
     </Modal>

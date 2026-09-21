@@ -74,6 +74,7 @@ def serialize_barathon_summary(barathon: Barathon, current_user_id: int) -> dict
             if barathon.created_by_user_id == current_user_id
             else "participant"
         ),
+        "join_code": barathon.join_code,
         "participants_count": len(barathon.participants),
         "stops": [
             {
@@ -196,6 +197,14 @@ def get_my_upcoming_barathons(
 
     barathons = list(db.scalars(query).unique().all())
 
+    has_new_code = False
+    for b in barathons:
+        if b.join_code is None:
+            b.join_code = generate_unique_join_code(db)
+            has_new_code = True
+    if has_new_code:
+        db.commit()
+
     return [serialize_barathon_summary(b, current_user.id) for b in barathons]
 
 
@@ -300,7 +309,12 @@ def get_my_barathon_balances(
 @router.get("/{barathon_id}", response_model=BarathonRead)
 def get_barathon(
     barathon: Barathon = Depends(get_barathon_with_access),
+    db: Session = Depends(get_db),
 ):
+    if barathon.join_code is None:
+        barathon.join_code = generate_unique_join_code(db)
+        db.commit()
+        db.refresh(barathon)
     return barathon
 
 

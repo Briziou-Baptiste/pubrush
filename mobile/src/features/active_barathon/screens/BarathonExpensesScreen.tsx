@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { fetchBarathonExpenses, createBarathonExpense } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
@@ -161,11 +162,15 @@ export default function BarathonExpensesScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.screenPadding}>
         {/* Back and Header */}
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Retour</Text>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+          <Ionicons name="arrow-back" size={18} color="#2563EB" />
+          <Text style={styles.backButtonText}>Retour</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.title, { fontSize: 24, marginBottom: 16 }]}>💰 Dépenses du Barathon</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <Ionicons name="wallet-outline" size={26} color="#10B981" />
+          <Text style={[styles.title, { fontSize: 24, marginBottom: 0 }]}>Dépenses du Barathon</Text>
+        </View>
 
         {/* List of Balances */}
         <View style={styles.balanceCard}>
@@ -317,9 +322,9 @@ export default function BarathonExpensesScreen() {
                         <Text style={isSelected ? styles.beneficiaryButtonTextActive : styles.beneficiaryButtonText}>
                           {item.username}
                         </Text>
-                        <Text style={isSelected ? styles.beneficiaryCheckActive : styles.beneficiaryCheck}>
-                          {isSelected ? '✓' : ''}
-                        </Text>
+                        {isSelected ? (
+                          <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                        ) : null}
                       </TouchableOpacity>
                     );
                   })}

@@ -205,15 +205,22 @@ export default function ReplaceOrAddStopModal({
         <View style={styles.modalCard}>
           {/* Header */}
           <View style={styles.headerRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title}>
-                {mode === 'replace' ? "🔄 Remplacer l'étape" : '➕ Ajouter un bar'}
-              </Text>
-              <Text style={styles.subtitle}>
-                {mode === 'replace'
-                  ? `Remplacement de : ${currentStop?.name ?? 'Étape courante'}`
-                  : 'Insère une nouvelle étape dans le barathon'}
-              </Text>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons
+                name={mode === 'replace' ? 'swap-horizontal' : 'add-circle-outline'}
+                size={22}
+                color="#1F2937"
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.title}>
+                  {mode === 'replace' ? "Remplacer l'étape" : 'Ajouter un bar'}
+                </Text>
+                <Text style={styles.subtitle}>
+                  {mode === 'replace'
+                    ? `Remplacement de : ${currentStop?.name ?? 'Étape courante'}`
+                    : 'Insère une nouvelle étape dans le barathon'}
+                </Text>
+              </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={22} color="#4B5563" />
@@ -226,29 +233,32 @@ export default function ReplaceOrAddStopModal({
               <Text style={styles.sectionLabel}>Motif du remplacement :</Text>
               <View style={styles.pillsRow}>
                 <TouchableOpacity
-                  style={[styles.pill, reason === 'fermé' && styles.pillActive]}
+                  style={[styles.pill, reason === 'fermé' && styles.pillActive, { flexDirection: 'row', alignItems: 'center', gap: 5 }]}
                   onPress={() => setReason('fermé')}
                 >
+                  <Ionicons name="close-circle-outline" size={14} color={reason === 'fermé' ? '#FFFFFF' : '#EF4444'} />
                   <Text style={[styles.pillText, reason === 'fermé' && styles.pillTextActive]}>
-                    🚫 Bar fermé
+                    Bar fermé
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.pill, reason === 'bondé' && styles.pillActive]}
+                  style={[styles.pill, reason === 'bondé' && styles.pillActive, { flexDirection: 'row', alignItems: 'center', gap: 5 }]}
                   onPress={() => setReason('bondé')}
                 >
+                  <Ionicons name="people-outline" size={14} color={reason === 'bondé' ? '#FFFFFF' : '#4B5563'} />
                   <Text style={[styles.pillText, reason === 'bondé' && styles.pillTextActive]}>
-                    👥 Bar bondé
+                    Bar bondé
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.pill, reason === 'autre' && styles.pillActive]}
+                  style={[styles.pill, reason === 'autre' && styles.pillActive, { flexDirection: 'row', alignItems: 'center', gap: 5 }]}
                   onPress={() => setReason('autre')}
                 >
+                  <Ionicons name="create-outline" size={14} color={reason === 'autre' ? '#FFFFFF' : '#4B5563'} />
                   <Text style={[styles.pillText, reason === 'autre' && styles.pillTextActive]}>
-                    ✍️ Autre
+                    Autre
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -268,29 +278,32 @@ export default function ReplaceOrAddStopModal({
               <Text style={styles.sectionLabel}>Position dans le parcours :</Text>
               <View style={styles.pillsRow}>
                 <TouchableOpacity
-                  style={[styles.pill, position === 'before_current' && styles.pillActive]}
+                  style={[styles.pill, position === 'before_current' && styles.pillActive, { flexDirection: 'row', alignItems: 'center', gap: 5 }]}
                   onPress={() => setPosition('before_current')}
                 >
+                  <Ionicons name="play-back-outline" size={13} color={position === 'before_current' ? '#FFFFFF' : '#4B5563'} />
                   <Text style={[styles.pillText, position === 'before_current' && styles.pillTextActive]}>
-                    ⏪ Avant l’étape
+                    Avant l’étape
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.pill, position === 'after_current' && styles.pillActive]}
+                  style={[styles.pill, position === 'after_current' && styles.pillActive, { flexDirection: 'row', alignItems: 'center', gap: 5 }]}
                   onPress={() => setPosition('after_current')}
                 >
+                  <Ionicons name="play-forward-outline" size={13} color={position === 'after_current' ? '#FFFFFF' : '#4B5563'} />
                   <Text style={[styles.pillText, position === 'after_current' && styles.pillTextActive]}>
-                    ⏩ Après l’étape
+                    Après l’étape
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.pill, position === 'at_end' && styles.pillActive]}
+                  style={[styles.pill, position === 'at_end' && styles.pillActive, { flexDirection: 'row', alignItems: 'center', gap: 5 }]}
                   onPress={() => setPosition('at_end')}
                 >
+                  <Ionicons name="flag-outline" size={13} color={position === 'at_end' ? '#FFFFFF' : '#4B5563'} />
                   <Text style={[styles.pillText, position === 'at_end' && styles.pillTextActive]}>
-                    🏁 À la fin
+                    À la fin
                   </Text>
                 </TouchableOpacity>
               </View>

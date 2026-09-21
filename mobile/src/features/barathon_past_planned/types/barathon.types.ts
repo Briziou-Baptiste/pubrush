@@ -13,6 +13,7 @@ export type BarathonListItem = {
   ended_at: string | null;
   end_datetime?: string | null;
   current_user_role?: CurrentUserRole;
+  join_code?: string;
   participants_count: number;
   stops: Array<{
     id: number;

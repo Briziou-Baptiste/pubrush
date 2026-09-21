@@ -1,4 +1,5 @@
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from '../styles/activeBarathon.styles';
 import { formatRemainingTime, getTimerTone } from '../utils/activeBarathon.timer';
@@ -35,25 +36,28 @@ export default function ActiveBarathonHeader({
       {/* Ligne du haut */}
       <View style={styles.headerTopRow}>
         <View style={styles.headerTextBlock}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
           <Text style={styles.subtitle}>{stepLabel}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
             <Text style={[styles.phaseText, { marginTop: 0 }]}>{phaseLabel}</Text>
             {isSousSolMode && (
               <TouchableOpacity
-                style={styles.offlineBadge}
+                style={[styles.offlineBadge, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}
                 activeOpacity={0.8}
                 onPress={
                   onSousSolPress ||
                   (() => {
                     Alert.alert(
-                      'Mode Sous-sol Actif 🔦',
+                      'Mode Sous-sol Actif',
                       'Pas de réseau 4G détecté (cave ou sous-sol). Tes actions et le chrono continuent en local et seront synchronisés automatiquement à la sortie !'
                     );
                   })
                 }
               >
-                <Text style={styles.offlineBadgeText}>🔦 Sous-sol</Text>
+                <Ionicons name="flashlight-outline" size={13} color="#D97706" />
+                <Text style={styles.offlineBadgeText}>Sous-sol</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -63,21 +67,23 @@ export default function ActiveBarathonHeader({
           <View style={{ flexDirection: 'row', gap: 6 }}>
             {onInvitePress && (
               <TouchableOpacity
-                style={styles.rolesButton}
+                style={[styles.rolesButton, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}
                 activeOpacity={0.85}
                 onPress={onInvitePress}
               >
-                <Text style={styles.rolesButtonText}>🎟️ Inviter</Text>
+                <Ionicons name="qr-code-outline" size={14} color="#FFFFFF" />
+                <Text style={styles.rolesButtonText}>Inviter</Text>
               </TouchableOpacity>
             )}
 
             {onRolesPress && (
               <TouchableOpacity
-                style={styles.rolesButton}
+                style={[styles.rolesButton, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}
                 activeOpacity={0.85}
                 onPress={onRolesPress}
               >
-                <Text style={styles.rolesButtonText}>👑 Rôles</Text>
+                <Ionicons name="ribbon-outline" size={14} color="#FFFFFF" />
+                <Text style={styles.rolesButtonText}>Rôles</Text>
               </TouchableOpacity>
             )}
 
@@ -94,11 +100,12 @@ export default function ActiveBarathonHeader({
 
           {onExpensesPress && (
             <TouchableOpacity
-              style={[styles.expensesButton, { marginTop: 0 }]}
+              style={[styles.expensesButton, { marginTop: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }]}
               activeOpacity={0.85}
               onPress={onExpensesPress}
             >
-              <Text style={styles.expensesButtonText}>💰 Comptes</Text>
+              <Ionicons name="wallet-outline" size={15} color="#FFFFFF" />
+              <Text style={styles.expensesButtonText}>Comptes</Text>
             </TouchableOpacity>
           )}
         </View>

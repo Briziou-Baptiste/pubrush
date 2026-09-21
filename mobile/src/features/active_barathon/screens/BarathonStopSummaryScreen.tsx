@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from '../styles/barathonStopSummary.styles';
 import { fetchBarathonExpenses, savePastBarathon, createBarathonExpense, fetchBarathon } from '../../../lib/api';
@@ -307,7 +308,10 @@ export default function BarathonStopSummaryScreen() {
         {/* Card Dépenses & Compensations */}
         {expenses.length > 0 && (
           <View style={styles.card}>
-            <Text style={[styles.sectionTitle, { color: '#10B981', marginBottom: 16 }]}>💰 Comptes du Barathon</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Ionicons name="wallet-outline" size={22} color="#10B981" />
+              <Text style={[styles.sectionTitle, { color: '#10B981', marginBottom: 0 }]}>Comptes du Barathon</Text>
+            </View>
 
             {/* Section Compensations */}
             <Text style={styles.sectionTitle}>
@@ -315,9 +319,12 @@ export default function BarathonStopSummaryScreen() {
             </Text>
 
             {debts.length === 0 ? (
-              <Text style={styles.successText}>
-                ✓ Toutes les dépenses sont parfaitement équilibrées ! Aucun remboursement nécessaire.
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="checkmark-circle-outline" size={18} color="#10B981" />
+                <Text style={[styles.successText, { flex: 1 }]}>
+                  Toutes les dépenses sont parfaitement équilibrées ! Aucun remboursement nécessaire.
+                </Text>
+              </View>
             ) : (
               <View style={{ gap: 8, marginBottom: 20 }}>
                 {debts.map((debt, index) => {
@@ -328,9 +335,12 @@ export default function BarathonStopSummaryScreen() {
                     return (
                       <View key={index} style={styles.debtorCard}>
                         <View style={{ flex: 1, marginRight: 8 }}>
-                          <Text style={styles.debtorText}>
-                            ⚠️ Tu dois à {debt.creditorName}
-                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                            <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
+                            <Text style={styles.debtorText}>
+                              Tu dois à {debt.creditorName}
+                            </Text>
+                          </View>
                           <Text style={styles.debtorAmount}>
                             {debt.amount.toFixed(2)} €
                           </Text>
@@ -356,9 +366,12 @@ export default function BarathonStopSummaryScreen() {
                   if (isMeCreditor) {
                     return (
                       <View key={index} style={styles.creditorCard}>
-                        <Text style={styles.creditorText}>
-                          🎉 {debt.debtorName} te doit
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <Ionicons name="gift-outline" size={16} color="#059669" />
+                          <Text style={styles.creditorText}>
+                            {debt.debtorName} te doit
+                          </Text>
+                        </View>
                         <Text style={styles.creditorAmount}>
                           {debt.amount.toFixed(2)} €
                         </Text>
@@ -407,9 +420,18 @@ export default function BarathonStopSummaryScreen() {
                           : `Payé par ${exp.payer_username} • ${exp.beneficiary_user_ids.length} pers.`}
                       </Text>
                     </View>
-                    <Text style={[styles.expenseAmount, isRefund && { color: '#15803D' }]}>
-                      {isRefund ? `✓ ${exp.amount.toFixed(2)} €` : `${exp.amount.toFixed(2)} €`}
-                    </Text>
+                    {isRefund ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Ionicons name="checkmark" size={15} color="#15803D" />
+                        <Text style={[styles.expenseAmount, { color: '#15803D' }]}>
+                          {exp.amount.toFixed(2)} €
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.expenseAmount}>
+                        {exp.amount.toFixed(2)} €
+                      </Text>
+                    )}
                   </View>
                 );
               })}

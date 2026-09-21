@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import MapView, { Marker, Polyline, Region } from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
 
 import { createBarathonRecapStyles as styles } from '../../create_barathon/styles/createBarathonRecap.styles';
 import { createBarathon } from '../../create_barathon/services/createBarathon.service';
@@ -749,7 +750,10 @@ export default function BarathonRecapScreen() {
         {/* Card Dépenses & Compensations */}
         {isDetailsMode && (status === 'completed' || status === 'started') && (
           <View style={styles.card}>
-            <Text style={[styles.sectionTitle, { color: '#10B981', marginBottom: 16 }]}>💰 Comptes du Barathon</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Ionicons name="wallet-outline" size={20} color="#10B981" />
+              <Text style={[styles.sectionTitle, { color: '#10B981', marginBottom: 0 }]}>Comptes du Barathon</Text>
+            </View>
 
             {expenses.length === 0 ? (
               <Text style={{ color: '#6B7280', fontSize: 14, textAlign: 'center', marginVertical: 12 }}>
@@ -763,9 +767,12 @@ export default function BarathonRecapScreen() {
                 </Text>
 
                 {debts.length === 0 ? (
-                  <Text style={{ color: '#10B981', fontSize: 14, fontWeight: '700', marginBottom: 16, lineHeight: 20 }}>
-                    ✓ Toutes les dépenses sont parfaitement équilibrées ! Aucun remboursement nécessaire.
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                    <Ionicons name="checkmark-circle-outline" size={18} color="#10B981" />
+                    <Text style={{ color: '#10B981', fontSize: 14, fontWeight: '700', flex: 1, lineHeight: 20 }}>
+                      Toutes les dépenses sont parfaitement équilibrées ! Aucun remboursement nécessaire.
+                    </Text>
+                  </View>
                 ) : (
                   <View style={{ gap: 8, marginBottom: 20 }}>
                     {debts.map((debt, index) => {
@@ -787,9 +794,12 @@ export default function BarathonRecapScreen() {
                               alignItems: 'center',
                             }}
                           >
-                            <Text style={{ fontWeight: '700', color: '#B91C1C', fontSize: 14 }}>
-                              ⚠️ Tu dois à {debt.creditorName}
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                              <Ionicons name="alert-circle-outline" size={16} color="#B91C1C" />
+                              <Text style={{ fontWeight: '700', color: '#B91C1C', fontSize: 14 }}>
+                                Tu dois à {debt.creditorName}
+                              </Text>
+                            </View>
                             <Text style={{ fontWeight: '900', color: '#B91C1C', fontSize: 16 }}>
                               {debt.amount.toFixed(2)} €
                             </Text>
@@ -812,9 +822,12 @@ export default function BarathonRecapScreen() {
                               alignItems: 'center',
                             }}
                           >
-                            <Text style={{ fontWeight: '700', color: '#15803D', fontSize: 14 }}>
-                              🎉 {debt.debtorName} te doit
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                              <Ionicons name="gift-outline" size={16} color="#15803D" />
+                              <Text style={{ fontWeight: '700', color: '#15803D', fontSize: 14 }}>
+                                {debt.debtorName} te doit
+                              </Text>
+                            </View>
                             <Text style={{ fontWeight: '900', color: '#15803D', fontSize: 16 }}>
                               {debt.amount.toFixed(2)} €
                             </Text>
@@ -983,8 +996,8 @@ export default function BarathonRecapScreen() {
                         longitude: stop.longitude,
                       }}
                       pinColor={isBar ? 'orange' : 'red'}
-                      title={`Étape ${index + 1} • ${isBar ? '🍻' : '🍔'} ${stop.name}`}
-                      description={isBar ? '🍻 Bar' : '🍔 Restaurant'}
+                      title={`Étape ${index + 1} - ${stop.name}`}
+                      description={`${isBar ? 'Bar' : 'Restaurant'} • Étape`}
                     />
                   );
                 })}
@@ -1003,6 +1016,9 @@ export default function BarathonRecapScreen() {
                       <Text style={[styles.stopName, { flex: 1, marginTop: 0 }]}>{stop.name}</Text>
                       <View
                         style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
                           backgroundColor: isBar ? '#FEF3C7' : '#FEE2E2',
                           borderColor: isBar ? '#FCD34D' : '#FCA5A5',
                           borderWidth: 1,
@@ -1011,6 +1027,11 @@ export default function BarathonRecapScreen() {
                           paddingVertical: 3,
                         }}
                       >
+                        <Ionicons
+                          name={isBar ? 'beer' : 'restaurant'}
+                          size={12}
+                          color={isBar ? '#92400E' : '#991B1B'}
+                        />
                         <Text
                           style={{
                             fontSize: 11,
@@ -1018,7 +1039,7 @@ export default function BarathonRecapScreen() {
                             color: isBar ? '#92400E' : '#991B1B',
                           }}
                         >
-                          {isBar ? '🍻 Bar' : '🍔 Restaurant'}
+                          {isBar ? 'Bar' : 'Restaurant'}
                         </Text>
                       </View>
                     </View>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { BarathonListItem } from '../types/barathon.types';
 import { formatDate, formatTime } from '../utils/barathon.formatters';
@@ -183,7 +184,10 @@ export default function BarathonCard({
             activeOpacity={0.85}
             disabled={isDeleting}
           >
-            <Text style={styles.infoLabel}>Participants</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <Text style={styles.infoLabel}>Participants</Text>
+              <Ionicons name="qr-code-outline" size={13} color="#3B82F6" />
+            </View>
             <Text style={styles.infoValue}>{item.participants_count}</Text>
           </TouchableOpacity>
         ) : (

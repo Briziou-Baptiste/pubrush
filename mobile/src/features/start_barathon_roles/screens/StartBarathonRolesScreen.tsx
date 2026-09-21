@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import {
   assignRolesAndStartBarathon,
@@ -107,7 +108,7 @@ export default function StartBarathonRolesScreen() {
                 return [...prev, { user_id: newUser.id, role_id: null }];
               });
 
-              Alert.alert('Nouvel invité ! 🍻', `${newUser.username} a rejoint le barathon !`);
+              Alert.alert('Nouvel invité !', `${newUser.username} a rejoint le barathon !`);
             }
           }
         },
@@ -345,11 +346,12 @@ export default function StartBarathonRolesScreen() {
         </Text>
 
         <TouchableOpacity
-          style={styles.inviteButton}
+          style={[styles.inviteButton, { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }]}
           activeOpacity={0.85}
           onPress={() => setInviteModalVisible(true)}
         >
-          <Text style={styles.inviteButtonText}>🎟️ Inviter des amis (QR Code)</Text>
+          <Ionicons name="qr-code-outline" size={18} color="#FFFFFF" />
+          <Text style={styles.inviteButtonText}>Inviter des amis (QR Code)</Text>
         </TouchableOpacity>
 
         <View style={styles.actionRow}>

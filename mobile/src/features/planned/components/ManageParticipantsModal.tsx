@@ -19,6 +19,8 @@ import {
   addParticipantsToBarathon,
   removeParticipantFromBarathon,
 } from '../services/planned.service';
+import InviteFriendsModal from '../../active_barathon/components/InviteFriendsModal';
+import { Ionicons } from '@expo/vector-icons';
 
 type ManageParticipantsModalProps = {
   visible: boolean;
@@ -35,6 +37,7 @@ export default function ManageParticipantsModal({
   onClose,
   onUpdated,
 }: ManageParticipantsModalProps) {
+  const [qrModalVisible, setQrModalVisible] = useState(false);
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<SearchUserResult[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
@@ -186,12 +189,13 @@ export default function ManageParticipantsModal({
   }
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        onRequestClose={onClose}
+      >
       <View style={styles.overlay}>
         <View style={styles.card}>
           <Text style={styles.title}>{"Gérer les participants"}</Text>
@@ -203,6 +207,29 @@ export default function ManageParticipantsModal({
             </View>
           ) : (
             <>
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  backgroundColor: '#EFF6FF',
+                  borderWidth: 1.5,
+                  borderColor: '#3B82F6',
+                  borderRadius: 14,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  marginBottom: 14,
+                }}
+                onPress={() => setQrModalVisible(true)}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="qr-code-outline" size={18} color="#2563EB" />
+                <Text style={{ fontSize: 14, fontWeight: '700', color: '#2563EB' }}>
+                  Inviter des amis via QR Code
+                </Text>
+              </TouchableOpacity>
+
               <TextInput
                 value={search}
                 onChangeText={setSearch}
@@ -323,7 +350,16 @@ export default function ManageParticipantsModal({
         </View>
       </View>
     </Modal>
-  );
+
+    <InviteFriendsModal
+      visible={qrModalVisible}
+      onClose={() => setQrModalVisible(false)}
+      joinCode={fullBarathon?.join_code || barathon?.join_code || ''}
+      barathonName={barathon?.name || ''}
+      participantsCount={participants.length}
+    />
+  </>
+);
 }
 
 const styles = StyleSheet.create({

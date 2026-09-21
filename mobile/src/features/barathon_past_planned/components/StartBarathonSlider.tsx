@@ -1,36 +1,46 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { styles } from '../styles/startBarathonSlider.styles';
 import {
   Animated,
   Easing,
   PanResponder,
-  Text,
   View,
+  LayoutChangeEvent,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { styles } from '../styles/startBarathonSlider.styles';
 
 type StartBarathonSliderProps = {
   disabled?: boolean;
   onComplete: () => void;
 };
 
-const TRACK_WIDTH = 320;
-const TRACK_HEIGHT = 58;
+const DEFAULT_TRACK_WIDTH = 320;
 const THUMB_SIZE = 50;
-const MAX_TRANSLATE = TRACK_WIDTH - THUMB_SIZE - 8;
 
 export default function StartBarathonSlider({
   disabled = false,
   onComplete,
 }: StartBarathonSliderProps) {
+  const [trackWidth, setTrackWidth] = useState(DEFAULT_TRACK_WIDTH);
+  const maxTranslate = Math.max(1, trackWidth - THUMB_SIZE - 8);
+
   const translateX = useRef(new Animated.Value(0)).current;
   const [completed, setCompleted] = useState(false);
   const currentOffsetRef = useRef(0);
 
+  function handleLayout(event: LayoutChangeEvent) {
+    const width = event.nativeEvent.layout.width;
+    if (width > 0 && Math.abs(width - trackWidth) > 1) {
+      setTrackWidth(width);
+    }
+  }
+
   function animateBack() {
     Animated.spring(translateX, {
       toValue: 0,
-      useNativeDriver: true,
-      bounciness: 6,
+      useNativeDriver: false,
+      bounciness: 4,
+      speed: 16,
     }).start(() => {
       currentOffsetRef.current = 0;
     });
@@ -40,7 +50,7 @@ export default function StartBarathonSlider({
     Animated.timing(translateX, {
       toValue: 0,
       duration: 220,
-      useNativeDriver: true,
+      useNativeDriver: false,
       easing: Easing.out(Easing.ease),
     }).start(() => {
       currentOffsetRef.current = 0;
@@ -51,29 +61,41 @@ export default function StartBarathonSlider({
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => !disabled && !completed,
-        onMoveShouldSetPanResponder: () => !disabled && !completed,
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (disabled || completed) return false;
+          return (
+            Math.abs(gestureState.dx) > 6 &&
+            Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
+          );
+        },
+        onPanResponderGrant: () => {
+          currentOffsetRef.current = (translateX as any)._value || 0;
+        },
         onPanResponderMove: (_, gestureState) => {
-          const next = Math.max(0, Math.min(MAX_TRANSLATE, gestureState.dx));
+          const next = Math.max(0, Math.min(maxTranslate, gestureState.dx));
           translateX.setValue(next);
           currentOffsetRef.current = next;
         },
-        onPanResponderRelease: () => {
-          const completionRatio = currentOffsetRef.current / MAX_TRANSLATE;
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderRelease: (_, gestureState) => {
+          const completionRatio = currentOffsetRef.current / maxTranslate;
+          const isFastFling = gestureState.vx > 0.4 && completionRatio >= 0.45;
+          const isFarEnough = completionRatio >= 0.75;
 
-          if (completionRatio >= 0.92) {
+          if (isFarEnough || isFastFling) {
             Animated.timing(translateX, {
-              toValue: MAX_TRANSLATE,
+              toValue: maxTranslate,
               duration: 120,
-              useNativeDriver: true,
+              useNativeDriver: false,
+              easing: Easing.out(Easing.ease),
             }).start(() => {
               setCompleted(true);
-              console.log('Barathon lancé');
               onComplete();
 
               setTimeout(() => {
                 resetSlider();
-              }, 1400);
+              }, 1600);
             });
           } else {
             animateBack();
@@ -83,31 +105,69 @@ export default function StartBarathonSlider({
           animateBack();
         },
       }),
-    [disabled, completed]
+    [disabled, completed, maxTranslate]
   );
+
+  const fillWidth = translateX.interpolate({
+    inputRange: [0, maxTranslate],
+    outputRange: [THUMB_SIZE + 8, trackWidth],
+    extrapolate: 'clamp',
+  });
+
+  const textOpacity = translateX.interpolate({
+    inputRange: [0, maxTranslate * 0.6],
+    outputRange: [1, 0.1],
+    extrapolate: 'clamp',
+  });
 
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.track, disabled ? styles.trackDisabled : null]}>
-        <View style={styles.trackFill} />
+      <View
+        onLayout={handleLayout}
+        style={[
+          styles.track,
+          disabled && styles.trackDisabled,
+          completed && styles.trackCompleted,
+        ]}
+      >
+        <Animated.View
+          style={[
+            styles.trackFill,
+            { width: fillWidth },
+            completed && styles.trackFillCompleted,
+          ]}
+        />
 
-        <Text style={[styles.trackLabel, completed ? styles.trackLabelDone : null]}>
-          {completed ? 'Barathon lancé' : 'Slide pour lancer le barathon'}
-        </Text>
+        <Animated.Text
+          style={[
+            styles.trackLabel,
+            { opacity: textOpacity },
+            completed && styles.trackLabelDone,
+          ]}
+          numberOfLines={1}
+        >
+          {completed ? 'Barathon lancé !' : 'Glisser pour lancer le barathon'}
+        </Animated.Text>
 
         <Animated.View
           {...panResponder.panHandlers}
           style={[
             styles.thumb,
-            disabled ? styles.thumbDisabled : null,
+            disabled && styles.thumbDisabled,
+            completed && styles.thumbCompleted,
             {
               transform: [{ translateX }],
             },
           ]}
         >
-          <Text style={styles.thumbText}>→</Text>
+          <Ionicons
+            name={completed ? 'checkmark' : 'arrow-forward'}
+            size={24}
+            color={completed ? '#FFFFFF' : '#065F46'}
+          />
         </Animated.View>
       </View>
     </View>
   );
 }
+

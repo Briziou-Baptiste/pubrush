@@ -178,7 +178,7 @@ export default function ActiveBarathonMap({
                 longitude: Number(stop.longitude),
               }}
               title={`Étape ${index + 1} - ${stop.name}`}
-              description={`${statusText} • ${stop.stop_type === 'bar' ? '🍻 Bar' : '🍔 Restaurant'}`}
+              description={`${statusText} • ${stop.stop_type === 'bar' ? 'Bar' : 'Restaurant'}`}
               pinColor={pinColor}
             />
           );

@@ -127,15 +127,15 @@ export default function PartnerEventMapScreen() {
     });
   };
 
-  const getMarkerEmoji = (type: string) => {
+  const getMarkerIcon = (type: string): keyof typeof Ionicons.glyphMap => {
     switch (type?.toLowerCase()) {
-      case 'bar': return '🍻';
-      case 'security': return '🛡️';
-      case 'water': return '💧';
-      case 'first_aid': return '🏥';
-      case 'partner_restaurant': case 'food': case 'restaurant': return '🍕';
-      case 'challenge': return '🚩';
-      default: return '📍';
+      case 'bar': return 'beer';
+      case 'security': return 'shield-checkmark';
+      case 'water': return 'water';
+      case 'first_aid': return 'medkit';
+      case 'partner_restaurant': case 'food': case 'restaurant': return 'restaurant';
+      case 'challenge': return 'flag';
+      default: return 'location';
     }
   };
 
@@ -265,7 +265,7 @@ export default function PartnerEventMapScreen() {
               onPress={() => handleSpotPress(spot)}
             >
               <View style={[styles.customMarker, { backgroundColor: getMarkerColor(spot.spot_type) }]}>
-                <Text style={styles.markerEmoji}>{getMarkerEmoji(spot.spot_type)}</Text>
+                <Ionicons name={getMarkerIcon(spot.spot_type)} size={18} color="#FFFFFF" />
               </View>
             </Marker>
           ))}
@@ -352,8 +352,8 @@ export default function PartnerEventMapScreen() {
           <View style={styles.spotDetailsCard}>
             <View style={styles.spotDetailsHeader}>
               <View style={styles.spotTitleContainer}>
-                <View style={[styles.spotBadge, { backgroundColor: getMarkerColor(selectedSpot.spot_type) }]}>
-                  <Text style={styles.spotBadgeEmoji}>{getMarkerEmoji(selectedSpot.spot_type)}</Text>
+                <View style={[styles.spotBadge, { backgroundColor: getMarkerColor(selectedSpot.spot_type), alignItems: 'center', justifyContent: 'center' }]}>
+                  <Ionicons name={getMarkerIcon(selectedSpot.spot_type)} size={18} color="#FFFFFF" />
                 </View>
                 <Text style={styles.spotTitle} numberOfLines={1}>{selectedSpot.name}</Text>
               </View>

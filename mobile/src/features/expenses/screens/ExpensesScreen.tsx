@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import { fetchMyBarathonBalances, BarathonBalance } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
@@ -77,7 +78,7 @@ export default function ExpensesScreen() {
             )}
           </Text>
         </View>
-        <Text style={styles.chevron}>❯</Text>
+        <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
       </TouchableOpacity>
     );
   }
@@ -102,7 +103,7 @@ export default function ExpensesScreen() {
           </View>
         ) : balances.length === 0 ? (
           <View style={styles.messageCard}>
-            <Text style={styles.emptyIcon}>🎉</Text>
+            <Ionicons name="sparkles-outline" size={44} color="#10B981" style={{ marginBottom: 12 }} />
             <Text style={styles.emptyText}>Aucune dette ou créance en cours !</Text>
           </View>
         ) : (
