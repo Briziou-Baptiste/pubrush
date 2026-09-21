@@ -1,11 +1,15 @@
-import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router';
+import { getAccessToken, clearSession } from './authStorage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.pubrush.com';
 
 async function getAccessTokenOrThrow() {
-  const token = await SecureStore.getItemAsync('access_token');
+  const token = await getAccessToken();
 
   if (!token) {
+    try {
+      router.replace('/login');
+    } catch {}
     throw new Error('Session expirée. Reconnecte-toi.');
   }
 
@@ -26,6 +30,14 @@ export async function authenticatedJsonRequest<T>(
       'Content-Type': 'application/json',
     },
   });
+
+  if (response.status === 401) {
+    await clearSession();
+    try {
+      router.replace('/login');
+    } catch {}
+    throw new Error('Session expirée. Veuillez vous reconnecter.');
+  }
 
   const data = await response.json().catch(() => null);
 

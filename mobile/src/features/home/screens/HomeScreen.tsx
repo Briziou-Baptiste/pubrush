@@ -15,7 +15,7 @@ import HomeMenu from '../components/HomeMenu';
 import LocationButton from '../components/LocationButton';
 import { useUserLocation } from '../hooks/useUserLocation';
 import { styles } from '../styles/home.styles';
-import { clearSession } from '../../../lib/authStorage';
+import { clearSession, getAccessToken } from '../../../lib/authStorage';
 import { getMyActiveBarathon } from '../../active_barathon/services/activeBarathon.service';
 
 const DEFAULT_REGION: Region = {
@@ -46,7 +46,7 @@ export default function HomeScreen() {
 
   async function bootstrap() {
     try {
-      const token = await SecureStore.getItemAsync('access_token');
+      const token = await getAccessToken();
 
       if (!token) {
         router.replace('/login');
@@ -64,8 +64,16 @@ export default function HomeScreen() {
         });
         return;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('HOME BOOTSTRAP ERROR', error);
+      if (
+        error?.message?.includes('401') ||
+        error?.message?.includes('Session expirée')
+      ) {
+        await clearSession();
+        router.replace('/login');
+        return;
+      }
     } finally {
       setBootstrapping(false);
     }
@@ -154,6 +162,35 @@ export default function HomeScreen() {
         showsMyLocationButton={false}
         toolbarEnabled={false}
       />
+
+      {/* Indicateur de recherche de position GPS au chargement */}
+      {loadingLocation && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 130,
+            alignSelf: 'center',
+            backgroundColor: 'rgba(17, 24, 39, 0.92)',
+            borderRadius: 24,
+            paddingVertical: 10,
+            paddingHorizontal: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            shadowColor: '#000',
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 6,
+            zIndex: 999,
+          }}
+        >
+          <ActivityIndicator size="small" color="#10B981" />
+          <Text style={{ fontSize: 13, color: '#FFFFFF', fontWeight: '700' }}>
+            Recherche de votre position GPS...
+          </Text>
+        </View>
+      )}
 
       <View style={styles.topBarWrapper}>
         <View style={styles.topBar}>

@@ -5,6 +5,9 @@
 //  Created by Baptiste Briziou on 30/03/2026.
 //
 
+import { router } from 'expo-router';
+import { clearSession } from './authStorage';
+
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.pubrush.com';
 
 export type RegisterPayload = {
@@ -31,7 +34,15 @@ export type MeResponse = {
 };
 
 async function handleResponse<T>(response: Response): Promise<T> {
-  const data = await response.json();
+  if (response.status === 401) {
+    await clearSession();
+    try {
+      router.replace('/login');
+    } catch {}
+    throw new Error('Session expirée. Veuillez vous reconnecter.');
+  }
+
+  const data = await response.json().catch(() => null);
 
   if (!response.ok) {
     const message =

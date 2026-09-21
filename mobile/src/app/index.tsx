@@ -1,12 +1,12 @@
-import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { SafeAreaView, Text } from 'react-native';
+import { getAccessToken } from '../lib/authStorage';
 
 export default function IndexScreen() {
   useEffect(() => {
     async function bootstrap() {
-      const token = await SecureStore.getItemAsync('access_token');
+      const token = await getAccessToken();
 
       if (token) {
         router.replace('/home');

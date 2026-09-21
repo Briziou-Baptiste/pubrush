@@ -60,6 +60,19 @@ function parseJwtPayload(token: string): JwtPayload {
   return JSON.parse(payloadString) as JwtPayload;
 }
 
+export function isTokenExpired(token: string): boolean {
+  try {
+    const payload = parseJwtPayload(token);
+    if (!payload.exp) {
+      return false;
+    }
+    // Considered expired if within 30 seconds of expiry
+    return Date.now() >= (payload.exp - 30) * 1000;
+  } catch {
+    return true;
+  }
+}
+
 export async function saveSession(accessToken: string) {
   const payload = parseJwtPayload(accessToken);
 
@@ -72,11 +85,26 @@ export async function saveSession(accessToken: string) {
   notifyListeners(accessToken);
 }
 
-export async function getAccessToken() {
-  return SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+export async function getAccessToken(): Promise<string | null> {
+  const token = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+  if (!token) {
+    return null;
+  }
+
+  if (isTokenExpired(token)) {
+    await clearSession();
+    return null;
+  }
+
+  return token;
 }
 
 export async function getCurrentUserId() {
+  const token = await getAccessToken();
+  if (!token) {
+    return null;
+  }
+
   const value = await SecureStore.getItemAsync(CURRENT_USER_ID_KEY);
 
   if (!value) {
@@ -94,7 +122,7 @@ export async function clearSession() {
 }
 
 export async function getCurrentUser() {
-  const token = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+  const token = await getAccessToken();
 
   if (!token) {
     return null;
