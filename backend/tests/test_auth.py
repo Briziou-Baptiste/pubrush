@@ -52,8 +52,8 @@ def test_login_unknown_user(client):
         "password": "password123"
     }
     response = client.post("/login", json=payload)
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Utilisateur inconnu"
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Email ou mot de passe incorrect"
 
 def test_login_wrong_password(client, test_user):
     payload = {
@@ -62,7 +62,7 @@ def test_login_wrong_password(client, test_user):
     }
     response = client.post("/login", json=payload)
     assert response.status_code == 401
-    assert response.json()["detail"] == "Mauvais mot de passe"
+    assert response.json()["detail"] == "Email ou mot de passe incorrect"
 
 def test_me_success(client, user_auth_headers, test_user):
     response = client.get("/me", headers=user_auth_headers)
@@ -191,7 +191,7 @@ def test_delete_account_solo_barathon(client, user_auth_headers, test_user, db_s
         "password": "password123"
     }
     login_res = client.post("/login", json=login_payload)
-    assert login_res.status_code == 404
+    assert login_res.status_code == 401
 
     # Verify barathon is deleted as well (since they were the only participant)
     db_session.expire_all()
@@ -225,7 +225,7 @@ def test_delete_account_shared_barathon(client, user_auth_headers, test_user, te
         "password": "password123"
     }
     login_res = client.post("/login", json=login_payload)
-    assert login_res.status_code == 404
+    assert login_res.status_code == 401
 
     # Verify barathon is NOT deleted (since test_user_2 was also a participant)
     db_session.expire_all()

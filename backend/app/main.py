@@ -1,14 +1,15 @@
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import delete, select, func
-from sqlalchemy.orm import Session, selectinload
-from datetime import datetime, timedelta
-import random
+import os
+import secrets
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
 # Charger les variables d'environnement
 load_dotenv()
+
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import delete, select, func
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.routes.barathons import router as barathons_router
 from app.api.routes.ws import router as ws_router
@@ -17,6 +18,8 @@ from app.api.routes.bars import router as bars_router
 from app.api.routes.saved_barathons import router as saved_barathons_router
 from app.api.routes.partner_events import router as partner_events_router
 from app.core.lifespan import lifespan
+from app.core.rate_limiter import InMemoryRateLimiter
+from app.api.deps.auth import get_current_user
 from app.db import get_db
 from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop, PartnerEvent, MapFilter, EventTicket, PartnerEventUser, PartnerEventSpot, AppUsageLog
 from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse, PartnerEventRead, MapFilterRead, PartnerEventSpotRead, PartnerEventSpotCreate
@@ -29,11 +32,37 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-bearer_scheme = HTTPBearer()
+# Rate limiters
+auth_limiter = InMemoryRateLimiter(requests_limit=10, window_seconds=60)
+forgot_limiter = InMemoryRateLimiter(requests_limit=5, window_seconds=60)
+
+
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response: Response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_env:
+    allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+else:
+    allowed_origins = [
+        "https://pubrush.com",
+        "https://admin.pubrush.com",
+        "https://api.pubrush.com",
+        "http://localhost:3000",
+        "http://localhost:8081",
+        "http://localhost:19006",
+    ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,7 +80,7 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+@app.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED, dependencies=[Depends(auth_limiter)])
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     existing_email = db.scalar(
         select(User).where(func.lower(User.email) == func.lower(payload.email))
@@ -97,15 +126,15 @@ def check_username(username: str, db: Session = Depends(get_db)):
     return {"available": existing_username is None}
 
 
-@app.post("/login", response_model=TokenResponse)
+@app.post("/login", response_model=TokenResponse, dependencies=[Depends(auth_limiter)])
 def login(payload: UserLogin, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == payload.email))
 
-    if not user:
-        raise HTTPException(status_code=404, detail="Utilisateur inconnu")
-
-    if not verify_password(payload.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Mauvais mot de passe")
+    if not user or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email ou mot de passe incorrect"
+        )
 
     # Record login usage log
     log = AppUsageLog(user_id=user.id, action="login")
@@ -125,27 +154,6 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
         "access_token": token,
         "token_type": "bearer",
     }
-
-
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    db: Session = Depends(get_db),
-) -> User:
-    token = credentials.credentials
-    payload = decode_access_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid token payload")
-
-    user = db.get(User, int(user_id))
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-
-    return user
 
 
 def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
@@ -187,37 +195,31 @@ def get_roles(
     return list(roles)
 
 
-@app.post("/forgot-password/request")
+@app.post("/forgot-password/request", dependencies=[Depends(forgot_limiter)])
 def request_password_reset(payload: PasswordResetRequest, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == payload.email))
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Aucun compte n'est associé à cette adresse email."
+    if user:
+        db.execute(
+            delete(PasswordResetToken).where(PasswordResetToken.email == payload.email)
         )
 
-    db.execute(
-        delete(PasswordResetToken).where(PasswordResetToken.email == payload.email)
-    )
+        code = f"{secrets.randbelow(900000) + 100000}"
+        expiration = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=15)
+        token_entry = PasswordResetToken(
+            email=payload.email,
+            token=code,
+            expires_at=expiration
+        )
+        db.add(token_entry)
+        db.commit()
 
-    code = f"{random.randint(100000, 999999)}"
+        # Envoi du mail réel
+        send_reset_code_email(payload.email, code)
 
-    expiration = datetime.utcnow() + timedelta(minutes=15)
-    token_entry = PasswordResetToken(
-        email=payload.email,
-        token=code,
-        expires_at=expiration
-    )
-    db.add(token_entry)
-    db.commit()
-
-    # Envoi du mail réel
-    send_reset_code_email(payload.email, code)
-
-    return {"message": "Un code de réinitialisation a été envoyé par email."}
+    return {"message": "Si un compte est associé à cette adresse email, un code de réinitialisation a été envoyé."}
 
 
-@app.post("/forgot-password/reset")
+@app.post("/forgot-password/reset", dependencies=[Depends(forgot_limiter)])
 def confirm_password_reset(payload: PasswordResetConfirm, db: Session = Depends(get_db)):
     token_entry = db.scalar(
         select(PasswordResetToken).where(
@@ -232,7 +234,8 @@ def confirm_password_reset(payload: PasswordResetConfirm, db: Session = Depends(
             detail="Le code de réinitialisation est incorrect."
         )
 
-    if token_entry.expires_at < datetime.utcnow():
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if token_entry.expires_at < now:
         db.delete(token_entry)
         db.commit()
         raise HTTPException(
@@ -493,7 +496,7 @@ def get_users_registration_stats(
     if period not in ("day", "month", "year"):
         raise HTTPException(status_code=400, detail="Période invalide")
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if period == "day":
         start_date = now - timedelta(days=30)
         trunc = func.date_trunc('day', User.created_at)
@@ -536,7 +539,7 @@ def get_app_usage_stats(
     if period not in ("day", "month", "year"):
         raise HTTPException(status_code=400, detail="Période invalide")
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if period == "day":
         start_date = now - timedelta(days=30)
         trunc = func.date_trunc('day', AppUsageLog.created_at)

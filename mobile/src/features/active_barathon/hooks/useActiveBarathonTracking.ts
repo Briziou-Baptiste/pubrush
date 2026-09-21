@@ -29,11 +29,14 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     [barathon.max_time_in_bar_minutes]
   );
 
-    const ENTER_RADIUS_METERS = 15;
-    const EXIT_RADIUS_METERS = 25;
+    const ENTER_RADIUS_METERS = 50;
+    const EXIT_RADIUS_METERS = 100;
     
+  const firstIncompleteIdx = barathon.stops.findIndex((s) => !s.is_completed);
+  const initialStopIndex = firstIncompleteIdx === -1 ? 0 : firstIncompleteIdx;
+
   const [state, setState] = useState<ActiveBarathonState>({
-    activeStopIndex: 0,
+    activeStopIndex: initialStopIndex,
     phase: 'en_route',
     currentLocation: null,
     visitedPath: [],
@@ -102,12 +105,15 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
       overtime: null,
     };
 
+    const firstIncomplete = barathon.stops.findIndex((s) => !s.is_completed);
+    const resolvedIndex = firstIncomplete === -1 ? 0 : firstIncomplete;
+
     hasStartedTimerForCurrentStopRef.current = false;
-    currentStopIdRef.current = barathon.stops[0]?.id ?? null;
+    currentStopIdRef.current = barathon.stops[resolvedIndex]?.id ?? null;
 
     setState((prev) => ({
       ...prev,
-      activeStopIndex: 0,
+      activeStopIndex: resolvedIndex,
       phase: 'en_route',
       remainingSeconds: maxBarSeconds,
       isInsideStopRadius: false,
@@ -357,6 +363,49 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     }));
   }
 
+  async function advanceToStop(targetIndex: number) {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    await cancelStopNotifications(notificationIdsRef.current);
+
+    notificationIdsRef.current = {
+      fiveMin: null,
+      overtime: null,
+    };
+
+    hasStartedTimerForCurrentStopRef.current = false;
+    currentStopIdRef.current = barathon.stops[targetIndex]?.id ?? null;
+
+    setState((prev) => {
+      const hasTargetStop = targetIndex < barathon.stops.length;
+
+      if (!hasTargetStop || targetIndex >= barathon.stops.length) {
+        return {
+          ...prev,
+          activeStopIndex: Math.max(0, barathon.stops.length - 1),
+          phase: 'finished',
+          remainingSeconds: 0,
+          isInsideStopRadius: false,
+          fiveMinNotificationId: null,
+          overtimeNotificationId: null,
+        };
+      }
+
+      return {
+        ...prev,
+        activeStopIndex: targetIndex,
+        phase: 'en_route',
+        remainingSeconds: maxBarSeconds,
+        isInsideStopRadius: false,
+        fiveMinNotificationId: null,
+        overtimeNotificationId: null,
+      };
+    });
+  }
+
   async function goToNextStop() {
     if (activeStop && !activeStop.is_completed) {
       try {
@@ -435,5 +484,6 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     openInGoogleMaps,
     stopTracking,
     goToNextStop,
+    advanceToStop,
   };
 }

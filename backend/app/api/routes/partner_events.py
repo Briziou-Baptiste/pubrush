@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
 from app.db import get_db
@@ -104,7 +104,7 @@ def redeem_partner_event_ticket(
             detail="L'événement associé à ce ticket n'est pas actif."
         )
         
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if event.end_date and now > event.end_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -203,7 +203,7 @@ def join_partner_event(
         )
 
     # Check dates activity
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if event.end_date and now > event.end_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -1,8 +1,14 @@
-from datetime import datetime
+import secrets
+import uuid
+from datetime import datetime, timezone
 from typing import Optional
 
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session, selectinload
 
 from app.db import get_db
@@ -14,7 +20,9 @@ from app.models import (
     Role,
     User,
     BarathonExpense,
+    AppUsageLog,
 )
+from app.security import hash_password, create_access_token
 from app.services.websocket_service import websocket_service
 from app.api.deps.auth import get_current_user
 from app.api.deps.barathons import get_barathon_with_access
@@ -26,10 +34,26 @@ from app.schemas import (
     BarathonRead,
     UpdateBarathonStartDatetime,
     MyBarathonBalanceRead,
+    ReplaceBarathonStopPayload,
+    AddBarathonStopPayload,
+    BarathonPreviewByCode,
+    JoinGuestPayload,
+    JoinGuestResponse,
 )
 
 
 router = APIRouter(prefix="/barathons", tags=["barathons"])
+
+
+def generate_unique_join_code(db: Session) -> str:
+    alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+    for _ in range(15):
+        random_part = "".join(secrets.choice(alphabet) for _ in range(4))
+        code = f"RUSH-{random_part}"
+        exists = db.scalar(select(Barathon.id).where(Barathon.join_code == code))
+        if not exists:
+            return code
+    return f"RUSH-{uuid.uuid4().hex[:6].upper()}"
 
 
 def serialize_barathon_summary(barathon: Barathon, current_user_id: int) -> dict:
@@ -109,6 +133,7 @@ def create_barathon(
         max_time_in_bar_minutes=payload.max_time_in_bar_minutes,
         created_by_user_id=current_user.id,
         partner_event_id=payload.partner_event_id,
+        join_code=generate_unique_join_code(db),
     )
 
     db.add(barathon)
@@ -218,6 +243,11 @@ def get_my_active_barathon(
 
     if not barathon:
         return None
+
+    if barathon.join_code is None:
+        barathon.join_code = generate_unique_join_code(db)
+        db.commit()
+        db.refresh(barathon)
 
     return barathon
 
@@ -472,7 +502,7 @@ async def start_barathon(
             detail="Seuls les barathons en statut planned peuvent être démarrés.",
         )
 
-    now = datetime.utcnow()
+    now = utc_now()
     barathon.status = "started"
     barathon.has_started = True
     barathon.started_at = now
@@ -506,12 +536,18 @@ async def start_barathon(
 @router.get("/{barathon_id}/active-view", response_model=ActiveBarathonRead)
 def get_active_barathon_by_id(
     barathon: Barathon = Depends(get_barathon_with_access),
+    db: Session = Depends(get_db),
 ):
     if barathon.status != "started":
         raise HTTPException(
             status_code=400,
             detail="Ce barathon n'est pas en cours.",
         )
+
+    if barathon.join_code is None:
+        barathon.join_code = generate_unique_join_code(db)
+        db.commit()
+        db.refresh(barathon)
 
     return barathon
 
@@ -544,7 +580,7 @@ def finish_barathon(
             detail="Seuls les barathons started peuvent être terminés.",
         )
 
-    now = datetime.utcnow()
+    now = utc_now()
     barathon.status = "completed"
     barathon.ended_at = now
     barathon.updated_at = now
@@ -584,11 +620,17 @@ def get_barathon_start_config(
     if not is_creator and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Seul le créateur peut lancer le barathon.")
 
+    if barathon.join_code is None:
+        barathon.join_code = generate_unique_join_code(db)
+        db.commit()
+        db.refresh(barathon)
+
     roles = db.scalars(select(Role).order_by(Role.name.asc())).all()
 
     return {
         "barathon_id": barathon.id,
         "barathon_name": barathon.name,
+        "join_code": barathon.join_code,
         "participants": [
             {
                 "user_id": participant.user.id,
@@ -674,7 +716,7 @@ async def assign_roles_and_start_barathon(
             )
         )
     
-    now = datetime.utcnow()
+    now = utc_now()
     if not barathon:
         raise HTTPException(status_code=404, detail="Barathon introuvable après démarrage.")
 
@@ -707,7 +749,7 @@ async def stop_barathon(
             detail="Seuls les barathons en cours peuvent être arrêtés.",
         )
 
-    now = datetime.utcnow()
+    now = utc_now()
     barathon.status = "stopped"
     barathon.ended_at = now
     barathon.updated_at = now
@@ -734,11 +776,40 @@ async def stop_barathon(
     }
 
 
+@router.get("/{barathon_id}/roles")
+def get_barathon_roles(
+    barathon_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    barathon: Barathon = Depends(get_barathon_with_access),
+):
+    assigned_roles = db.scalars(
+        select(BarathonParticipantRole)
+        .options(
+            selectinload(BarathonParticipantRole.user),
+            selectinload(BarathonParticipantRole.role),
+        )
+        .where(BarathonParticipantRole.barathon_id == barathon.id)
+    ).all()
+
+    return [
+        {
+            "user_id": ar.user.id,
+            "username": ar.user.username,
+            "role_id": ar.role.id,
+            "role_name": ar.role.name,
+            "role_description": ar.role.description,
+        }
+        for ar in assigned_roles
+    ]
+
+
 @router.post("/{barathon_id}/stops/{stop_id}/complete")
-def complete_barathon_stop(
+async def complete_barathon_stop(
     stop_id: int,
     barathon: Barathon = Depends(get_barathon_with_access),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     if barathon.status != "started":
         raise HTTPException(status_code=400, detail="Le barathon n'est pas en cours.")
@@ -753,15 +824,457 @@ def complete_barathon_stop(
     if not stop:
         raise HTTPException(status_code=404, detail="Étape introuvable.")
 
+    now = utc_now()
     if not stop.is_completed:
         stop.is_completed = True
-        stop.completed_at = datetime.utcnow()
+        stop.completed_at = now
         db.commit()
         db.refresh(stop)
+
+    stops_sorted = sorted(barathon.stops, key=lambda s: s.stop_order)
+    current_index = next((idx for idx, s in enumerate(stops_sorted) if s.id == stop.id), 0)
+    next_index = current_index + 1
+    next_stop = stops_sorted[next_index] if next_index < len(stops_sorted) else None
+
+    participant_ids = [p.user_id for p in barathon.participants]
+    await websocket_service.notify_barathon_next_step(
+        barathon_id=barathon.id,
+        participant_ids=participant_ids,
+        completed_stop_id=stop.id,
+        next_stop_index=next_index,
+        next_stop_id=next_stop.id if next_stop else None,
+        advanced_by_user_id=current_user.id,
+        timestamp=now.isoformat(),
+    )
 
     return {
         "success": True,
         "stop_id": stop.id,
         "is_completed": stop.is_completed,
         "completed_at": stop.completed_at,
+        "next_stop_index": next_index,
+        "next_stop_id": next_stop.id if next_stop else None,
     }
+
+
+@router.post("/{barathon_id}/next-step")
+async def advance_barathon_next_step(
+    barathon_id: int,
+    barathon: Barathon = Depends(get_barathon_with_access),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if barathon.status != "started":
+        raise HTTPException(status_code=400, detail="Le barathon n'est pas en cours.")
+
+    stops_sorted = sorted(barathon.stops, key=lambda s: s.stop_order)
+    current_stop = next((s for s in stops_sorted if not s.is_completed), None)
+    if not current_stop and stops_sorted:
+        current_stop = stops_sorted[-1]
+
+    now = utc_now()
+    completed_stop_id = None
+    if current_stop:
+        completed_stop_id = current_stop.id
+        if not current_stop.is_completed:
+            current_stop.is_completed = True
+            current_stop.completed_at = now
+            db.commit()
+            db.refresh(current_stop)
+
+    current_index = (
+        next((idx for idx, s in enumerate(stops_sorted) if s.id == completed_stop_id), 0)
+        if completed_stop_id
+        else 0
+    )
+    next_index = current_index + 1
+    next_stop = stops_sorted[next_index] if next_index < len(stops_sorted) else None
+
+    participant_ids = [p.user_id for p in barathon.participants]
+    await websocket_service.notify_barathon_next_step(
+        barathon_id=barathon.id,
+        participant_ids=participant_ids,
+        completed_stop_id=completed_stop_id or 0,
+        next_stop_index=next_index,
+        next_stop_id=next_stop.id if next_stop else None,
+        advanced_by_user_id=current_user.id,
+        timestamp=now.isoformat(),
+    )
+
+    return {
+        "success": True,
+        "completed_stop_id": completed_stop_id,
+        "next_stop_index": next_index,
+        "next_stop_id": next_stop.id if next_stop else None,
+    }
+
+
+def check_is_maitre_du_trajet(barathon: Barathon, current_user: User, db: Session) -> bool:
+    if barathon.created_by_user_id == current_user.id:
+        return True
+    has_role = db.scalar(
+        select(BarathonParticipantRole)
+        .join(Role)
+        .where(
+            BarathonParticipantRole.barathon_id == barathon.id,
+            BarathonParticipantRole.user_id == current_user.id,
+            func.lower(Role.name).in_(["maître du trajet", "maitre du trajet", "capitaine"]),
+        )
+    )
+    return has_role is not None
+
+
+@router.post("/{barathon_id}/stops/{stop_id}/replace", response_model=ActiveBarathonRead)
+async def replace_barathon_stop(
+    barathon_id: int,
+    stop_id: int,
+    payload: ReplaceBarathonStopPayload,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    barathon = db.scalar(
+        select(Barathon)
+        .options(
+            selectinload(Barathon.stops),
+            selectinload(Barathon.participants).selectinload(BarathonParticipant.user),
+        )
+        .where(Barathon.id == barathon_id)
+    )
+    if not barathon:
+        raise HTTPException(status_code=404, detail="Barathon introuvable.")
+
+    if barathon.status not in ("started", "planned"):
+        raise HTTPException(
+            status_code=400,
+            detail="Seuls les barathons en cours ou planifiés peuvent avoir leurs étapes modifiées.",
+        )
+
+    if not check_is_maitre_du_trajet(barathon, current_user, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seul le créateur du barathon (Maître du trajet) peut modifier les étapes.",
+        )
+
+    stop = next((s for s in barathon.stops if s.id == stop_id), None)
+    if not stop:
+        raise HTTPException(status_code=404, detail="Étape introuvable dans ce barathon.")
+
+    if stop.is_completed:
+        raise HTTPException(
+            status_code=400,
+            detail="Impossible de remplacer une étape déjà terminée.",
+        )
+
+    old_name = stop.name
+    stop.name = payload.name
+    stop.latitude = payload.latitude
+    stop.longitude = payload.longitude
+    stop.stop_type = payload.stop_type
+    stop.updated_at = utc_now()
+
+    log = AppUsageLog(
+        user_id=current_user.id,
+        action=f"replace_stop:{payload.reason}",
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(barathon)
+
+    stops_sorted = sorted(barathon.stops, key=lambda x: x.stop_order)
+    stops_data = [
+        {
+            "id": s.id,
+            "barathon_id": s.barathon_id,
+            "name": s.name,
+            "stop_type": s.stop_type,
+            "latitude": float(s.latitude),
+            "longitude": float(s.longitude),
+            "stop_order": s.stop_order,
+            "is_completed": s.is_completed,
+            "entered_at": s.entered_at.isoformat() if s.entered_at else None,
+            "left_at": s.left_at.isoformat() if s.left_at else None,
+            "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+        }
+        for s in stops_sorted
+    ]
+
+    participant_ids = [p.user_id for p in barathon.participants]
+    now_iso = utc_now().isoformat()
+
+    await websocket_service.notify_barathon_stop_replaced(
+        barathon_id=barathon.id,
+        participant_ids=participant_ids,
+        stop_id=stop.id,
+        old_name=old_name,
+        new_name=stop.name,
+        reason=payload.reason,
+        replaced_by_user_id=current_user.id,
+        replaced_by_username=current_user.username,
+        stops=stops_data,
+        timestamp=now_iso,
+    )
+
+    return barathon
+
+
+@router.post("/{barathon_id}/stops/add", response_model=ActiveBarathonRead, status_code=status.HTTP_201_CREATED)
+async def add_barathon_stop(
+    barathon_id: int,
+    payload: AddBarathonStopPayload,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    barathon = db.scalar(
+        select(Barathon)
+        .options(
+            selectinload(Barathon.stops),
+            selectinload(Barathon.participants).selectinload(BarathonParticipant.user),
+        )
+        .where(Barathon.id == barathon_id)
+    )
+    if not barathon:
+        raise HTTPException(status_code=404, detail="Barathon introuvable.")
+
+    if barathon.status not in ("started", "planned"):
+        raise HTTPException(
+            status_code=400,
+            detail="Impossible d'ajouter une étape à un barathon terminé ou arrêté.",
+        )
+
+    if not check_is_maitre_du_trajet(barathon, current_user, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seul le créateur du barathon (Maître du trajet) peut ajouter des étapes.",
+        )
+
+    existing_stops = sorted(barathon.stops, key=lambda s: s.stop_order)
+
+    # Determine target stop_order based on requested position
+    if payload.position in ("before_current", "after_current") and payload.current_stop_id:
+        target_ref = next((s for s in existing_stops if s.id == payload.current_stop_id), None)
+        if target_ref:
+            if payload.position == "before_current":
+                target_order = target_ref.stop_order
+            else:
+                target_order = target_ref.stop_order + 1
+        else:
+            target_order = (max([s.stop_order for s in existing_stops] or [0])) + 1
+    else:
+        # at_end
+        target_order = (max([s.stop_order for s in existing_stops] or [0])) + 1
+
+    # Shift existing stops if inserting in the middle to prevent UniqueConstraint collision
+    stops_to_shift = sorted(
+        [s for s in existing_stops if s.stop_order >= target_order],
+        key=lambda s: s.stop_order,
+    )
+    if stops_to_shift:
+        max_order = max(s.stop_order for s in existing_stops)
+        # Step 1: Temporarily shift out of range with positive numbers to satisfy chk_barathon_stops_order
+        for idx, s in enumerate(stops_to_shift):
+            s.stop_order = max_order + 1000 + idx
+        db.flush()
+
+        # Step 2: Assign new shifted positive orders
+        for idx, s in enumerate(stops_to_shift):
+            s.stop_order = target_order + 1 + idx
+        db.flush()
+
+    new_stop = BarathonStop(
+        barathon_id=barathon.id,
+        name=payload.name,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        stop_type=payload.stop_type,
+        stop_order=target_order,
+        is_completed=False,
+    )
+    db.add(new_stop)
+
+    log = AppUsageLog(
+        user_id=current_user.id,
+        action=f"add_stop:{payload.position}",
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(barathon)
+
+    stops_sorted = sorted(barathon.stops, key=lambda x: x.stop_order)
+    stops_data = [
+        {
+            "id": s.id,
+            "barathon_id": s.barathon_id,
+            "name": s.name,
+            "stop_type": s.stop_type,
+            "latitude": float(s.latitude),
+            "longitude": float(s.longitude),
+            "stop_order": s.stop_order,
+            "is_completed": s.is_completed,
+            "entered_at": s.entered_at.isoformat() if s.entered_at else None,
+            "left_at": s.left_at.isoformat() if s.left_at else None,
+            "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+        }
+        for s in stops_sorted
+    ]
+
+    participant_ids = [p.user_id for p in barathon.participants]
+    now_iso = utc_now().isoformat()
+
+    added_stop_dict = {
+        "id": new_stop.id,
+        "name": new_stop.name,
+        "latitude": float(new_stop.latitude),
+        "longitude": float(new_stop.longitude),
+        "stop_type": new_stop.stop_type,
+        "stop_order": new_stop.stop_order,
+    }
+
+    await websocket_service.notify_barathon_stop_added(
+        barathon_id=barathon.id,
+        participant_ids=participant_ids,
+        added_stop=added_stop_dict,
+        position=payload.position,
+        added_by_user_id=current_user.id,
+        added_by_username=current_user.username,
+        stops=stops_data,
+        timestamp=now_iso,
+    )
+
+    return barathon
+
+
+@router.get("/by-code/{code}", response_model=BarathonPreviewByCode)
+def get_barathon_preview_by_code(code: str, db: Session = Depends(get_db)):
+    clean_code = code.strip().upper()
+    barathon = db.scalar(
+        select(Barathon)
+        .options(
+            selectinload(Barathon.creator),
+            selectinload(Barathon.stops),
+            selectinload(Barathon.participants),
+        )
+        .where(func.upper(Barathon.join_code) == clean_code)
+    )
+    if not barathon:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Barathon introuvable avec ce code d'invitation.",
+        )
+
+    return BarathonPreviewByCode(
+        id=barathon.id,
+        name=barathon.name,
+        join_code=barathon.join_code or clean_code,
+        status=barathon.status,
+        start_datetime=barathon.start_datetime,
+        creator_username=barathon.creator.username if barathon.creator else "Organisateur",
+        stops_count=len(barathon.stops),
+        participants_count=len(barathon.participants),
+    )
+
+
+@router.post("/join-guest", response_model=JoinGuestResponse, status_code=status.HTTP_201_CREATED)
+async def join_barathon_as_guest(
+    payload: JoinGuestPayload,
+    db: Session = Depends(get_db),
+):
+    clean_code = payload.join_code.strip().upper()
+    barathon = db.scalar(
+        select(Barathon)
+        .options(
+            selectinload(Barathon.stops),
+            selectinload(Barathon.participants).selectinload(BarathonParticipant.user),
+            selectinload(Barathon.creator),
+        )
+        .where(func.upper(Barathon.join_code) == clean_code)
+    )
+    if not barathon:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Code de barathon invalide ou inexistant.",
+        )
+
+    if barathon.status in ("completed", "stopped", "failed"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impossible de rejoindre un barathon terminé ou annulé.",
+        )
+
+    clean_username = payload.username.strip()
+    if not clean_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le pseudo ne peut pas être vide.",
+        )
+
+    # Vérifier si l'utilisateur existe déjà dans ce barathon avec ce pseudo
+    existing_participant = next(
+        (p for p in barathon.participants if p.user and p.user.username.lower() == clean_username.lower()),
+        None,
+    )
+
+    if existing_participant and existing_participant.user and existing_participant.user.is_guest:
+        # Re-connexion transparente de l'invité existant
+        guest_user = existing_participant.user
+    else:
+        # Si le nom est déjà pris dans l'application par un autre utilisateur, ajouter un suffixe court
+        final_username = clean_username
+        user_with_name = db.scalar(select(User).where(func.lower(User.username) == clean_username.lower()))
+        if user_with_name:
+            final_username = f"{clean_username}_{secrets.randbelow(900) + 100}"
+
+        guest_email = f"guest_{uuid.uuid4().hex[:12]}@guest.pubrush.internal"
+        guest_user = User(
+            email=guest_email,
+            username=final_username,
+            password_hash=hash_password(secrets.token_urlsafe(16)),
+            is_admin=False,
+            is_guest=True,
+        )
+        db.add(guest_user)
+        db.flush()
+
+        participant = BarathonParticipant(
+            barathon_id=barathon.id,
+            user_id=guest_user.id,
+            role="participant",
+        )
+        db.add(participant)
+
+        log = AppUsageLog(user_id=guest_user.id, action=f"guest_join:{barathon.id}")
+        db.add(log)
+        db.commit()
+        db.refresh(barathon)
+
+        # Diffuser la notification WebSocket à la room
+        participant_ids = [p.user_id for p in barathon.participants if p.user_id != guest_user.id]
+        await websocket_service.notify_participant_joined(
+            barathon_id=barathon.id,
+            participant_ids=participant_ids,
+            user_data={
+                "id": guest_user.id,
+                "username": guest_user.username,
+                "is_guest": True,
+            },
+            participants_count=len(barathon.participants),
+            timestamp=utc_now().isoformat(),
+        )
+
+    access_token = create_access_token(
+        {
+            "sub": str(guest_user.id),
+            "email": guest_user.email,
+            "username": guest_user.username,
+            "is_admin": guest_user.is_admin,
+            "is_guest": True,
+        }
+    )
+
+    return JoinGuestResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=guest_user,
+        barathon=barathon,
+    )
+
+

@@ -13,6 +13,7 @@ export type StartConfigRole = {
 export type StartBarathonConfigResponse = {
   barathon_id: number;
   barathon_name: string;
+  join_code?: string;
   participants: StartConfigParticipant[];
   roles: StartConfigRole[];
 };

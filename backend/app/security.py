@@ -1,11 +1,30 @@
 import os
+import warnings
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from dotenv import load_dotenv
 
 from jose import JWTError, jwt
 from pwdlib import PasswordHash
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGE_ME_SUPER_SECRET_KEY_DEV_ONLY")
+load_dotenv()
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+is_production = (
+    os.getenv("ENVIRONMENT", "").lower() == "production"
+    or bool(os.getenv("KUBERNETES_SERVICE_HOST"))
+)
+
+if not SECRET_KEY or SECRET_KEY == "CHANGE_ME_SUPER_SECRET_KEY_DEV_ONLY":
+    if is_production:
+        raise RuntimeError(
+            "CRITICAL SECURITY ERROR: JWT_SECRET_KEY is not configured or using default dev key in production!"
+        )
+    warnings.warn(
+        "JWT_SECRET_KEY is not configured or using dev default. Set JWT_SECRET_KEY in production."
+    )
+    SECRET_KEY = SECRET_KEY or "CHANGE_ME_SUPER_SECRET_KEY_DEV_ONLY"
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 

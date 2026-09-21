@@ -1,3 +1,6 @@
+import os
+os.environ["TESTING"] = "true"
+
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -56,6 +59,13 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 TestingSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=engine, future=True
 )
+
+from app import db as app_db
+from app.websocket import auth as ws_auth
+from app.services import barathon_service as b_service
+app_db.SessionLocal = TestingSessionLocal
+ws_auth.SessionLocal = TestingSessionLocal
+b_service.SessionLocal = TestingSessionLocal
 
 @pytest.fixture(scope="function")
 def db_session():

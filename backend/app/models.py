@@ -1,5 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
@@ -25,7 +29,8 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow, server_default=func.now())
+    is_guest: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now, server_default=func.now())
 
     created_barathons: Mapped[list["Barathon"]] = relationship(
         back_populates="creator",
@@ -79,15 +84,21 @@ class Barathon(Base):
         nullable=True,
         index=True,
     )
+    join_code: Mapped[Optional[str]] = mapped_column(
+        String(12),
+        unique=True,
+        nullable=True,
+        index=True,
+    )
 
     started_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     ended_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=utc_now,
+        onupdate=utc_now,
     )
 
     creator: Mapped["User"] = relationship(back_populates="created_barathons")
@@ -132,7 +143,7 @@ class BarathonParticipant(Base):
         index=True,
     )
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="participant", server_default="participant")
-    joined_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    joined_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
     barathon: Mapped["Barathon"] = relationship(back_populates="participants")
     user: Mapped["User"] = relationship(back_populates="barathon_links")
@@ -167,12 +178,12 @@ class BarathonStop(Base):
     latitude: Mapped[float] = mapped_column(Numeric(9, 6), nullable=False)
     longitude: Mapped[float] = mapped_column(Numeric(9, 6), nullable=False)
     stop_order: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=utc_now,
+        onupdate=utc_now,
     )
     is_completed: Mapped[bool] = mapped_column(
         Boolean,
@@ -245,7 +256,7 @@ class PasswordResetToken(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     token: Mapped[str] = mapped_column(String(6), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 class BarathonExpense(Base):
@@ -256,7 +267,7 @@ class BarathonExpense(Base):
     payer_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
     is_refund: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
 
     barathon: Mapped["Barathon"] = relationship(back_populates="expenses")
@@ -282,7 +293,7 @@ class SavedBarathon(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     travel_time_between_bars_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=15)
     max_time_in_bar_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=60)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
     user: Mapped["User"] = relationship(back_populates="saved_barathons")
     stops: Mapped[list["SavedBarathonStop"]] = relationship(
@@ -324,7 +335,7 @@ class PartnerEvent(Base):
     start_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     end_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     requires_ticket: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
     barathons: Mapped[list["Barathon"]] = relationship(back_populates="partner_event")
     filters: Mapped[list["MapFilter"]] = relationship(
@@ -347,7 +358,7 @@ class MapFilter(Base):
     osm_query: Mapped[str] = mapped_column(Text, nullable=False)
     google_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     is_global: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
     events: Mapped[list["PartnerEvent"]] = relationship(
         secondary="event_map_filters",
@@ -389,7 +400,7 @@ class PartnerEventUser(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     event_id: Mapped[int] = mapped_column(ForeignKey("partner_events.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    joined_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    joined_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
     event: Mapped["PartnerEvent"] = relationship()
     user: Mapped["User"] = relationship()
@@ -419,7 +430,7 @@ class PartnerEventSpot(Base):
     latitude: Mapped[float] = mapped_column(Numeric(9, 6), nullable=False)
     longitude: Mapped[float] = mapped_column(Numeric(9, 6), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
     event: Mapped["PartnerEvent"] = relationship(back_populates="spots")
 
@@ -430,7 +441,7 @@ class AppUsageLog(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     action: Mapped[str] = mapped_column(String(50), nullable=False)  # 'login' or 'use_app'
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
     user: Mapped["User"] = relationship()
 

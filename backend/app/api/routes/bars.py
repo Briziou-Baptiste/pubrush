@@ -12,14 +12,62 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.api.deps.auth import get_current_user
 from app.models import User, MapFilter
+import time
 from app.schemas import BarSearchResult
 
-# In-memory thread-safe cache to avoid repeating heavy remote calls for identical or nearby queries
-# This speeds up response times to 0ms for recurrent queries and autocomplete/transition loops.
-NEARBY_CACHE = {}
-SEARCH_CACHE = {}
+
+class ExpiringCache:
+    """In-memory cache with TTL and maximum size to prevent memory leaks."""
+
+    def __init__(self, max_size: int = 500, ttl_seconds: int = 300):
+        self.max_size = max_size
+        self.ttl_seconds = ttl_seconds
+        self._cache: dict[tuple, tuple] = {}
+
+    def get(self, key):
+        if key in self._cache:
+            val, exp = self._cache[key]
+            if time.time() < exp:
+                return val
+            del self._cache[key]
+        return None
+
+    def set(self, key, value):
+        now = time.time()
+        if len(self._cache) >= self.max_size:
+            expired = [k for k, (_, exp) in self._cache.items() if exp <= now]
+            for k in expired:
+                del self._cache[k]
+            if len(self._cache) >= self.max_size:
+                to_remove = list(self._cache.keys())[: max(1, self.max_size // 5)]
+                for k in to_remove:
+                    del self._cache[k]
+        self._cache[key] = (value, now + self.ttl_seconds)
+
+    def __contains__(self, key):
+        return self.get(key) is not None
+
+    def __getitem__(self, key):
+        val = self.get(key)
+        if val is None:
+            raise KeyError(key)
+        return val
+
+    def __setitem__(self, key, value):
+        self.set(key, value)
+
+    def clear(self):
+        self._cache.clear()
+
+    def __len__(self):
+        return len(self._cache)
+
+
+NEARBY_CACHE = ExpiringCache(max_size=300, ttl_seconds=300)
+SEARCH_CACHE = ExpiringCache(max_size=300, ttl_seconds=300)
 
 router = APIRouter(prefix="/bars", tags=["bars"])
+
 
 def _http_get_json(url: str, data_encoded: bytes = None, headers: dict = None, timeout: int = 5) -> dict:
     req_headers = {"User-Agent": "PubRush-FastAPI/1.0"}
@@ -27,8 +75,11 @@ def _http_get_json(url: str, data_encoded: bytes = None, headers: dict = None, t
         req_headers.update(headers)
 
     req = urllib.request.Request(url, data=data_encoded, headers=req_headers)
-    ssl_context = ssl._create_unverified_context()
-    
+    if os.getenv("ALLOW_INSECURE_SSL", "").lower() == "true":
+        ssl_context = ssl._create_unverified_context()
+    else:
+        ssl_context = ssl.create_default_context()
+
     with urllib.request.urlopen(req, timeout=timeout, context=ssl_context) as response:
         return json.loads(response.read().decode("utf-8"))
 
@@ -364,7 +415,16 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
     # amenity regex filtering: extremely fast single-pass match
     # out center: computes gravity center coordinates for polygonal elements automatically
     
-    query_body = osm_query if osm_query else 'nwr["amenity"~"^(pub|bar|restaurant)$"]'
+    # Sanitize osm_query to avoid Overpass QL syntax escape / injection
+    if osm_query:
+        import re
+        cleaned = osm_query.strip()
+        if re.match(r'^[a-zA-Z0-9_\[\]"\'=~^$|:\s\-]+$', cleaned) and not any(c in cleaned for c in (";", ")", "(")):
+            query_body = cleaned
+        else:
+            query_body = 'nwr["amenity"~"^(pub|bar|restaurant)$"]'
+    else:
+        query_body = 'nwr["amenity"~"^(pub|bar|restaurant)$"]'
     
     overpass_query = f"""
     [out:json][timeout:5];
@@ -384,7 +444,6 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
     
     data_encoded = urllib.parse.urlencode({"data": overpass_query}).encode("utf-8")
     
-    import ssl
     res_data = None
     
     for server_url in servers:

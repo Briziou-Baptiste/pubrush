@@ -127,79 +127,103 @@
 }
 
 .timeText {
-  @apply text-[10px] text-slate-900 font-bold;
+  @apply text-[10px] text-slate-200 font-bold tracking-tight;
 }
 
 .island {
-  @apply w-20 h-4.5 bg-black rounded-full;
+  @apply w-20 h-4.5 bg-black rounded-full border border-slate-800/60 shadow-inner flex items-center justify-end pr-2;
 }
 
 .statusIcons {
-  @apply flex gap-1 items-center;
+  @apply flex gap-1.5 items-center text-slate-300;
 }
 
 .networkIcon {
-  @apply w-2.5 h-2.5 bg-slate-900 rounded-full flex items-center justify-center text-[7px] text-white font-bold;
+  @apply text-[9px] text-slate-300 font-bold;
 }
 
 .batteryIcon {
-  @apply w-4 h-2 border border-slate-900 rounded-[3px] p-0.5 flex items-center;
+  @apply w-4 h-2 border border-slate-300 rounded-[3px] p-0.5 flex items-center;
 }
 
 .batteryLevel {
-  @apply w-2 h-full bg-slate-900 rounded-[1px];
+  @apply w-2 h-full bg-emerald-400 rounded-[1px];
 }
 
 .mapBg {
-  @apply absolute inset-0 bg-[#F4F6FA] z-0 overflow-hidden;
+  @apply absolute inset-0 bg-[#0B0F19] z-0 overflow-hidden;
 }
 
 .mapSvg {
-  @apply absolute inset-0 w-[296px] h-[626px] opacity-75 pointer-events-none;
+  @apply absolute inset-0 w-[296px] h-[626px] opacity-80 pointer-events-none;
 }
 
 .searchRadius {
-  @apply absolute top-[300px] left-[148px] -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-blue-500/25 bg-blue-500/[0.03] pointer-events-none;
+  @apply absolute top-[280px] left-[148px] -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border border-amber-500/20 bg-amber-500/[0.04] pointer-events-none;
 }
 
 .userDotWrapper {
-  @apply absolute top-[260px] left-[100px] z-10;
+  @apply absolute top-[310px] left-[130px] z-10;
 }
 
 .userDot {
-  @apply w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md flex items-center justify-center;
+  @apply w-4 h-4 bg-amber-400 rounded-full border-2 border-slate-950 shadow-lg shadow-amber-500/50 flex items-center justify-center;
 }
 
 .userDotPing {
   @apply w-1.5 h-1.5 bg-white rounded-full animate-ping;
 }
 
-.purplePin {
-  @apply w-6 h-6 rounded-full bg-purple-700 border-2 border-white shadow-md flex items-center justify-center;
+.pinContainer {
+  @apply flex flex-col items-center select-none;
 }
 
-.purplePinDot {
-  @apply w-2 h-2 bg-white rounded-full;
+.pinBubble {
+  @apply px-2 py-1 rounded-lg bg-slate-900/90 border border-slate-700/80 shadow-xl backdrop-blur-md flex items-center gap-1.5;
 }
 
-.redPin {
-  @apply w-6 h-6 rounded-full bg-red-600 border-2 border-white shadow-lg flex items-center justify-center;
+.pinBubbleActive {
+  @apply px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 border border-amber-400 shadow-xl shadow-amber-500/30 flex items-center gap-1.5 text-slate-950;
 }
 
-.redPinDot {
-  @apply w-2 h-2 bg-white rounded-full;
+.pinText {
+  @apply text-[9px] font-bold text-slate-200 whitespace-nowrap;
+}
+
+.pinTextActive {
+  @apply text-[10px] font-black text-slate-950 whitespace-nowrap;
+}
+
+.pinArrow {
+  @apply w-0 h-0 border-solid border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-800 -mt-0.5;
+}
+
+.pinArrowActive {
+  @apply w-0 h-0 border-solid border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-amber-500 -mt-0.5;
+}
+
+.friendPin {
+  @apply flex flex-col items-center;
+}
+
+.friendBubble {
+  @apply w-[22px] h-[22px] rounded-full bg-blue-500 border-2 border-white text-white text-[8px] font-black flex items-center justify-center shadow-md;
+}
+
+.friendBubbleOrange {
+  @apply w-[22px] h-[22px] rounded-full bg-amber-500 border-2 border-white text-slate-950 text-[8px] font-black flex items-center justify-center shadow-md;
 }
 
 .topFloatingCard {
-  @apply absolute top-12 left-3.5 right-3.5 bg-white border border-slate-100 p-3.5 rounded-2xl shadow-md z-20 flex justify-between items-center text-slate-800;
+  @apply absolute top-12 left-3 right-3 bg-slate-900/90 border border-slate-800/80 p-3 rounded-2xl shadow-xl shadow-black/40 backdrop-blur-md z-20 flex justify-between items-center text-white;
 }
 
 .cardTitle {
-  @apply text-sm font-extrabold tracking-tight;
+  @apply text-xs font-black tracking-tight text-white flex items-center gap-1.5;
 }
 
 .cardSubtitle {
-  @apply text-[10px] text-slate-500 font-semibold mt-0.5;
+  @apply text-[10px] text-amber-400 font-bold mt-0.5;
 }
 
 .cardMeta {
@@ -207,71 +231,47 @@
 }
 
 .cardBtn {
-  @apply bg-black text-white text-[10px] font-bold px-3.5 py-1.5 rounded-xl cursor-pointer;
-}
-
-.searchControls {
-  @apply absolute top-[140px] left-3.5 right-3.5 z-20 space-y-2.5;
-}
-
-.searchBar {
-  @apply bg-white border border-slate-100 p-2.5 rounded-2xl shadow-sm flex items-center gap-2;
-}
-
-.searchText {
-  @apply text-[10px] text-slate-400 font-medium;
-}
-
-.pills {
-  @apply flex gap-2;
-}
-
-.pillActive {
-  @apply bg-blue-600 text-white px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-[9px] font-bold;
-}
-
-.pillInactive {
-  @apply bg-slate-100 text-slate-700 border border-slate-200/50 px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 text-[9px] font-semibold;
+  @apply bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold px-2.5 py-1 rounded-lg;
 }
 
 .bottomFloatingCard {
-  @apply absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 rounded-t-[2rem] shadow-[0_-8px_24px_rgba(0,0,0,0.06)] z-20 text-slate-800 space-y-3;
+  @apply absolute bottom-0 left-0 right-0 bg-slate-900/95 border-t border-slate-800/90 p-3.5 rounded-t-[1.75rem] shadow-2xl z-20 text-white space-y-2.5 backdrop-blur-xl;
 }
 
 .floatingSectionHeader {
-  @apply text-[10px] font-extrabold uppercase tracking-wider text-slate-400;
+  @apply text-[9px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between;
 }
 
 .stepCard {
-  @apply mt-2 p-3 rounded-xl bg-slate-50 border border-slate-100 flex justify-between items-center;
+  @apply mt-1.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex justify-between items-center;
 }
 
 .stepLabel {
-  @apply text-[9px] font-bold text-rose-500;
+  @apply text-[9px] font-bold text-amber-400 uppercase tracking-wide;
 }
 
 .stepTitle {
-  @apply text-xs font-black text-slate-800;
+  @apply text-xs font-black text-white;
 }
 
 .stepMeta {
-  @apply text-[9px] text-slate-400 font-medium;
+  @apply text-[10px] text-slate-300 font-medium mt-0.5 flex items-center gap-1;
 }
 
 .stepDelete {
-  @apply text-[9px] font-extrabold text-red-500 bg-rose-500/5 px-2.5 py-1 rounded-lg;
+  @apply text-[9px] font-bold text-slate-400 bg-slate-800/80 px-2 py-1 rounded-md border border-slate-700/50;
 }
 
 .stepIndicator {
-  @apply flex flex-col items-center gap-0.5;
+  @apply flex items-center justify-between px-1 text-[9px] font-bold text-emerald-400;
 }
 
 .indicatorText {
-  @apply text-[10px] font-bold text-emerald-600;
+  @apply text-[10px] font-bold text-emerald-400 flex items-center gap-1;
 }
 
 .ctaBtn {
-  @apply w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-3.5 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/10 cursor-pointer;
+  @apply w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20 cursor-pointer transition;
 }
 
 /* Features */
@@ -489,6 +489,10 @@
 
 .contactIconMessage {
   @apply w-11 h-11 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-violet-500;
+}
+
+.contactIconLocation {
+  @apply w-11 h-11 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-amber-400;
 }
 
 .contactLabel {

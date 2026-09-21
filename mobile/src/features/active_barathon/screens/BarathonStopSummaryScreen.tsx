@@ -96,7 +96,6 @@ export default function BarathonStopSummaryScreen() {
 
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [expenses, setExpenses] = useState<any[]>([]);
-  const [balances, setBalances] = useState<any[]>([]);
   const [debts, setDebts] = useState<DebtSettlement[]>([]);
 
   // Barathon details states loaded dynamically or from params
@@ -175,7 +174,7 @@ export default function BarathonStopSummaryScreen() {
 
               Alert.alert('Succès', 'Le remboursement a bien été enregistré.');
               void loadUserDataAndExpenses();
-            } catch (err) {
+            } catch {
               Alert.alert('Erreur', "Impossible d'enregistrer le remboursement.");
             }
           },
@@ -201,7 +200,6 @@ export default function BarathonStopSummaryScreen() {
           // 1. Fetch expenses
           const expenseData = await fetchBarathonExpenses(Number(params.barathonId), token);
           setExpenses(expenseData.expenses);
-          setBalances(expenseData.balances);
           setDebts(calculateSimplifiedDebts(expenseData.balances));
 
           // 2. Fetch details to populate stops and metadata if missing or to ensure up-to-date values

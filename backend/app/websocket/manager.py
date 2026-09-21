@@ -5,6 +5,16 @@ class WSManager:
     def __init__(self):
         self.user_connections: dict[int, set[WebSocket]] = defaultdict(set)
         self.barathon_connections: dict[int, set[WebSocket]] = defaultdict(set)
+        self.barathon_locations: dict[int, dict[int, dict]] = defaultdict(dict)
+
+    def set_user_location(self, barathon_id: int, user_id: int, location_data: dict):
+        self.barathon_locations[barathon_id][user_id] = location_data
+
+    def get_barathon_locations(self, barathon_id: int) -> list[dict]:
+        return list(self.barathon_locations.get(barathon_id, {}).values())
+
+    def clear_barathon_locations(self, barathon_id: int):
+        self.barathon_locations.pop(barathon_id, None)
 
     async def connect_user(self, user_id: int, websocket: WebSocket):
         await websocket.accept()

@@ -21,7 +21,7 @@ export default function Footer() {
         </Link>
 
         <p className={styles.warning}>
-          © {new Date().getFullYear()} PubRush. Tous droits réservés.
+          © {new Date().getFullYear()} PubRush • 12 Rue de la Soif, 31000 Toulouse. Tous droits réservés.
           <br />
           <span className={styles.alcoholWarning}>
             L'abus d'alcool est dangereux pour la santé, à consommer avec modération.

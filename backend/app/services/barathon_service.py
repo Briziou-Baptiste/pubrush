@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def fail_expired_planned_barathons():
     with Session(engine) as db:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         grace_limit = now - timedelta(minutes=15)
 
         expired_barathons = db.scalars(
@@ -48,6 +48,14 @@ async def barathon_status_watcher():
 async def is_user_participant(barathon_id: int, user_id: int) -> bool:
     db: Session = SessionLocal()
     try:
+        barathon = db.scalar(
+            select(Barathon).where(Barathon.id == barathon_id)
+        )
+        if not barathon:
+            return False
+        if barathon.created_by_user_id == user_id:
+            return True
+
         participant = db.scalar(
             select(BarathonParticipant).where(
                 BarathonParticipant.barathon_id == barathon_id,
@@ -57,3 +65,4 @@ async def is_user_participant(barathon_id: int, user_id: int) -> bool:
         return participant is not None
     finally:
         db.close()
+

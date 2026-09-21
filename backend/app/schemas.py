@@ -19,6 +19,7 @@ class UserRead(BaseModel):
     email: EmailStr
     username: str
     is_admin: bool
+    is_guest: bool = False
 
     model_config = {
         "from_attributes": True
@@ -35,6 +36,7 @@ class MeResponse(BaseModel):
     email: EmailStr
     username: str
     is_admin: bool
+    is_guest: bool = False
 
     model_config = {
         "from_attributes": True
@@ -86,31 +88,6 @@ class BarathonStopRead(BaseModel):
     }
 
 
-class BarathonCreate(BaseModel):
-    name: str = Field(min_length=1, max_length=255)
-    start_datetime: datetime
-    travel_time_between_bars_minutes: int = Field(ge=0)
-    max_time_in_bar_minutes: int = Field(gt=0)
-    stops: list[BarathonStopCreate] = Field(default_factory=list)
-
-
-class BarathonRead(BaseModel):
-    id: int
-    name: str
-    start_datetime: datetime
-    has_started: bool
-    status: str
-    travel_time_between_bars_minutes: int
-    max_time_in_bar_minutes: int
-    created_by_user_id: int
-    started_at: Optional[datetime] = None
-    ended_at: Optional[datetime] = None
-    stops: list[BarathonStopRead] = []
-
-    model_config = {
-        "from_attributes": True
-    }
-
 class UpdateBarathonStartDatetime(BaseModel):
     start_datetime: datetime
 
@@ -147,6 +124,7 @@ class BarathonRead(BaseModel):
     created_by_user_id: int
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
+    join_code: Optional[str] = None
     participants: list[BarathonParticipantRead] = []
     stops: list[BarathonStopRead] = []
     partner_event_id: Optional[int] = None
@@ -181,6 +159,8 @@ class ActiveBarathonRead(BaseModel):
     end_datetime: Optional[datetime] = None
     max_time_in_bar_minutes: int
     travel_time_between_bars_minutes: int
+    created_by_user_id: Optional[int] = None
+    join_code: Optional[str] = None
     stops: list[ActiveBarathonStopRead] = []
 
     model_config = {
@@ -380,5 +360,79 @@ class PartnerEventSpotRead(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
+class ReplaceBarathonStopPayload(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    latitude: float
+    longitude: float
+    stop_type: str = "bar"
+    reason: str = Field(min_length=1, max_length=100)
+
+    @field_validator("latitude")
+    @classmethod
+    def validate_latitude(cls, value: float) -> float:
+        if value < -90 or value > 90:
+            raise ValueError("latitude must be between -90 and 90")
+        return value
+
+    @field_validator("longitude")
+    @classmethod
+    def validate_longitude(cls, value: float) -> float:
+        if value < -180 or value > 180:
+            raise ValueError("longitude must be between -180 and 180")
+        return value
+
+
+class AddBarathonStopPayload(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    latitude: float
+    longitude: float
+    stop_type: str = "bar"
+    position: str = "after_current"  # "before_current", "after_current", "at_end"
+    current_stop_id: Optional[int] = None
+
+    @field_validator("latitude")
+    @classmethod
+    def validate_latitude(cls, value: float) -> float:
+        if value < -90 or value > 90:
+            raise ValueError("latitude must be between -90 and 90")
+        return value
+
+    @field_validator("longitude")
+    @classmethod
+    def validate_longitude(cls, value: float) -> float:
+        if value < -180 or value > 180:
+            raise ValueError("longitude must be between -180 and 180")
+        return value
+
+
+class BarathonPreviewByCode(BaseModel):
+    id: int
+    name: str
+    join_code: str
+    status: str
+    start_datetime: datetime
+    creator_username: str
+    stops_count: int
+    participants_count: int
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class JoinGuestPayload(BaseModel):
+    join_code: str = Field(..., min_length=3, max_length=20)
+    username: str = Field(..., min_length=2, max_length=30)
+
+
+class JoinGuestResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserRead
+    barathon: ActiveBarathonRead
+
+
 
 

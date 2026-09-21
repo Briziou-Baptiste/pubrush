@@ -16,6 +16,8 @@ export type ActiveBarathonData = {
   end_datetime: string | null;
   max_time_in_bar_minutes: number;
   travel_time_between_bars_minutes: number;
+  created_by_user_id?: number;
+  join_code?: string;
   stops: ActiveBarathonStop[];
 };
 

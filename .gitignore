@@ -19,8 +19,27 @@ alembic/versions/*.pyc
 .vscode/
 .idea/
 
-# Logs
+# Logs & caches
 *.log
+.pytest_cache/
+.coverage
+coverage/
 
 # Fichiers accidentels lies a des serveurs
 root@*
+
+# Node / Frontend / Mobile
+node_modules/
+.expo/
+.next/
+dist/
+build/
+web/.next/
+web/node_modules/
+mobile/node_modules/
+
+# Kubernetes Secrets (autorise les templates)
+*secrets.yaml
+!*secrets.template.yaml
+*.secret.yaml
+!*secret.template.yaml

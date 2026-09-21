@@ -107,7 +107,7 @@ export default function RootLayout() {
       <Stack.Screen name="active-barathon" />
       <Stack.Screen name="barathon-stop-summary" />
       <Stack.Screen name="expenses" />
-      <Stack.Screen name="barathon-expenses-placeholder" />
+      <Stack.Screen name="barathon-expenses" />
       <Stack.Screen name="saved-barathons" />
       <Stack.Screen name="partner-event-map" />
     </Stack>

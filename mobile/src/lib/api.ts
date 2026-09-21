@@ -5,7 +5,7 @@
 //  Created by Baptiste Briziou on 30/03/2026.
 //
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.pubrush.com';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.pubrush.com';
 
 export type RegisterPayload = {
   email: string;
@@ -66,8 +66,6 @@ export async function loginUser(payload: { email: string; password: string }) {
   });
 
   const rawText = await response.text();
-  console.log('LOGIN STATUS:', response.status);
-  console.log('LOGIN RESPONSE:', rawText);
 
   let data: any = {};
   try {
@@ -152,6 +150,26 @@ export async function fetchMyRoleInBarathon(barathonId: number, token: string): 
 
   return handleResponse<{ role: string | null }>(response);
 }
+
+export type AssignedBarathonRole = {
+  user_id: number;
+  username: string;
+  role_id: number;
+  role_name: string;
+  role_description?: string | null;
+};
+
+export async function fetchBarathonRoles(barathonId: number, token: string): Promise<AssignedBarathonRole[]> {
+  const response = await fetch(`${API_BASE_URL}/barathons/${barathonId}/roles`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse<AssignedBarathonRole[]>(response);
+}
+
 
 export async function fetchBarathon(barathonId: number, token: string): Promise<any> {
   const response = await fetch(`${API_BASE_URL}/barathons/${barathonId}`, {

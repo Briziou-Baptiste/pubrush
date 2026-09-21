@@ -1,7 +1,10 @@
+import logging
 import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+logger = logging.getLogger(__name__)
 
 # Load variables with standard default values
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
@@ -11,13 +14,11 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER or "noreply@pubrush.com")
 
 def send_reset_code_email(to_email: str, code: str) -> bool:
-    # If no SMTP_USER is set, we print a warning and log to console for development
+    # If no SMTP_USER is set, we log a warning
     if not SMTP_USER or not SMTP_PASSWORD:
-        print("\n" + "!"*60)
-        print("⚠️  [EMAIL SERVICE] SMTP_USER ou SMTP_PASSWORD non configuré !")
-        print("Veuillez configurer ces variables d'environnement dans le fichier backend/.env")
-        print(f"Code de secours généré pour {to_email} : {code}")
-        print("!"*60 + "\n")
+        logger.warning("[EMAIL SERVICE] SMTP_USER or SMTP_PASSWORD not configured. Email not sent.")
+        if os.getenv("ENVIRONMENT", "").lower() != "production":
+            logger.info("[DEV ONLY] Reset code for %s: %s", to_email, code)
         return False
 
     try:
@@ -60,6 +61,7 @@ def send_reset_code_email(to_email: str, code: str) -> bool:
         server.quit()
         return True
     except Exception as e:
-        print(f"\n❌ [EMAIL SERVICE ERROR] Impossible d'envoyer l'email : {e}")
-        print(f"Code de secours généré pour {to_email} : {code}\n")
+        logger.error("[EMAIL SERVICE ERROR] Impossible d'envoyer l'email: %s", e)
+        if os.getenv("ENVIRONMENT", "").lower() != "production":
+            logger.info("[DEV ONLY] Reset code for %s: %s", to_email, code)
         return False

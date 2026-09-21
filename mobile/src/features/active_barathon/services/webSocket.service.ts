@@ -1,7 +1,9 @@
+import { WSMessage } from '../types/webSocker.types';
+
+export { WSMessage };
+
 let userSocket: WebSocket | null = null;
 let activeBarathonSocket: WebSocket | null = null;
-import { WSMessage } from '../types/webSocker.types';
-export { WSMessage };
 
 function buildWsUrl(path: string, token: string, apiBaseUrl: string) {
   const wsBaseUrl = apiBaseUrl
@@ -108,5 +110,21 @@ export function disconnectBarathonSocket() {
   if (activeBarathonSocket) {
     activeBarathonSocket.close();
     activeBarathonSocket = null;
+  }
+}
+
+export function sendBarathonLocation(latitude: number, longitude: number) {
+  if (activeBarathonSocket && activeBarathonSocket.readyState === WebSocket.OPEN) {
+    try {
+      activeBarathonSocket.send(
+        JSON.stringify({
+          type: 'UPDATE_LOCATION',
+          latitude,
+          longitude,
+        })
+      );
+    } catch (e) {
+      console.error('[WS][BARATHON] Error sending location:', e);
+    }
   }
 }

@@ -185,7 +185,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* High-Fidelity Non-deformable Phone Simulator Mockup */}
+        {/* High-Fidelity Phone Simulator Mockup */}
         <div className={styles.simulatorWrapper}>
           <div className={styles.simulatorGlow} />
           
@@ -194,144 +194,171 @@ export default function Home() {
             
             {/* Dynamic Island & Time */}
             <div className={styles.islandTime}>
-              <span className={styles.timeText}>09:42</span>
-              <div className={styles.island} />
+              <span className={styles.timeText}>21:42</span>
+              <div className={styles.island}>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1" />
+              </div>
               <div className={styles.statusIcons}>
-                <div className={styles.networkIcon}>5G</div>
+                <span className={styles.networkIcon}>5G</span>
                 <div className={styles.batteryIcon}>
                   <div className={styles.batteryLevel} />
                 </div>
               </div>
             </div>
             
-            {/* Map Screen Background - Restrict to actual inner dimensions (296x626) */}
+            {/* Realistic Dark Map Screen Background */}
             <div className={styles.mapBg}>
-              {/* Grid/Street Pattern */}
+              {/* Street & River Vector Layer */}
               <svg className={styles.mapSvg} viewBox="0 0 296 626" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                  <pattern id="grid-pattern" width="60" height="60" patternUnits="userSpaceOnUse">
-                    <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#E2E8F0" strokeWidth="1" />
+                  {/* Subtle City Grid */}
+                  <pattern id="dark-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#162032" strokeWidth="0.75" />
                   </pattern>
+                  <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#F59E0B" />
+                    <stop offset="100%" stopColor="#10B981" />
+                  </linearGradient>
                 </defs>
-                <rect width="100%" height="100%" fill="url(#grid-pattern)" />
-                {/* Styled Roads */}
-                <path d="M-20,150 Q100,120 340,160" fill="none" stroke="#FFFFFF" strokeWidth="16" strokeLinecap="round" />
-                <path d="M110,-20 L90,660" fill="none" stroke="#FFFFFF" strokeWidth="12" strokeLinecap="round" />
-                <path d="M220,-20 L240,660" fill="none" stroke="#FFFFFF" strokeWidth="12" strokeLinecap="round" />
-                <path d="M-20,380 L340,320" fill="none" stroke="#FFFFFF" strokeWidth="18" strokeLinecap="round" />
                 
-                {/* Green highlighted route path */}
-                <path d="M 108 268 L 132 268 L 132 332 L 157 332" fill="none" stroke="#27AE60" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+                <rect width="100%" height="100%" fill="#0A0F1D" />
+                <rect width="100%" height="100%" fill="url(#dark-grid)" />
+                
+                {/* River Garonne curve */}
+                <path d="M-30,480 Q80,440 120,380 T260,250 T330,120" fill="none" stroke="#0F2442" strokeWidth="32" strokeLinecap="round" />
+                
+                {/* Secondary Roads */}
+                <path d="M-20,130 L320,170" fill="none" stroke="#1A263D" strokeWidth="10" strokeLinecap="round" />
+                <path d="M-20,290 L320,240" fill="none" stroke="#1A263D" strokeWidth="8" strokeLinecap="round" />
+                <path d="M60,-20 L80,660" fill="none" stroke="#1A263D" strokeWidth="9" strokeLinecap="round" />
+                <path d="M220,-20 L210,660" fill="none" stroke="#1A263D" strokeWidth="9" strokeLinecap="round" />
+                <path d="M-20,440 L320,410" fill="none" stroke="#1A263D" strokeWidth="12" strokeLinecap="round" />
+
+                {/* Primary Avenue (Allée Jean Jaurès) */}
+                <path d="M-20,210 Q140,190 320,225" fill="none" stroke="#253553" strokeWidth="16" strokeLinecap="round" />
+                <path d="M140,-20 L150,660" fill="none" stroke="#253553" strokeWidth="14" strokeLinecap="round" />
+
+                {/* Active Walking Route Line with Amber/Emerald Glow */}
+                <path 
+                  d="M 148 220 L 148 275 L 85 275 L 85 340 L 175 340" 
+                  fill="none" 
+                  stroke="#F59E0B" 
+                  strokeWidth="4" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeDasharray="6 3"
+                />
               </svg>
               
-              {/* Search Radius Area Circle */}
+              {/* Geofence Detection Radius around Active Stop */}
               <div className={styles.searchRadius} />
 
-              {/* User location dot */}
+              {/* User Live GPS Location Pulse */}
               <div className={styles.userDotWrapper}>
                 <div className={styles.userDot}>
                   <div className={styles.userDotPing} />
                 </div>
               </div>
 
-              {/* Map pins */}
-              <div className="absolute top-[180px] left-[60px] z-10">
-                <div className={styles.purplePin}>
-                  <div className={styles.purplePinDot} />
+              {/* Bar 1: Le Délirium Café (ACTIVE STOP) */}
+              <div className="absolute top-[200px] left-[90px] z-10">
+                <div className={styles.pinContainer}>
+                  <div className={styles.pinBubbleActive}>
+                    <Beer className="w-3 h-3 text-slate-950 font-bold" />
+                    <span className={styles.pinTextActive}>1. Délirium Café</span>
+                  </div>
+                  <div className={styles.pinArrowActive} />
                 </div>
               </div>
 
-              <div className="absolute top-[150px] left-[170px] z-10">
-                <div className={styles.purplePin}>
-                  <div className={styles.purplePinDot} />
+              {/* Bar 2: Chez Tonton (UPCOMING) */}
+              <div className="absolute top-[255px] left-[20px] z-10">
+                <div className={styles.pinContainer}>
+                  <div className={styles.pinBubble}>
+                    <span className="text-[10px]">🍻</span>
+                    <span className={styles.pinText}>2. Chez Tonton</span>
+                  </div>
+                  <div className={styles.pinArrow} />
                 </div>
               </div>
 
-              <div className="absolute top-[230px] left-[250px] z-10">
-                <div className={styles.purplePin}>
-                  <div className={styles.purplePinDot} />
+              {/* Bar 3: La Couleur de la Culotte */}
+              <div className="absolute top-[320px] left-[150px] z-10">
+                <div className={styles.pinContainer}>
+                  <div className={styles.pinBubble}>
+                    <span className="text-[10px]">🍷</span>
+                    <span className={styles.pinText}>3. La Couleur</span>
+                  </div>
+                  <div className={styles.pinArrow} />
                 </div>
               </div>
 
-              <div className="absolute top-[260px] left-[210px] z-10">
-                <div className={styles.purplePin}>
-                  <div className={styles.purplePinDot} />
-                </div>
+              {/* Live Friend GPS Avatars on Map */}
+              <div className="absolute top-[240px] left-[125px] z-10 flex flex-col items-center">
+                <div className={styles.friendBubbleOrange}>BB</div>
+                <span className="text-[7px] text-amber-300 font-bold bg-slate-950/80 px-1 rounded mt-0.5">Baptiste</span>
               </div>
 
-              <div className="absolute top-[400px] left-[50px] z-10">
-                <div className={styles.purplePin}>
-                  <div className={styles.purplePinDot} />
-                </div>
+              <div className="absolute top-[290px] left-[70px] z-10 flex flex-col items-center">
+                <div className={styles.friendBubble}>SO</div>
+                <span className="text-[7px] text-blue-300 font-bold bg-slate-950/80 px-1 rounded mt-0.5">Sophie</span>
               </div>
 
-              <div className="absolute top-[430px] left-[200px] z-10">
-                <div className={styles.purplePin}>
-                  <div className={styles.purplePinDot} />
-                </div>
-              </div>
-
-              {/* Red Selected pin */}
-              <div className="absolute top-[320px] left-[145px] z-10">
-                <div className={styles.redPin}>
-                  <div className={styles.redPinDot} />
-                </div>
+              <div className="absolute top-[355px] left-[190px] z-10 flex flex-col items-center">
+                <div className="w-[22px] h-[22px] rounded-full bg-emerald-500 border-2 border-white text-white text-[8px] font-black flex items-center justify-center shadow-md">TH</div>
+                <span className="text-[7px] text-emerald-300 font-bold bg-slate-950/80 px-1 rounded mt-0.5">Thomas</span>
               </div>
             </div>
 
-            {/* Top Floating App Card */}
+            {/* Top Floating Live Barathon Header */}
             <div className={styles.topFloatingCard}>
               <div>
-                <h4 className={styles.cardTitle}>PubRush</h4>
-                <p className={styles.cardSubtitle}>Nom du barathon : PubRush</p>
-                <p className={styles.cardMeta}>Date de début : 09/06/2026 à 09:41</p>
+                <h4 className={styles.cardTitle}>
+                  <span>Soirée Capitole</span>
+                  <span className="text-amber-400 font-bold">🍻</span>
+                </h4>
+                <p className={styles.cardSubtitle}>Étape 1 sur 4 • Dans le bar</p>
+                <p className={styles.cardMeta}>Chrono : 38 min restantes</p>
               </div>
               <div className={styles.cardBtn}>
-                Retour
+                🟢 En direct
               </div>
             </div>
 
-            {/* Floating Search Controls */}
-            <div className={styles.searchControls}>
-              {/* Search input bar */}
-              <div className={styles.searchBar}>
-                <Search className="w-3.5 h-3.5 text-slate-400" />
-                <span className={styles.searchText}>Rechercher un lieu (ex: Delirium...)</span>
-              </div>
-              {/* Category Pills */}
-              <div className={styles.pills}>
-                <div className={styles.pillActive}>
-                  <Beer className="w-3 h-3 text-white" />
-                  Bars
-                </div>
-                <div className={styles.pillInactive}>
-                  <UtensilsCrossed className="w-3 h-3 text-slate-500" />
-                  Restaurants
-                </div>
-              </div>
-            </div>
-
-            {/* Floating Bottom Card */}
+            {/* Floating Bottom Card: Active Stop Details with Real Address */}
             <div className={styles.bottomFloatingCard}>
               <div>
-                <h5 className={styles.floatingSectionHeader}>Lieux sélectionnés</h5>
+                <div className={styles.floatingSectionHeader}>
+                  <span>Étape 1 en cours</span>
+                  <span className="text-emerald-400 font-bold">Arrivé sur place ✅</span>
+                </div>
+                
                 <div className={styles.stepCard}>
-                  <div>
-                    <span className={styles.stepLabel}>Étape 1</span>
-                    <p className={styles.stepTitle}>Delirium Café</p>
-                    <p className={styles.stepMeta}>Bar • 43.60708 / 1.45129</p>
+                  <div className="flex-1 pr-2">
+                    <span className={styles.stepLabel}>Bar étape actuelle</span>
+                    <p className={styles.stepTitle}>Le Délirium Café</p>
+                    <p className={styles.stepMeta}>
+                      <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
+                      <span>22 Allée Jean Jaurès, 31000 Toulouse</span>
+                    </p>
                   </div>
-                  <span className={styles.stepDelete}>Supprimer</span>
+                  <span className="px-2 py-1 bg-amber-500/10 text-amber-400 text-[9px] font-bold rounded-lg border border-amber-500/20">
+                    Terrasse
+                  </span>
                 </div>
               </div>
 
               <div className={styles.stepIndicator}>
-                <ArrowDown className="w-3.5 h-3.5 text-slate-400" />
-                <span className={styles.indicatorText}>Temps estimé : 3 min</span>
+                <span className="text-slate-400">Prochaine étape : Chez Tonton</span>
+                <span className={styles.indicatorText}>
+                  <ArrowDown className="w-3 h-3" />
+                  3 min • 250 m
+                </span>
               </div>
 
               <div className={styles.ctaBtn}>
-                Créer mon barathon
+                <span>Passer à l&apos;étape suivante</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </div>
             </div>
           </div>
@@ -491,6 +518,16 @@ export default function Home() {
               </p>
               
               <div className={styles.contactInfoList}>
+                <div className={styles.contactInfoItem}>
+                  <div className={styles.contactIconLocation}>
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className={styles.contactLabel}>Siège Social & Adresse</p>
+                    <p className={styles.contactValue}>12 Rue de la Soif, 31000 Toulouse, France</p>
+                  </div>
+                </div>
+
                 <div className={styles.contactInfoItem}>
                   <div className={styles.contactIconMail}>
                     <Mail className="w-5 h-5" />

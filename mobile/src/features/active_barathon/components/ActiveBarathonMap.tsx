@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { Text, View } from 'react-native';
 import MapView, { Marker, Polyline, Region } from 'react-native-maps';
 
 import { ActiveBarathonStop, LatLng } from '../types/activeBarathon.types';
+import { ParticipantLocation } from '../types/webSocker.types';
 import { styles } from '../styles/activeBarathon.styles';
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
   visitedPath: LatLng[];
   allStops: ActiveBarathonStop[];
   activeStopIndex: number;
+  friendLocations?: ParticipantLocation[];
+  currentUserId?: number;
 };
 
 export default function ActiveBarathonMap({
@@ -19,6 +22,8 @@ export default function ActiveBarathonMap({
   visitedPath,
   allStops,
   activeStopIndex,
+  friendLocations,
+  currentUserId,
 }: Props) {
   // Stores the coordinate arrays for the routes between each stop
   // Key format: `${from.id}-${to.id}` to uniquely identify a route segment
@@ -44,7 +49,7 @@ export default function ActiveBarathonMap({
         if (!active) return;
         const from = allStops[i];
         const to = allStops[i + 1];
-        const key = `${from.id}-${to.id}`;
+        const key = `${from.id}_${Number(from.latitude).toFixed(5)}_${Number(from.longitude).toFixed(5)}-${to.id}_${Number(to.latitude).toFixed(5)}_${Number(to.longitude).toFixed(5)}`;
 
         // Only fetch if we don't already have the geometry for this segment
         if (!newGeometries[key]) {
@@ -94,9 +99,9 @@ export default function ActiveBarathonMap({
       {[
         ...allStops.slice(0, -1).map((stop, index) => {
           const nextStop = allStops[index + 1];
-
-          const key = `active-polyline-${stop.id}-${nextStop.id}`;
-          const path = routeGeometries[`${stop.id}-${nextStop.id}`];
+          const segmentKey = `${stop.id}_${Number(stop.latitude).toFixed(5)}_${Number(stop.longitude).toFixed(5)}-${nextStop.id}_${Number(nextStop.latitude).toFixed(5)}_${Number(nextStop.longitude).toFixed(5)}`;
+          const key = `active-polyline-${segmentKey}`;
+          const path = routeGeometries[segmentKey];
 
           // Determine if this segment is currently active, already completed, or in the future
           const isCurrentLeg = index === activeStopIndex;
@@ -178,6 +183,39 @@ export default function ActiveBarathonMap({
             />
           );
         }),
+        ...(friendLocations || [])
+          .filter((f) => f.user_id !== currentUserId && f.latitude && f.longitude)
+          .map((friend) => (
+            <Marker
+              key={`friend-${friend.user_id}`}
+              coordinate={{
+                latitude: Number(friend.latitude),
+                longitude: Number(friend.longitude),
+              }}
+              title={friend.username}
+              description={friend.is_guest ? 'Ami invité (En direct)' : 'Ami PubRush (En direct)'}
+              anchor={{ x: 0.5, y: 1 }}
+            >
+              <View style={styles.friendMarkerContainer}>
+                <View
+                  style={[
+                    styles.friendMarkerBubble,
+                    friend.is_guest && styles.friendMarkerBubbleGuest,
+                  ]}
+                >
+                  <Text style={styles.friendMarkerText}>
+                    {friend.username.slice(0, 2).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={styles.friendMarkerArrow} />
+                <View style={styles.friendMarkerNameBadge}>
+                  <Text style={styles.friendMarkerNameText} numberOfLines={1}>
+                    {friend.username}
+                  </Text>
+                </View>
+              </View>
+            </Marker>
+          )),
       ]}
     </MapView>
   );

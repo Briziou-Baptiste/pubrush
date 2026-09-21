@@ -78,6 +78,24 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
+  inviteButton: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#86EFAC',
+    borderWidth: 1.5,
+    borderRadius: 16,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+
+  inviteButtonText: {
+    color: '#15803D',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+
   secondaryButton: {
     flex: 1,
     backgroundColor: '#DBEAFE',

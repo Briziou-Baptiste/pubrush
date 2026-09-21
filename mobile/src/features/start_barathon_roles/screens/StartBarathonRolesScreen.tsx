@@ -21,6 +21,10 @@ import {
 } from '../types/startBarathonRoles.types';
 import { styles } from '../styles/startBarathonRoles.styles';
 import ParticipantRoleCard from '../components/ParticipantRoleCard';
+import InviteFriendsModal from '../../active_barathon/components/InviteFriendsModal';
+import { connectBarathonSocket, disconnectBarathonSocket } from '../../active_barathon/services/webSocket.service';
+import { API_BASE_URL } from '../../../lib/api';
+import { getAccessToken } from '../../../lib/authStorage';
 
 export default function StartBarathonRolesScreen() {
   const params = useLocalSearchParams<{ barathonId?: string }>();
@@ -28,6 +32,7 @@ export default function StartBarathonRolesScreen() {
   const [config, setConfig] = useState<StartBarathonConfigResponse | null>(null);
   const [assignments, setAssignments] = useState<ParticipantRoleAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inviteModalVisible, setInviteModalVisible] = useState(false);
   const [submittingWithRoles, setSubmittingWithRoles] = useState(false);
   const [submittingWithoutRoles, setSubmittingWithoutRoles] = useState(false);
 
@@ -62,6 +67,61 @@ export default function StartBarathonRolesScreen() {
     }
   }
 
+  // Connect to Barathon WebSocket room to update participants list live when friends join via QR code
+  useEffect(() => {
+    if (!config?.barathon_id) return;
+
+    let isMounted = true;
+    async function initSocket() {
+      const token = await getAccessToken();
+      if (!token || !isMounted || !config) return;
+
+      connectBarathonSocket({
+        apiBaseUrl: API_BASE_URL,
+        token,
+        barathonId: config.barathon_id,
+        onMessage: (message) => {
+          if (message.type === 'BARATHON_PARTICIPANT_JOINED') {
+            const newUser = message.payload?.user;
+            if (newUser) {
+              setConfig((prev) => {
+                if (!prev) return null;
+                const alreadyExists = prev.participants.some((p) => p.user_id === newUser.id);
+                if (alreadyExists) return prev;
+                return {
+                  ...prev,
+                  participants: [
+                    ...prev.participants,
+                    {
+                      user_id: newUser.id,
+                      username: newUser.username,
+                      email: '',
+                    },
+                  ],
+                };
+              });
+
+              setAssignments((prev) => {
+                const alreadyExists = prev.some((a) => a.user_id === newUser.id);
+                if (alreadyExists) return prev;
+                return [...prev, { user_id: newUser.id, role_id: null }];
+              });
+
+              Alert.alert('Nouvel invité ! 🍻', `${newUser.username} a rejoint le barathon !`);
+            }
+          }
+        },
+      });
+    }
+
+    void initSocket();
+
+    return () => {
+      isMounted = false;
+      disconnectBarathonSocket();
+    };
+  }, [config?.barathon_id]);
+
   const usedRoleIds = useMemo(() => {
     return assignments
       .map((assignment) => assignment.role_id)
@@ -82,16 +142,17 @@ export default function StartBarathonRolesScreen() {
     setAssignments((prev) =>
       prev.map((assignment) =>
         assignment.user_id === userId
-          ? { ...assignment, role_id: roleId }
+          ? {
+              ...assignment,
+              role_id: assignment.role_id === roleId ? null : roleId,
+            }
           : assignment
       )
     );
   }
 
-  function handleRandomAssign() {
-    if (!config) {
-      return;
-    }
+  function performFullRandomAssign() {
+    if (!config) return;
 
     if (config.roles.length < config.participants.length) {
       Alert.alert(
@@ -110,6 +171,65 @@ export default function StartBarathonRolesScreen() {
     }));
 
     setAssignments(randomAssignments);
+  }
+
+  function handleRandomAssign() {
+    if (!config) {
+      return;
+    }
+
+    const allAssigned =
+      assignments.length > 0 &&
+      assignments.every((a) => a.role_id !== null);
+
+    if (allAssigned) {
+      Alert.alert(
+        'Attribution aléatoire',
+        'Tous les rôles sont déjà sélectionnés. Voulez-vous tout effacer pour relancer une attribution aléatoire ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Tout effacer et relancer',
+            style: 'destructive',
+            onPress: () => performFullRandomAssign(),
+          },
+        ]
+      );
+      return;
+    }
+
+    const unassignedParticipants = assignments.filter((a) => a.role_id === null);
+    const currentlyAssignedRoleIds = assignments
+      .map((a) => a.role_id)
+      .filter((id): id is number => id !== null);
+
+    const availableRoles = config.roles.filter(
+      (role) => !currentlyAssignedRoleIds.includes(role.id)
+    );
+
+    if (availableRoles.length < unassignedParticipants.length) {
+      Alert.alert(
+        'Erreur',
+        "Il n'y a pas assez de rôles restants pour attribuer un rôle à chacun des participants restants."
+      );
+      return;
+    }
+
+    const shuffledRoles = [...availableRoles].sort(() => Math.random() - 0.5);
+    let shuffleIdx = 0;
+
+    setAssignments((prev) =>
+      prev.map((a) => {
+        if (a.role_id !== null) {
+          return a;
+        }
+        const assigned = shuffledRoles[shuffleIdx++];
+        return {
+          ...a,
+          role_id: assigned ? assigned.id : null,
+        };
+      })
+    );
   }
 
   async function handleStartWithoutRoles() {
@@ -224,6 +344,14 @@ export default function StartBarathonRolesScreen() {
           Rôles attribués : {selectedRolesCount} / {participantCount}
         </Text>
 
+        <TouchableOpacity
+          style={styles.inviteButton}
+          activeOpacity={0.85}
+          onPress={() => setInviteModalVisible(true)}
+        >
+          <Text style={styles.inviteButtonText}>🎟️ Inviter des amis (QR Code)</Text>
+        </TouchableOpacity>
+
         <View style={styles.actionRow}>
           <TouchableOpacity
             style={styles.secondaryButton}
@@ -280,6 +408,14 @@ export default function StartBarathonRolesScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <InviteFriendsModal
+        visible={inviteModalVisible}
+        onClose={() => setInviteModalVisible(false)}
+        joinCode={config.join_code || ''}
+        barathonName={config.barathon_name}
+        participantsCount={config.participants.length}
+      />
     </SafeAreaView>
   );
 }

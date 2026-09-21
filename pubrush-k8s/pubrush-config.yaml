@@ -9,13 +9,4 @@ data:
   SMTP_HOST: "smtp.gmail.com"
   SMTP_PORT: "587"
   SMTP_FROM: "noreply@pubrush.com"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: pubrush-secrets
-type: Opaque
-stringData:
-  DB_PASSWORD: "k8M2pAzW9xF5yR7qL3sT9vB4"
-  SMTP_PASSWORD: "gplx ylkn rmeb zked"
-  SMTP_USER: "pubrush.app@gmail.com"
+

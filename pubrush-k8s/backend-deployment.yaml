@@ -62,6 +62,14 @@ spec:
             secretKeyRef:
               name: pubrush-secrets
               key: SMTP_PASSWORD
+        # 4. JWT Secret Key et environnement
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: pubrush-secrets
+              key: JWT_SECRET_KEY
+        - name: ENVIRONMENT
+          value: "production"
       containers:
       - name: backend
         image: baptistebriziou/pubrush-backend:latest
@@ -69,7 +77,29 @@ spec:
         ports:
         - containerPort: 8000
         env: *backend-env
-        env: *backend-env
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 10000
 ---
 apiVersion: v1
 kind: Service

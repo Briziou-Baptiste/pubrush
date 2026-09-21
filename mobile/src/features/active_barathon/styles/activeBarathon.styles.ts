@@ -155,6 +155,50 @@ export const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
+  trajetActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+
+  trajetReplaceButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF7ED',
+    borderColor: '#FDBA74',
+    borderWidth: 1,
+    borderRadius: 14,
+    height: 44,
+    gap: 6,
+  },
+
+  trajetReplaceButtonText: {
+    color: '#C2410C',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  trajetAddButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#93C5FD',
+    borderWidth: 1,
+    borderRadius: 14,
+    height: 44,
+    gap: 6,
+  },
+
+  trajetAddButtonText: {
+    color: '#1D4ED8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
   row: {
     marginBottom: 10,
   },
@@ -301,6 +345,26 @@ export const styles = StyleSheet.create({
     },
 
     expensesButtonText: {
+      color: '#FFFFFF',
+      fontWeight: '800',
+      fontSize: 13,
+    },
+
+    rolesButton: {
+      backgroundColor: '#8B5CF6',
+      borderRadius: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#8B5CF6',
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 3 },
+      elevation: 2,
+    },
+
+    rolesButtonText: {
       color: '#FFFFFF',
       fontWeight: '800',
       fontSize: 13,
@@ -478,6 +542,76 @@ export const styles = StyleSheet.create({
     selectAllText: {
       fontSize: 13,
       color: '#2563EB',
+      fontWeight: '700',
+    },
+    // Mode Sous-sol / Offline indicator
+    offlineBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: '#FEF3C7',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: '#FDE68A',
+    },
+    offlineBadgeText: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: '#92400E',
+    },
+    // Friend GPS Markers
+    friendMarkerContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    friendMarkerBubble: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: '#F59E0B',
+      borderWidth: 2.5,
+      borderColor: '#FFFFFF',
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 5,
+    },
+    friendMarkerBubbleGuest: {
+      backgroundColor: '#3B82F6',
+    },
+    friendMarkerText: {
+      fontSize: 13,
+      fontWeight: '900',
+      color: '#FFFFFF',
+    },
+    friendMarkerArrow: {
+      width: 0,
+      height: 0,
+      backgroundColor: 'transparent',
+      borderStyle: 'solid',
+      borderLeftWidth: 5,
+      borderRightWidth: 5,
+      borderTopWidth: 6,
+      borderLeftColor: 'transparent',
+      borderRightColor: 'transparent',
+      borderTopColor: '#FFFFFF',
+      marginTop: -1,
+    },
+    friendMarkerNameBadge: {
+      backgroundColor: 'rgba(17, 24, 39, 0.85)',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 6,
+      marginTop: 2,
+    },
+    friendMarkerNameText: {
+      color: '#FFFFFF',
+      fontSize: 10,
       fontWeight: '700',
     },
 });
