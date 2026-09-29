@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import * as Location from 'expo-location';
 
 import {
@@ -8,6 +9,7 @@ import {
   LatLng,
 } from '../types/activeBarathon.types';
 import { completeBarathonStop } from '../services/activeBarathon.service';
+import { queueOfflineAction } from '../services/offlineSync.service';
 import { getDistanceMeters } from '../utils/activeBarathon.distance';
 import { secondsFromMinutes } from '../utils/activeBarathon.timer';
 import {
@@ -91,7 +93,39 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     void ensureNotificationPermissions();
     void startLocationTracking();
 
+    const appStateSub = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && stopDeadlineRef.current) {
+        const secondsLeft = Math.max(
+          0,
+          Math.ceil((stopDeadlineRef.current - Date.now()) / 1000)
+        );
+
+        if (secondsLeft <= 0) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          stopDeadlineRef.current = null;
+          void cancelStopNotifications(notificationIdsRef.current);
+          setState((prev) => ({
+            ...prev,
+            remainingSeconds: 0,
+            phase: 'overtime',
+            isInsideStopRadius: true,
+          }));
+        } else {
+          setState((prev) => ({
+            ...prev,
+            remainingSeconds: secondsLeft,
+            phase: 'in_stop',
+            isInsideStopRadius: true,
+          }));
+        }
+      }
+    });
+
     return () => {
+      appStateSub.remove();
       void stopTracking();
     };
   }, []);
@@ -222,9 +256,9 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
 
     locationSubscriptionRef.current = await Location.watchPositionAsync(
       {
-        accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 1500,
-        distanceInterval: 3,
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 4000,
+        distanceInterval: 8,
       },
       (location) => {
         const newPosition = {
@@ -271,7 +305,24 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
       try {
         await completeBarathonStop(barathon.id, activeStop.id);
         onStopCompleted?.(activeStop.id);
+      } catch (err) {
+        console.warn(
+          '[useActiveBarathonTracking] Network failed completing stop, queueing offline action:',
+          err
+        );
+        try {
+          await queueOfflineAction({
+            type: 'COMPLETE_STOP',
+            barathonId: barathon.id,
+            stopId: activeStop.id,
+          });
+        } catch (queueErr) {
+          console.warn('[useActiveBarathonTracking] Failed to queue offline action:', queueErr);
+        }
+        onStopCompleted?.(activeStop.id);
+      }
 
+      try {
         if (timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = null;
@@ -360,9 +411,9 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
           }));
         }, 1000);
       } catch (error) {
+        console.error('[useActiveBarathonTracking] Error starting stop timer notifications/interval:', error);
         hasStartedTimerForCurrentStopRef.current = false;
         stopDeadlineRef.current = null;
-        throw error;
       }
     }
   async function resetStopTimerAndGoBackToRoute() {

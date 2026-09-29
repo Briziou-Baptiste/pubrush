@@ -39,3 +39,26 @@ export type SearchUserResult = {
   email: string;
   is_admin: boolean;
 };
+
+export type MapFilterItem = {
+  id?: string | number;
+  key: string;
+  label: string;
+  icon?: string;
+  is_global?: boolean;
+};
+
+export type BarSearchResult = {
+  id?: string | number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  stopType?: StopType;
+  stop_type?: StopType;
+  category?: string;
+  vicinity?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  estimatedMinutes?: number;
+};

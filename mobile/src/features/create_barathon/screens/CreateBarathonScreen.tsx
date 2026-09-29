@@ -100,10 +100,6 @@ export default function CreateBarathonScreen() {
     setSubmitted(true);
 
     if (!isFormValid || !startDate || !startTime) {
-      Alert.alert(
-        'Informations manquantes',
-        'Veuillez renseigner le nom, la date, l’heure et les durées pour continuer.'
-      );
       return;
     }
 

@@ -26,7 +26,7 @@ import LocationButton from '../../home/components/LocationButton';
 import { useUserLocation } from '../../home/hooks/useUserLocation';
 import { styles as homeStyles } from '../../home/styles/home.styles';
 import { createBarathonMapStyles as styles } from '../styles/createBarathonMap.styles';
-import { StopType } from '../types/createBarathon.types';
+import { StopType, MapFilterItem, BarSearchResult } from '../types/createBarathon.types';
 import { fetchBarsSearch, fetchNearbyBars, fetchMapFilters } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
 import {
@@ -96,9 +96,9 @@ export default function CreateBarathonMapScreen() {
   } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [pointName, setPointName] = useState('');
-  const [selectedSuggestion, setSelectedSuggestion] = useState<any | null>(null);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<BarSearchResult | null>(null);
   
-  const [mapFilters, setMapFilters] = useState<any[]>([]);
+  const [mapFilters, setMapFilters] = useState<MapFilterItem[]>([]);
   const [activeFilterKey, setActiveFilterKey] = useState<string>('bar');
   const [loadingFilters, setLoadingFilters] = useState(false);
   const [selectedStopType, setSelectedStopType] = useState<StopType>('bar');
@@ -108,12 +108,13 @@ export default function CreateBarathonMapScreen() {
   useEffect(() => {
     let active = true;
 
-    async function loadAllRouteSegments() {
-      if (points.length < 2) {
-        setRouteSegments({});
-        return;
-      }
+    if (points.length < 2) {
+      setRouteSegments({});
+      return;
+    }
 
+    // Debounce parallel OSRM queries by 250ms to prevent request storms and 429 errors
+    const debounceTimer = setTimeout(async () => {
       try {
         const updated = await fetchWalkingRoutesInParallel(points, routeSegments);
         if (active) {
@@ -122,12 +123,11 @@ export default function CreateBarathonMapScreen() {
       } catch (err) {
         console.error('[CreateMap] Failed to load routes in parallel:', err);
       }
-    }
-
-    void loadAllRouteSegments();
+    }, 250);
 
     return () => {
       active = false;
+      clearTimeout(debounceTimer);
     };
   }, [points]);
 
@@ -160,10 +160,10 @@ export default function CreateBarathonMapScreen() {
     useUserLocation();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const searchTimeoutRef = useRef<any>(null);
+  const [searchResults, setSearchResults] = useState<BarSearchResult[]>([]);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<BarSearchResult[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
 
@@ -447,7 +447,7 @@ export default function CreateBarathonMapScreen() {
     const newAdditions: SelectedPoint[] = candidates.slice(0, needed).map((c) => ({
       id: `${Date.now()}-${Math.random()}`,
       name: c.name,
-      stopType: c.stopType,
+      stopType: c.stopType || c.stop_type || 'bar',
       latitude: c.latitude,
       longitude: c.longitude,
     }));

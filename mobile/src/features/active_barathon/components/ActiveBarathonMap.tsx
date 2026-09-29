@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, Polyline, Region } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +18,7 @@ type Props = {
   currentUserId?: number;
 };
 
-export default function ActiveBarathonMap({
+function ActiveBarathonMap({
   initialRegion,
   currentLocation,
   visitedPath,
@@ -279,3 +279,5 @@ export default function ActiveBarathonMap({
     </View>
   );
 }
+
+export default memo(ActiveBarathonMap);

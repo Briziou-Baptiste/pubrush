@@ -140,27 +140,28 @@ def create_barathon(
     db.add(barathon)
     db.flush()
 
-    for user_id in participant_ids:
-        role = "creator" if user_id == current_user.id else "participant"
-        db.add(
-            BarathonParticipant(
-                barathon_id=barathon.id,
-                user_id=user_id,
-                role=role,
-            )
+    participants_to_add = [
+        BarathonParticipant(
+            barathon_id=barathon.id,
+            user_id=user_id,
+            role="creator" if user_id == current_user.id else "participant",
         )
+        for user_id in participant_ids
+    ]
+    db.add_all(participants_to_add)
 
-    for stop in payload.stops:
-        db.add(
-            BarathonStop(
-                barathon_id=barathon.id,
-                name=stop.name,
-                stop_type=stop.stop_type,
-                latitude=stop.latitude,
-                longitude=stop.longitude,
-                stop_order=stop.stop_order,
-            )
+    stops_to_add = [
+        BarathonStop(
+            barathon_id=barathon.id,
+            name=stop.name,
+            stop_type=stop.stop_type,
+            latitude=stop.latitude,
+            longitude=stop.longitude,
+            stop_order=stop.stop_order,
         )
+        for stop in payload.stops
+    ]
+    db.add_all(stops_to_add)
 
     db.commit()
 
@@ -818,6 +819,21 @@ def get_barathon_roles(
     ]
 
 
+def check_is_maitre_du_trajet(barathon: Barathon, current_user: User, db: Session) -> bool:
+    if barathon.created_by_user_id == current_user.id:
+        return True
+    has_role = db.scalar(
+        select(BarathonParticipantRole)
+        .join(Role)
+        .where(
+            BarathonParticipantRole.barathon_id == barathon.id,
+            BarathonParticipantRole.user_id == current_user.id,
+            func.lower(Role.name).in_(["maître du trajet", "maitre du trajet", "capitaine"]),
+        )
+    )
+    return has_role is not None
+
+
 @router.post("/{barathon_id}/stops/{stop_id}/complete")
 async def complete_barathon_stop(
     stop_id: int,
@@ -881,6 +897,12 @@ async def advance_barathon_next_step(
     if barathon.status != "started":
         raise HTTPException(status_code=400, detail="Le barathon n'est pas en cours.")
 
+    if not check_is_maitre_du_trajet(barathon, current_user, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seul le créateur ou le Maître du trajet peut faire avancer l'étape.",
+        )
+
     stops_sorted = sorted(barathon.stops, key=lambda s: s.stop_order)
     current_stop = next((s for s in stops_sorted if not s.is_completed), None)
     if not current_stop and stops_sorted:
@@ -921,21 +943,6 @@ async def advance_barathon_next_step(
         "next_stop_index": next_index,
         "next_stop_id": next_stop.id if next_stop else None,
     }
-
-
-def check_is_maitre_du_trajet(barathon: Barathon, current_user: User, db: Session) -> bool:
-    if barathon.created_by_user_id == current_user.id:
-        return True
-    has_role = db.scalar(
-        select(BarathonParticipantRole)
-        .join(Role)
-        .where(
-            BarathonParticipantRole.barathon_id == barathon.id,
-            BarathonParticipantRole.user_id == current_user.id,
-            func.lower(Role.name).in_(["maître du trajet", "maitre du trajet", "capitaine"]),
-        )
-    )
-    return has_role is not None
 
 
 @router.post("/{barathon_id}/stops/{stop_id}/replace", response_model=ActiveBarathonRead)

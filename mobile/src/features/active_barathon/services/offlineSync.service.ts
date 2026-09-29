@@ -67,11 +67,14 @@ export async function clearCachedBarathon(): Promise<void> {
   }
 }
 
+type DistributiveOmit<T, K extends keyof any> = T extends any ? Omit<T, K> : never;
+export type OfflineActionPayload = DistributiveOmit<OfflineAction, 'id' | 'timestamp'>;
+
 /**
  * Adds an action to the offline queue when cellular network is unavailable.
  */
 export async function queueOfflineAction(
-  action: Omit<OfflineAction, 'id' | 'timestamp'>
+  action: OfflineActionPayload
 ): Promise<OfflineAction> {
   const fullAction: OfflineAction = {
     ...action,

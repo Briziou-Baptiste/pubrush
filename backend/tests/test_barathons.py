@@ -254,3 +254,47 @@ def test_remove_participant(client, user_auth_headers, user_2_auth_headers, test
     assert len(updated_barathon["participants"]) == 1
     assert updated_barathon["participants"][0]["user"]["id"] == test_user.id
 
+
+def test_advance_next_step_permissions(client, user_auth_headers, user_2_auth_headers, test_user_2):
+    # 1. Create and start a barathon
+    payload = {
+        "name": "Live Step Barathon",
+        "start_datetime": (datetime.utcnow() + timedelta(days=1)).isoformat(),
+        "end_datetime": (datetime.utcnow() + timedelta(days=1, hours=4)).isoformat(),
+        "travel_time_between_bars_minutes": 10,
+        "max_time_in_bar_minutes": 30,
+        "participant_user_ids": [test_user_2.id],
+        "stops": [
+            {
+                "name": "Bar 1",
+                "stop_type": "bar",
+                "latitude": 48.8566,
+                "longitude": 2.3522,
+                "stop_order": 1,
+            },
+            {
+                "name": "Bar 2",
+                "stop_type": "bar",
+                "latitude": 48.8570,
+                "longitude": 2.3530,
+                "stop_order": 2,
+            },
+        ],
+    }
+    create_res = client.post("/barathons", json=payload, headers=user_auth_headers)
+    barathon_id = create_res.json()["id"]
+
+    client.post(f"/barathons/{barathon_id}/start", headers=user_auth_headers)
+
+    # 2. Non-maitre du trajet (test_user_2) tries to advance step -> 403 Forbidden
+    advance_res_forbidden = client.post(f"/barathons/{barathon_id}/next-step", headers=user_2_auth_headers)
+    assert advance_res_forbidden.status_code == 403
+    assert "Seul le créateur ou le Maître du trajet" in advance_res_forbidden.json()["detail"]
+
+    # 3. Creator advances step -> 200 OK
+    advance_res_ok = client.post(f"/barathons/{barathon_id}/next-step", headers=user_auth_headers)
+    assert advance_res_ok.status_code == 200
+    assert advance_res_ok.json()["success"] is True
+    assert advance_res_ok.json()["next_stop_index"] == 1
+
+

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -19,7 +20,7 @@ type Props = {
   pendingOfflineActionsCount?: number;
 };
 
-export default function ActiveBarathonHeader({
+function ActiveBarathonHeader({
   title,
   stepLabel,
   phaseLabel,
@@ -176,3 +177,5 @@ export default function ActiveBarathonHeader({
     </View>
   );
 }
+
+export default memo(ActiveBarathonHeader);

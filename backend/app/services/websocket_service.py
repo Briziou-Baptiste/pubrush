@@ -93,10 +93,6 @@ class WebSocketService:
         # Diffuser à la room du barathon (/ws/barathons/{id})
         await ws_manager.broadcast_to_barathon(barathon_id, event)
 
-        # Diffuser également aux sockets utilisateurs (/ws/me) de chaque participant
-        for user_id in participant_ids:
-            await ws_manager.send_to_user(user_id, event)
-
     async def notify_barathon_stop_replaced(
         self,
         barathon_id: int,
@@ -126,8 +122,6 @@ class WebSocketService:
             },
         }
         await ws_manager.broadcast_to_barathon(barathon_id, event)
-        for user_id in participant_ids:
-            await ws_manager.send_to_user(user_id, event)
 
     async def notify_barathon_stop_added(
         self,
@@ -154,8 +148,6 @@ class WebSocketService:
             },
         }
         await ws_manager.broadcast_to_barathon(barathon_id, event)
-        for user_id in participant_ids:
-            await ws_manager.send_to_user(user_id, event)
 
     async def notify_participant_joined(
         self,
@@ -176,8 +168,15 @@ class WebSocketService:
             },
         }
         await ws_manager.broadcast_to_barathon(barathon_id, event)
+        refresh_event = {
+            "type": "BARATHON_LIST_REFRESH",
+            "entity": "barathon",
+            "barathon_id": barathon_id,
+            "timestamp": timestamp,
+            "payload": {},
+        }
         for user_id in participant_ids:
-            await ws_manager.send_to_user(user_id, event)
+            await ws_manager.send_to_user(user_id, refresh_event)
 
 
 websocket_service = WebSocketService()

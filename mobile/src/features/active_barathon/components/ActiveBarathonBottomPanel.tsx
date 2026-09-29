@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,7 +18,7 @@ type Props = {
   isInsideStop?: boolean;
 };
 
-export default function ActiveBarathonBottomPanel({
+function ActiveBarathonBottomPanel({
   stopName,
   stopType = 'bar',
   distanceLabel,
@@ -151,3 +152,5 @@ export default function ActiveBarathonBottomPanel({
     </View>
   );
 }
+
+export default memo(ActiveBarathonBottomPanel);

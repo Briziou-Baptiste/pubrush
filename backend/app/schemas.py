@@ -46,8 +46,8 @@ class MeResponse(BaseModel):
 class BarathonStopCreate(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     stop_type: str = Field(default="bar")
-    latitude: float
-    longitude: float
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
     stop_order: int = Field(ge=1)
 
     @field_validator("stop_type")
@@ -107,8 +107,8 @@ class BarathonCreate(BaseModel):
     end_datetime: datetime
     travel_time_between_bars_minutes: int = Field(ge=0)
     max_time_in_bar_minutes: int = Field(gt=0)
-    participant_user_ids: list[int] = Field(default_factory=list)
-    stops: list[BarathonStopCreate] = Field(default_factory=list)
+    participant_user_ids: list[int] = Field(default_factory=list, max_length=50)
+    stops: list[BarathonStopCreate] = Field(default_factory=list, max_length=50)
     partner_event_id: Optional[int] = None
 
 
@@ -134,7 +134,7 @@ class BarathonRead(BaseModel):
     }
 
 class BarathonParticipantsUpdate(BaseModel):
-    participant_user_ids: list[int] = Field(default_factory=list)
+    participant_user_ids: list[int] = Field(default_factory=list, max_length=50)
 
 class ActiveBarathonStopRead(BaseModel):
     id: int
