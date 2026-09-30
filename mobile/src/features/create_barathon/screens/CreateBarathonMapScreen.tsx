@@ -1139,8 +1139,8 @@ export default function CreateBarathonMapScreen() {
                 onPress={handleAutoGenerate}
                 activeOpacity={0.85}
               >
-                <Ionicons name="sparkles" size={12} color="#FFFFFF" />
-                <Text style={styles.magicButtonText}>🪄 Auto (4 bars)</Text>
+                <Ionicons name="sparkles" size={13} color="#FFFFFF" />
+                <Text style={styles.magicButtonText}>Auto (4 bars)</Text>
               </TouchableOpacity>
             )}
             {points.length >= 3 && (

@@ -7,6 +7,7 @@ import {
   disconnectUserSocket,
   WSMessage,
 } from '../features/active_barathon/services/webSocket.service';
+import { initializeLocationCache } from '../features/home/hooks/useUserLocation';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
 
@@ -14,6 +15,9 @@ export default function RootLayout() {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
+    // Proactive location warm-up for instant startup map display
+    void initializeLocationCache();
+
     let isMounted = true;
 
     const loadToken = async () => {

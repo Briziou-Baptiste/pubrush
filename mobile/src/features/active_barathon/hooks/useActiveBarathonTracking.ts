@@ -94,32 +94,48 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     void startLocationTracking();
 
     const appStateSub = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active' && stopDeadlineRef.current) {
-        const secondsLeft = Math.max(
-          0,
-          Math.ceil((stopDeadlineRef.current - Date.now()) / 1000)
-        );
+      if (nextAppState === 'active') {
+        // Immediate GPS fix upon unlocking the phone / returning to foreground
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
+          .then((loc) => {
+            const freshPos = {
+              latitude: loc.coords.latitude,
+              longitude: loc.coords.longitude,
+            };
+            setState((prev) => ({
+              ...prev,
+              currentLocation: freshPos,
+            }));
+          })
+          .catch(() => {});
 
-        if (secondsLeft <= 0) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
+        if (stopDeadlineRef.current) {
+          const secondsLeft = Math.max(
+            0,
+            Math.ceil((stopDeadlineRef.current - Date.now()) / 1000)
+          );
+
+          if (secondsLeft <= 0) {
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            stopDeadlineRef.current = null;
+            void cancelStopNotifications(notificationIdsRef.current);
+            setState((prev) => ({
+              ...prev,
+              remainingSeconds: 0,
+              phase: 'overtime',
+              isInsideStopRadius: true,
+            }));
+          } else {
+            setState((prev) => ({
+              ...prev,
+              remainingSeconds: secondsLeft,
+              phase: 'in_stop',
+              isInsideStopRadius: true,
+            }));
           }
-          stopDeadlineRef.current = null;
-          void cancelStopNotifications(notificationIdsRef.current);
-          setState((prev) => ({
-            ...prev,
-            remainingSeconds: 0,
-            phase: 'overtime',
-            isInsideStopRadius: true,
-          }));
-        } else {
-          setState((prev) => ({
-            ...prev,
-            remainingSeconds: secondsLeft,
-            phase: 'in_stop',
-            isInsideStopRadius: true,
-          }));
         }
       }
     });
@@ -239,7 +255,9 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
       return;
     }
 
-    const lastKnown = await Location.getLastKnownPositionAsync();
+    const lastKnown = await Location.getLastKnownPositionAsync({
+      maxAge: 60000,
+    });
     if (lastKnown) {
       const initialPosition = {
         latitude: lastKnown.coords.latitude,
@@ -256,9 +274,9 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
 
     locationSubscriptionRef.current = await Location.watchPositionAsync(
       {
-        accuracy: Location.Accuracy.Balanced,
-        timeInterval: 4000,
-        distanceInterval: 8,
+        accuracy: Location.Accuracy.High,
+        timeInterval: 2500,
+        distanceInterval: 4,
       },
       (location) => {
         const newPosition = {

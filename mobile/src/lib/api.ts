@@ -33,12 +33,44 @@ export type MeResponse = {
   is_admin: boolean;
 };
 
+let isRedirectingToLogin = false;
+
+export async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init?: RequestInit & { timeout?: number }
+): Promise<Response> {
+  const { timeout = 10000, ...fetchInit } = init || {};
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const res = await fetch(input, {
+      ...fetchInit,
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    return res;
+  } catch (err: any) {
+    clearTimeout(timer);
+    if (err?.name === 'AbortError') {
+      throw new Error('Délai d’attente réseau dépassé. Veuillez réessayer.');
+    }
+    throw err;
+  }
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (response.status === 401) {
-    await clearSession();
-    try {
-      router.replace('/login');
-    } catch {}
+    if (!isRedirectingToLogin) {
+      isRedirectingToLogin = true;
+      await clearSession();
+      try {
+        router.replace('/login');
+      } catch {}
+      setTimeout(() => {
+        isRedirectingToLogin = false;
+      }, 1500);
+    }
     throw new Error('Session expirée. Veuillez vous reconnecter.');
   }
 

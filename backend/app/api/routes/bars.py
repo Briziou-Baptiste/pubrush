@@ -261,13 +261,22 @@ def search_google_places(q: str, lat: Optional[float], lon: Optional[float], key
             if len(parts) >= 3:
                 country = parts[2]
                 
-            if filter_key:
-                stop_type = filter_key
+            types = result.get("types", [])
+            is_bar = "bar" in types or "night_club" in types
+            
+            if not is_bar and ("restaurant" in types or "cafe" in types or "food" in types):
+                computed_stop_type = "food"
             else:
-                types = result.get("types", [])
-                stop_type = "bar"
-                if "restaurant" in types or "cafe" in types or "food" in types:
-                    stop_type = "food"
+                computed_stop_type = "bar" if is_bar else "food"
+
+            if filter_key:
+                if filter_key == "bar" and not is_bar:
+                    continue
+                if filter_key == "food" and is_bar:
+                    continue
+                stop_type = filter_key if filter_key not in ["bar", "food"] else computed_stop_type
+            else:
+                stop_type = computed_stop_type
                 
             results.append(
                 BarSearchResult(
@@ -499,11 +508,34 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
             if el_lat is None or el_lon is None or not name:
                 continue
                 
+            amenity = tags.get("amenity", "")
+            
+            # Taxonomie stricte Bar vs Restaurant
+            is_bar = False
+            if amenity in ["bar", "pub", "biergarten", "taphouse"]:
+                is_bar = True
+            elif amenity in ["restaurant", "cafe", "fast_food"]:
+                # Tolérer uniquement s'il y a une activité bar / brasserie explicite
+                if (
+                    tags.get("bar") == "yes"
+                    or tags.get("brewery") in ["yes", "microbrewery"]
+                    or tags.get("drink:beer") == "yes"
+                    or tags.get("drink:alcohol") == "yes"
+                ):
+                    is_bar = True
+            elif tags.get("bar") == "yes":
+                is_bar = True
+
+            computed_stop_type = "bar" if is_bar else "food"
+
             if filter_key:
-                stop_type = filter_key
+                if filter_key == "bar" and not is_bar:
+                    continue
+                if filter_key == "food" and is_bar:
+                    continue
+                stop_type = filter_key if filter_key not in ["bar", "food"] else computed_stop_type
             else:
-                amenity = tags.get("amenity", "")
-                stop_type = "bar" if amenity in ["bar", "pub", "biergarten"] else "food"
+                stop_type = computed_stop_type
             
             street = tags.get("addr:street")
             city = tags.get("addr:city")
@@ -554,13 +586,22 @@ def search_google_nearby(lat: float, lon: float, radius: int, key: str, google_t
             if lat_val is None or lon_val is None or not result.get("name"):
                 continue
                 
-            if filter_key:
-                stop_type = filter_key
+            types = result.get("types", [])
+            is_bar = "bar" in types or "night_club" in types
+            
+            if not is_bar and ("restaurant" in types or "cafe" in types or "food" in types):
+                computed_stop_type = "food"
             else:
-                types = result.get("types", [])
-                stop_type = "bar"
-                if "restaurant" in types or "cafe" in types or "food" in types:
-                    stop_type = "food"
+                computed_stop_type = "bar" if is_bar else "food"
+
+            if filter_key:
+                if filter_key == "bar" and not is_bar:
+                    continue
+                if filter_key == "food" and is_bar:
+                    continue
+                stop_type = filter_key if filter_key not in ["bar", "food"] else computed_stop_type
+            else:
+                stop_type = computed_stop_type
                 
             vicinity = result.get("vicinity", "")
             

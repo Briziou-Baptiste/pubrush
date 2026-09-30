@@ -64,7 +64,7 @@ export async function fetchWalkingRoute(from: LatLng, to: LatLng): Promise<Route
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-    const url = `https://router.project-osrm.org/route/v1/foot/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?overview=full&geometries=geojson`;
+    const url = `https://router.project-osrm.org/route/v1/foot/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?overview=simplified&geometries=geojson`;
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
 
@@ -171,58 +171,69 @@ export function optimizeStopOrder<T extends LatLng>(stops: T[]): T[] {
     return stops;
   }
 
-  const firstStop = stops[0];
-  const remainingStops = stops.slice(1);
+  const n = stops.length;
+  // Precompute N x N distance matrix so permutations perform instant array lookups (O(1))
+  const distMatrix: number[][] = Array.from({ length: n }, () => new Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const d = getHaversineDistanceKm(stops[i], stops[j]);
+      distMatrix[i][j] = d;
+      distMatrix[j][i] = d;
+    }
+  }
 
-  // For up to 8 remaining stops (<= 40,320 permutations), use exact permutation search
-  if (remainingStops.length <= 8) {
-    let bestOrder = remainingStops;
+  const firstStop = stops[0];
+  const remainingIndices = Array.from({ length: n - 1 }, (_, k) => k + 1);
+
+  // For up to 8 remaining stops (<= 40,320 permutations), use exact permutation search with matrix lookups
+  if (remainingIndices.length <= 8) {
+    let bestIndices: number[] = remainingIndices;
     let minDistance = Infinity;
 
-    function permute(arr: T[], m: T[] = []) {
+    function permute(arr: number[], m: number[] = []) {
       if (arr.length === 0) {
-        const fullCandidate = [firstStop, ...m];
-        let totalDist = 0;
-        for (let i = 0; i < fullCandidate.length - 1; i++) {
-          totalDist += getHaversineDistanceKm(fullCandidate[i], fullCandidate[i + 1]);
+        let totalDist = distMatrix[0][m[0]];
+        for (let i = 0; i < m.length - 1; i++) {
+          totalDist += distMatrix[m[i]][m[i + 1]];
         }
         if (totalDist < minDistance) {
           minDistance = totalDist;
-          bestOrder = m;
+          bestIndices = m;
         }
       } else {
         for (let i = 0; i < arr.length; i++) {
           const curr = arr.slice();
           const next = curr.splice(i, 1);
-          permute(curr.slice(), m.concat(next));
+          permute(curr, m.concat(next));
         }
       }
     }
 
-    permute(remainingStops);
-    return [firstStop, ...bestOrder];
+    permute(remainingIndices);
+    return [firstStop, ...bestIndices.map((idx) => stops[idx])];
   }
 
-  // Nearest neighbor heuristic for larger lists
-  const unvisited = [...remainingStops];
-  const result = [firstStop];
-  let current = firstStop;
+  // Nearest neighbor heuristic for larger lists using distance matrix
+  const unvisited = [...remainingIndices];
+  const resultIndices = [0];
+  let currentIdx = 0;
 
   while (unvisited.length > 0) {
-    let nearestIndex = 0;
+    let nearestPos = 0;
     let nearestDist = Infinity;
 
     for (let i = 0; i < unvisited.length; i++) {
-      const dist = getHaversineDistanceKm(current, unvisited[i]);
+      const targetIdx = unvisited[i];
+      const dist = distMatrix[currentIdx][targetIdx];
       if (dist < nearestDist) {
         nearestDist = dist;
-        nearestIndex = i;
+        nearestPos = i;
       }
     }
 
-    current = unvisited.splice(nearestIndex, 1)[0];
-    result.push(current);
+    currentIdx = unvisited.splice(nearestPos, 1)[0];
+    resultIndices.push(currentIdx);
   }
 
-  return result;
+  return resultIndices.map((idx) => stops[idx]);
 }
