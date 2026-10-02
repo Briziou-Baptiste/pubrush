@@ -22,7 +22,7 @@ from app.core.rate_limiter import InMemoryRateLimiter
 from app.api.deps.auth import get_current_user
 from app.db import get_db
 from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, Barathon, BarathonParticipant, BarathonStop, PartnerEvent, MapFilter, EventTicket, PartnerEventUser, PartnerEventSpot, AppUsageLog
-from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse, PartnerEventRead, MapFilterRead, PartnerEventSpotRead, PartnerEventSpotCreate
+from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, UserPublicRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse, PartnerEventRead, MapFilterRead, PartnerEventSpotRead, PartnerEventSpotCreate
 from app.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.services.email_service import send_reset_code_email
 
@@ -128,7 +128,7 @@ def check_username(username: str, db: Session = Depends(get_db)):
 
 @app.post("/login", response_model=TokenResponse, dependencies=[Depends(auth_limiter)])
 def login(payload: UserLogin, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.email == payload.email))
+    user = db.scalar(select(User).where(func.lower(User.email) == func.lower(payload.email)))
 
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
@@ -170,7 +170,7 @@ def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@app.get("/users/search", response_model=list[UserRead])
+@app.get("/users/search", response_model=list[UserPublicRead])
 def search_users(
     q: str,
     db: Session = Depends(get_db),
@@ -223,8 +223,7 @@ def request_password_reset(payload: PasswordResetRequest, db: Session = Depends(
 def confirm_password_reset(payload: PasswordResetConfirm, db: Session = Depends(get_db)):
     token_entry = db.scalar(
         select(PasswordResetToken).where(
-            PasswordResetToken.email == payload.email,
-            PasswordResetToken.token == payload.code
+            func.lower(PasswordResetToken.email) == func.lower(payload.email)
         )
     )
 
@@ -243,7 +242,22 @@ def confirm_password_reset(payload: PasswordResetConfirm, db: Session = Depends(
             detail="Le code de réinitialisation a expiré."
         )
 
-    user = db.scalar(select(User).where(User.email == payload.email))
+    if token_entry.token != payload.code:
+        token_entry.attempts = getattr(token_entry, "attempts", 0) + 1
+        if token_entry.attempts >= 5:
+            db.delete(token_entry)
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Nombre maximal de tentatives atteint. Veuillez demander un nouveau code."
+            )
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le code de réinitialisation est incorrect."
+        )
+
+    user = db.scalar(select(User).where(func.lower(User.email) == func.lower(payload.email)))
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

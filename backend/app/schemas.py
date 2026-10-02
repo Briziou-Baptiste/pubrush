@@ -8,10 +8,30 @@ class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=8, max_length=128)
 
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        clean = value.strip()
+        if len(clean) < 3:
+            raise ValueError("Le nom d'utilisateur doit contenir au moins 3 caractères.")
+        if any(char in clean for char in "<>\"'/\\;"):
+            raise ValueError("Le nom d'utilisateur contient des caractères non autorisés.")
+        return clean
+
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserPublicRead(BaseModel):
+    id: int
+    username: str
+    is_guest: bool = False
+
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class UserRead(BaseModel):
@@ -94,7 +114,7 @@ class UpdateBarathonStartDatetime(BaseModel):
 class BarathonParticipantRead(BaseModel):
     id: int
     role: str
-    user: UserRead
+    user: UserPublicRead
 
     model_config = {
         "from_attributes": True
@@ -178,7 +198,7 @@ class RoleRead(BaseModel):
 class BarathonParticipantWithUserRead(BaseModel):
     id: int
     role: str
-    user: UserRead
+    user: UserPublicRead
 
     model_config = {
         "from_attributes": True
@@ -193,7 +213,7 @@ class AssignBarathonRolesPayload(BaseModel):
 class BarathonParticipantRoleRead(BaseModel):
     id: int
     assigned_at: datetime
-    user: UserRead
+    user: UserPublicRead
     role: RoleRead
 
     model_config = {

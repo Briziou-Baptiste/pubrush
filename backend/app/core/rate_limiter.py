@@ -17,12 +17,19 @@ class InMemoryRateLimiter:
         self.requests: dict[str, deque[float]] = defaultdict(deque)
 
     def _get_client_identifier(self, request: Request) -> str:
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-        if request.client:
-            return request.client.host
-        return "127.0.0.1"
+        client_host = request.client.host if request.client else "127.0.0.1"
+
+        # Only trust X-Forwarded-For if client_host is loopback, internal test client, or explicitly configured trusted proxy
+        trusted_proxies_env = os.getenv("TRUSTED_PROXIES", "")
+        trusted_proxies = {p.strip() for p in trusted_proxies_env.split(",") if p.strip()}
+        is_trusted = client_host in ("127.0.0.1", "::1", "testclient") or client_host in trusted_proxies
+
+        if is_trusted:
+            forwarded = request.headers.get("X-Forwarded-For")
+            if forwarded:
+                return forwarded.split(",")[0].strip()
+
+        return client_host
 
     async def __call__(self, request: Request):
         # Skip rate limiting in test environments if requested

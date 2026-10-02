@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from '../styles/profile.styles';
@@ -161,6 +162,31 @@ export default function ProfileScreen() {
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#C7C7CC" />
               </TouchableOpacity>
+
+              {/* Separator */}
+              <View style={styles.menuSeparator} />
+
+              {/* Button 4: Legal & Privacy */}
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => void WebBrowser.openBrowserAsync('https://pubrush.com/privacy')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuLeft}>
+                  <View style={[styles.iconBadge, { backgroundColor: '#6366F1' }]}>
+                    <Ionicons name="shield-checkmark" size={16} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.menuText}>Confidentialité & Conditions</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#C7C7CC" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Health & Alcohol Prevention Notice */}
+            <View style={{ marginTop: 24, paddingHorizontal: 16, alignItems: 'center' }}>
+              <Text style={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16 }}>
+                L'abus d'alcool est dangereux pour la santé, à consommer avec modération.
+              </Text>
             </View>
           </>
         )}

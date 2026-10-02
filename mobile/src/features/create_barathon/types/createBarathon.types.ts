@@ -36,8 +36,8 @@ export type CreateBarathonRecapStop = {
 export type SearchUserResult = {
   id: number;
   username: string;
-  email: string;
-  is_admin: boolean;
+  email?: string;
+  is_admin?: boolean;
 };
 
 export type MapFilterItem = {

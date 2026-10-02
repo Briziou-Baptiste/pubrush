@@ -1,4 +1,5 @@
 import { Link, router } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -53,6 +54,14 @@ export default function RegisterScreen() {
 
     return () => clearTimeout(delayDebounceId);
   }, [normalizedUsername]);
+
+  const openTerms = () => {
+    void WebBrowser.openBrowserAsync('https://pubrush.com/terms');
+  };
+
+  const openPrivacy = () => {
+    void WebBrowser.openBrowserAsync('https://pubrush.com/privacy');
+  };
 
   async function handleRegister() {
     if (!emailIsValid) {
@@ -204,6 +213,20 @@ export default function RegisterScreen() {
                     Le mot de passe doit contenir au moins 8 caractères.
                   </Text>
                 ) : null}
+              </View>
+
+              <View style={styles.legalNotice}>
+                <Text style={styles.legalText}>
+                  En créant un compte, vous confirmez avoir au moins 18 ans et acceptez nos{' '}
+                  <Text style={styles.legalLink} onPress={openTerms}>
+                    CGU
+                  </Text>{' '}
+                  ainsi que notre{' '}
+                  <Text style={styles.legalLink} onPress={openPrivacy}>
+                    Politique de Confidentialité
+                  </Text>
+                  .
+                </Text>
               </View>
 
               <TouchableOpacity

@@ -120,4 +120,20 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2563EB',
   },
+  legalNotice: {
+    marginTop: 14,
+    marginBottom: 4,
+    paddingHorizontal: 4,
+  },
+  legalText: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  legalLink: {
+    color: '#2563EB',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
 });

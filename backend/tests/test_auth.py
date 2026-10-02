@@ -310,3 +310,71 @@ def test_check_username(client, test_user):
     res = client.get("/check-username?username=ab")
     assert res.status_code == 200
     assert res.json()["available"] is False
+
+
+def test_login_email_case_insensitive(client, test_user):
+    # Test login with upper case email
+    payload = {
+        "email": test_user.email.upper(),
+        "password": "password123",
+    }
+    res = client.post("/login", json=payload)
+    assert res.status_code == 200
+    assert "access_token" in res.json()
+
+
+def test_search_users_does_not_leak_emails(client, user_auth_headers, test_user_2):
+    # Search users and verify that private email addresses are NOT returned
+    res = client.get("/users/search?q=test", headers=user_auth_headers)
+    assert res.status_code == 200
+    users = res.json()
+    assert len(users) > 0
+    for u in users:
+        assert "email" not in u
+        assert "username" in u
+        assert "id" in u
+
+
+def test_forgot_password_max_attempts_burns_token(client, test_user, db_session):
+    from unittest.mock import patch
+    from sqlalchemy import select
+    from app.models import PasswordResetToken
+
+    with patch("app.main.send_reset_code_email", return_value=True):
+        # 1. Request reset
+        res = client.post("/forgot-password/request", json={"email": test_user.email})
+        assert res.status_code == 200
+
+        # 2. Submit wrong code 5 times
+        for i in range(4):
+            fail_res = client.post(
+                "/forgot-password/reset",
+                json={"email": test_user.email, "code": "000000", "new_password": "NewPassword123!"}
+            )
+            assert fail_res.status_code == 400
+            assert "incorrect" in fail_res.json()["detail"]
+
+        # 5th failed attempt should burn the token
+        final_fail = client.post(
+            "/forgot-password/reset",
+            json={"email": test_user.email, "code": "000000", "new_password": "NewPassword123!"}
+        )
+        assert final_fail.status_code == 400
+        assert "Nombre maximal de tentatives atteint" in final_fail.json()["detail"]
+
+        # Verify token was purged from DB
+        token = db_session.scalar(
+            select(PasswordResetToken).where(PasswordResetToken.email == test_user.email)
+        )
+        assert token is None
+
+
+def test_register_username_rejects_malicious_characters(client):
+    payload = {
+        "email": "malicious@test.com",
+        "username": "<script>alert(1)</script>",
+        "password": "securepassword123",
+    }
+    res = client.post("/register", json=payload)
+    assert res.status_code == 422
+
