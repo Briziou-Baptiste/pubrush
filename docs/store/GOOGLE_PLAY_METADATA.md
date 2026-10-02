@@ -13,9 +13,10 @@ Create, track, and share your epic barathons with friends! PubRush is the ultima
 Créez, suivez et partagez vos barathons épiques avec vos amis ! PubRush est l'application ultime pour vos soirées. Suivez votre progression sur la carte, gérez vos dépenses et voyez où sont vos amis en temps réel. Consommez avec modération !
 
 ## Google Play Console Configurations
-- **Content Rating**: 18+ (Alcohol references)
+- **Content Rating**: 18+ (Alcohol references, IARC questionnaire)
 - **Data Safety**:
-  - Location: Precise Location (Collected, Shared for app functionality)
-  - Personal Info: Email Address (Collected for account management)
-  - Data is encrypted in transit.
-  - Users can request data deletion.
+  - Location: Approximate & Precise Location (Collected while in use / Foreground, Shared among group participants during an active event)
+  - Personal Info: Email Address, User IDs (Account creation & management)
+  - Data is encrypted in transit (HTTPS / TLS).
+  - Data Deletion URL (Mandatory for Google Play Console): `https://pubrush.com/delete-account` (or `privacy@pubrush.app` contact page)
+  - Users can request account and data deletion directly in-app via Profile -> Gérer mon profil -> Supprimer mon compte.

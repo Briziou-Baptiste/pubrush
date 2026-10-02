@@ -7,7 +7,7 @@ Welcome to PubRush. We value your privacy and are committed to protecting your p
 
 ### 2. Data Collection
 - **Account Data**: We collect email addresses, usernames, and passwords to create and manage your account.
-- **Geolocation**: We collect foreground and background location data to enable features like tracking your progress during a barathon, geofencing for stops, and sharing your location with friends in real-time. Background location is only active during an active barathon.
+- **Geolocation**: We collect foreground location data while the application is in use to enable real-time features like tracking your progress during a barathon, displaying nearby bars, and sharing your position with friends in your group. Location tracking is never executed in the background when the app is closed.
 
 ### 3. Data Storage and Retention
 Your data is stored securely on our servers. We retain account data as long as your account is active. Location data from barathons is aggregated and anonymized after the event.
@@ -30,7 +30,7 @@ Bienvenue sur PubRush. Nous accordons une grande importance à votre vie privée
 
 ### 2. Collecte des Données
 - **Données de compte** : Nous collectons les adresses e-mail, les noms d'utilisateur et les mots de passe.
-- **Géolocalisation** : Nous collectons les données de localisation au premier plan et en arrière-plan (foreground & background) pour le suivi de votre progression, le geofencing, et le partage en temps réel. La localisation en arrière-plan n'est active que pendant un barathon.
+- **Géolocalisation** : Nous collectons les données de localisation au premier plan (lorsque l'application est active) pour le calcul d'itinéraires pédestres, l'affichage des bars autour de vous et le partage de position entre amis pendant un barathon. Aucun suivi de géolocalisation n'est effectué en arrière-plan lorsque l'application est fermée.
 
 ### 3. Stockage et Rétention
 Vos données sont stockées de manière sécurisée. Nous conservons vos données tant que votre compte est actif. Les données de localisation des barathons sont anonymisées après l'événement.
