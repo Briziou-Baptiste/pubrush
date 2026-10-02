@@ -505,7 +505,7 @@ export default function BarathonStopSummaryScreen() {
               return;
             }
 
-            // cas par défaut (ex: active)
+            // default case (e.g. active)
             router.replace('/home');
           }}
         >

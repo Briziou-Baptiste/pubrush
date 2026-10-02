@@ -218,14 +218,14 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
         phase: state.phase,
       });
 
-      // Entrée dans la zone du bar : on démarre uniquement si le timer n'a pas déjà été lancé
+      // Enter the bar zone: start only if the timer hasn't been started yet
       if (!hasStarted && distance <= ENTER_RADIUS_METERS) {
         consecutiveExitCountRef.current = 0;
         void startStopTimer();
         return;
       }
 
-      // Sortie de la zone du bar : hystérésis pour éviter qu'un décrochage GPS indoor n'annule le chrono
+      // Leave the bar zone: hysteresis to prevent an indoor GPS drop from cancelling the timer
       if (hasStarted && !isOvertime) {
         if (distance >= EXIT_RADIUS_METERS) {
           consecutiveExitCountRef.current += 1;

@@ -3,7 +3,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
-# Charger les variables d'environnement
+# Load environment variables
 load_dotenv()
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
@@ -213,7 +213,7 @@ def request_password_reset(payload: PasswordResetRequest, db: Session = Depends(
         db.add(token_entry)
         db.commit()
 
-        # Envoi du mail réel
+        # Send real email
         send_reset_code_email(payload.email, code)
 
     return {"message": "Si un compte est associé à cette adresse email, un code de réinitialisation a été envoyé."}

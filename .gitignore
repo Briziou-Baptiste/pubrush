@@ -3,32 +3,27 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Virtual env & local envs
+.pytest_cache/
+.coverage
+coverage/
 venv/
 .venv/
+
+# Environment
 .env
 .env*
 .env.*
+!*.example
 
-# Alembic
-alembic/versions/*.pyc
-
-# OS / IDEs
+# OS
 .DS_Store
 .vscode/
 .idea/
 
-# Logs & caches
+# Logs
 *.log
-.pytest_cache/
-.coverage
-coverage/
 
-# Fichiers accidentels lies a des serveurs
-root@*
-
-# Node / Frontend / Mobile
+# Node / Expo / Next
 node_modules/
 .expo/
 .next/
@@ -38,7 +33,10 @@ web/.next/
 web/node_modules/
 mobile/node_modules/
 
-# Kubernetes Secrets (autorise les templates)
+# Alembic
+alembic/versions/*.pyc
+
+# K8s secrets
 *secrets.yaml
 !*secrets.template.yaml
 *.secret.yaml

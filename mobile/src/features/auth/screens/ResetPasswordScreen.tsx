@@ -110,7 +110,7 @@ export default function ResetPasswordScreen() {
                   value={email}
                   onChangeText={setEmail}
                   style={styles.input}
-                  editable={!initialEmail} // Si l'email vient du paramètre de route, on bloque l'édition pour plus de simplicité
+                  editable={!initialEmail} // If email comes from route params, disable editing for simplicity
                 />
               </View>
 

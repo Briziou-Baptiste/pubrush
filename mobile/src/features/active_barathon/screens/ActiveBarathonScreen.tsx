@@ -425,7 +425,7 @@ export default function ActiveBarathonScreen() {
     }
 
     try {
-      // 1. Notifier le backend qui diffuse via WebSocket à tous les autres participants
+      // 1. Notify the backend which broadcasts via WebSocket to all other participants
       await advanceBarathonNextStep(barathon.id);
     } catch (error) {
       console.warn('[handleNextStep] Network error, queuing action for offline sync:', error);

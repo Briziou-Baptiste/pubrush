@@ -1228,7 +1228,7 @@ async def join_barathon_as_guest(
             detail="Le pseudo ne peut pas être vide.",
         )
 
-    # Vérifier si l'utilisateur existe déjà dans ce barathon avec ce pseudo
+    # Check if the user already exists in this barathon with this username
     existing_participant = next(
         (p for p in barathon.participants if p.user and p.user.username.lower() == clean_username.lower()),
         None,
@@ -1238,7 +1238,7 @@ async def join_barathon_as_guest(
         # Re-connexion transparente de l'invité existant
         guest_user = existing_participant.user
     else:
-        # Si le nom est déjà pris dans l'application par un autre utilisateur, ajouter un suffixe court
+        # If the name is already taken by another user, add a short suffix
         final_username = clean_username
         user_with_name = db.scalar(select(User).where(func.lower(User.username) == clean_username.lower()))
         if user_with_name:
@@ -1267,7 +1267,7 @@ async def join_barathon_as_guest(
         db.commit()
         db.refresh(barathon)
 
-        # Diffuser la notification WebSocket à la room
+        # Broadcast WebSocket notification to the room
         participant_ids = [p.user_id for p in barathon.participants if p.user_id != guest_user.id]
         await websocket_service.notify_participant_joined(
             barathon_id=barathon.id,

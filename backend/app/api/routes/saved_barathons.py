@@ -17,14 +17,14 @@ def save_past_barathon(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Vérifier que le barathon est bien dans un statut passé
+    # Check that the barathon is in a past status
     if barathon.status not in ["completed", "stopped", "failed"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Seuls les barathons passés (terminés, arrêtés ou échoués) peuvent être enregistrés."
         )
 
-    # Créer le barathon enregistré
+    # Create the saved barathon
     saved = SavedBarathon(
         user_id=current_user.id,
         name=payload.name,
@@ -45,7 +45,7 @@ def save_past_barathon(
     db.commit()
     db.refresh(saved)
 
-    # Recharger avec les stops ordonnés
+    # Reload with ordered stops
     query = (
         select(SavedBarathon)
         .options(selectinload(SavedBarathon.stops))

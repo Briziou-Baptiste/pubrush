@@ -52,7 +52,7 @@ class WebSocketService:
             },
         }
 
-        # Pour les écrans détail connectés au canal du barathon
+        # For detail screens connected to the barathon channel
         await ws_manager.broadcast_to_barathon(barathon_id, event)
 
         refresh_event = {
@@ -90,7 +90,7 @@ class WebSocketService:
             },
         }
 
-        # Diffuser à la room du barathon (/ws/barathons/{id})
+        # Broadcast to the barathon room (/ws/barathons/{id})
         await ws_manager.broadcast_to_barathon(barathon_id, event)
 
     async def notify_barathon_stop_replaced(

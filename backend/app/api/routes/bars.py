@@ -510,12 +510,12 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
                 
             amenity = tags.get("amenity", "")
             
-            # Taxonomie stricte Bar vs Restaurant
+            # Strict Bar vs Restaurant taxonomy
             is_bar = False
             if amenity in ["bar", "pub", "biergarten", "taphouse"]:
                 is_bar = True
             elif amenity in ["restaurant", "cafe", "fast_food"]:
-                # Tolérer uniquement s'il y a une activité bar / brasserie explicite
+                # Tolerate only if there is explicit bar/brewery activity
                 if (
                     tags.get("bar") == "yes"
                     or tags.get("brewery") in ["yes", "microbrewery"]

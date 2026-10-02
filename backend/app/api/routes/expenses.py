@@ -16,7 +16,7 @@ def create_expense(
     barathon: Barathon = Depends(get_barathon_with_access),
     db: Session = Depends(get_db),
 ):
-    # 1. Vérifier si le barathon est actif ou passé
+    # 1. Check if the barathon is active or past
     if barathon.status not in ["started", "completed", "stopped"]:
         raise HTTPException(
             status_code=400,
@@ -25,14 +25,14 @@ def create_expense(
 
     participant_ids = {p.user_id for p in barathon.participants}
 
-    # 4. Vérifier que le payeur fait partie des participants
+    # 4. Check that the payer is part of the participants
     if payload.payer_user_id not in participant_ids:
         raise HTTPException(
             status_code=400,
             detail="Le payeur doit faire partie des participants du barathon."
         )
 
-    # 5. Vérifier que tous les bénéficiaires font partie des participants
+    # 5. Check that all beneficiaries are part of the participants
     invalid_beneficiary_ids = set(payload.beneficiary_user_ids) - participant_ids
     if invalid_beneficiary_ids:
         raise HTTPException(
@@ -40,7 +40,7 @@ def create_expense(
             detail=f"Certains bénéficiaires ne participent pas au barathon: {sorted(list(invalid_beneficiary_ids))}"
         )
 
-    # 6. Créer la dépense
+    # 6. Create the expense
     expense = BarathonExpense(
         barathon_id=barathon.id,
         payer_user_id=payload.payer_user_id,
@@ -49,9 +49,9 @@ def create_expense(
         is_refund=payload.is_refund,
     )
     db.add(expense)
-    db.flush() # Récupérer l'id de la dépense
+    db.flush() # Retrieve the expense ID
 
-    # 7. Ajouter les bénéficiaires
+    # 7. Add beneficiaries
     for user_id in payload.beneficiary_user_ids:
         db.add(
             BarathonExpenseBeneficiary(
@@ -62,7 +62,7 @@ def create_expense(
 
     db.commit()
 
-    # 8. Charger la dépense créée avec les relations requises
+    # 8. Load the created expense with the required relationships
     created_expense = db.scalar(
         select(BarathonExpense)
         .options(
@@ -89,7 +89,7 @@ def get_expenses_and_balances(
     barathon: Barathon = Depends(get_barathon_with_access),
     db: Session = Depends(get_db),
 ):
-    # Charger toutes les dépenses associées au barathon
+    # Load all expenses associated with the barathon
     expenses = db.scalars(
         select(BarathonExpense)
         .options(
@@ -99,7 +99,7 @@ def get_expenses_and_balances(
         .where(BarathonExpense.barathon_id == barathon.id)
     ).all()
 
-    # 3. Préparer le dictionnaire des balances pour tous les participants
+    # 3. Prepare the balances dictionary for all participants
     balances_dict = {}
     for p in barathon.participants:
         balances_dict[p.user_id] = {
@@ -109,7 +109,7 @@ def get_expenses_and_balances(
             "debt_amount": 0.0,
         }
 
-    # 4. Parcourir toutes les dépenses pour calculer les soldes de chacun
+    # 4. Loop through all expenses to calculate balances for each
     formatted_expenses = []
     for exp in expenses:
         payer_id = exp.payer_user_id
@@ -117,11 +117,11 @@ def get_expenses_and_balances(
         beneficiaries_ids = [b.user_id for b in exp.beneficiaries]
         num_beneficiaries = len(beneficiaries_ids)
 
-        # Ajouter au total payé du payeur (s'il est toujours dans les participants)
+        # Add to the payer's total paid (if still in participants)
         if payer_id in balances_dict:
             balances_dict[payer_id]["paid_amount"] += amount
 
-        # Répartir la dette entre les bénéficiaires
+        # Distribute the debt among beneficiaries
         if num_beneficiaries > 0:
             share = amount / num_beneficiaries
             for b_id in beneficiaries_ids:
@@ -139,7 +139,7 @@ def get_expenses_and_balances(
             "is_refund": exp.is_refund,
         })
 
-    # 5. Formater la liste des balances finales
+    # 5. Format the list of final balances
     balances_list = []
     for u_id, bal in balances_dict.items():
         paid = bal["paid_amount"]
@@ -154,7 +154,7 @@ def get_expenses_and_balances(
             )
         )
 
-    # Trier la liste pour avoir les créanciers en premier, puis ordre alphabétique
+    # Sort the list to have creditors first, then alphabetically
     balances_list.sort(key=lambda x: (-x.balance, x.username))
 
     return {

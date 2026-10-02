@@ -234,7 +234,7 @@ export default function BarathonRecapScreen() {
       setCurrentUser(user);
     }
 
-    // Charger les dépenses et les compensations
+    // Load expenses and compensations
     if (data.status === 'started' || data.status === 'completed') {
       try {
         const token = await getAccessToken();
