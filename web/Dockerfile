@@ -3,8 +3,8 @@
 # Image ultra-légère (<180Mo) et sécurisée (non-root)
 # ==============================================================================
 
-# --- Étape 1 : Image de base Alpine ---
-FROM node:20-alpine AS base
+# --- Étape 1 : Image de base Alpine sécurisée & patchée ---
+FROM node:22.23.4-alpine AS base
 WORKDIR /app
 # Dépendances système Alpine et certificats racine à jour
 RUN apk add --no-cache libc6-compat ca-certificates
@@ -25,8 +25,8 @@ ENV NODE_ENV=production
 
 RUN npm run build
 
-# --- Étape 4 : Image d'exécution de production (Runner minimal) ---
-FROM node:20-alpine AS runner
+# --- Étape 4 : Image d'exécution de production (Runner minimal sécurisé) ---
+FROM node:22.23.4-alpine AS runner
 WORKDIR /app
 
 # Certificats racine à jour pour les requêtes TLS sécurisées

@@ -1,3 +1,5 @@
+import { safeJsonParse } from '../../lib/safeJson';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.pubrush.com';
 
 function getHeaders() {
@@ -18,12 +20,14 @@ export async function request(path: string, options: RequestInit = {}) {
     },
   });
 
+  const rawText = await response.text().catch(() => '');
+  const data = rawText ? safeJsonParse<any>(rawText, {}) : {};
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    throw new Error(data.detail || `HTTP error! status: ${response.status}`);
   }
 
-  return response.json();
+  return data;
 }
 
 export const api = {

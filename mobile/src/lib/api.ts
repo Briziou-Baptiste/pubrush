@@ -7,6 +7,7 @@
 
 import { router } from 'expo-router';
 import { clearSession } from './authStorage';
+import { safeJsonParse } from './safeJson';
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.pubrush.com';
 
@@ -74,7 +75,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
     throw new Error('Session expirée. Veuillez vous reconnecter.');
   }
 
-  const data = await response.json().catch(() => null);
+  const rawText = await response.text().catch(() => '');
+  const data = rawText ? safeJsonParse<any>(rawText, null) : null;
 
   if (!response.ok) {
     const message =
@@ -111,11 +113,7 @@ export async function loginUser(payload: { email: string; password: string }) {
   const rawText = await response.text();
 
   let data: any = {};
-  try {
-    data = rawText ? JSON.parse(rawText) : {};
-  } catch {
-    data = { detail: rawText };
-  }
+  data = rawText ? safeJsonParse(rawText, { detail: rawText }) : {};
 
   if (!response.ok) {
     throw new Error(
