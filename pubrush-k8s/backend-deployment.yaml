@@ -2,8 +2,16 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pubrush-backend
+  namespace: default
+  labels:
+    app: pubrush-backend
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: pubrush-backend
@@ -12,12 +20,20 @@ spec:
       labels:
         app: pubrush-backend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       initContainers:
       - name: migration
         image: baptistebriziou/pubrush-backend:latest
+        imagePullPolicy: Always
         command: ["sh", "-c", "alembic upgrade head"]
         env: &backend-env
-        # 1. On récupère d'abord les briques unitaires
+        # 1. Variables de configuration base de données
         - name: _DB_USER
           valueFrom:
             configMapKeyRef:
@@ -28,15 +44,20 @@ spec:
             configMapKeyRef:
               name: pubrush-config
               key: DB_NAME
+        - name: _DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: DB_PORT
         - name: _DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: pubrush-secrets
               key: DB_PASSWORD
-        # 2. On reconstruit l'URL dynamiquement comme dans ton compose
+        # 2. Construction dynamique de l'URL psycopg v3
         - name: DATABASE_URL
-          value: "postgresql+psycopg://$(_DB_USER):$(_DB_PASSWORD)@db:5432/$(_DB_NAME)"
-        # 3. Récupération des variables SMTP
+          value: "postgresql+psycopg://$(_DB_USER):$(_DB_PASSWORD)@db:$(_DB_PORT)/$(_DB_NAME)"
+        # 3. Variables SMTP
         - name: SMTP_HOST
           valueFrom:
             configMapKeyRef:
@@ -62,7 +83,7 @@ spec:
             secretKeyRef:
               name: pubrush-secrets
               key: SMTP_PASSWORD
-        # 4. JWT Secret Key et environnement
+        # 4. Sécurité JWT et Environnement
         - name: JWT_SECRET_KEY
           valueFrom:
             secretKeyRef:
@@ -70,45 +91,85 @@ spec:
               key: JWT_SECRET_KEY
         - name: ENVIRONMENT
           value: "production"
-      containers:
-      - name: backend
-        image: baptistebriziou/pubrush-backend:latest
-        command: ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000"]
-        ports:
-        - containerPort: 8000
-        env: *backend-env
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 10
         resources:
           requests:
             cpu: 100m
             memory: 128Mi
           limits:
             cpu: 500m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-volume
+      containers:
+      - name: backend
+        image: baptistebriziou/pubrush-backend:latest
+        imagePullPolicy: Always
+        command: ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
+        ports:
+        - containerPort: 8000
+          name: http
+        env: *backend-env
+        # Startup Probe : absorbe le démarrage à froid sans déclencher d'alerte liveness
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 2
+          periodSeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 20 # 60s max
+        # Liveness Probe : redémarre le conteneur en cas de blocage d'event loop
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 15
+          timeoutSeconds: 2
+          failureThreshold: 3
+        # Readiness Probe : coupe le trafic si le pod est saturé ou indisponible
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 2
+        resources:
+          requests:
+            cpu: 150m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
             memory: 512Mi
         securityContext:
           allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: 10000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-volume
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-service # C'est le nom exact attendu par ton fichier ingress.yaml
+  name: backend-service
+  namespace: default
 spec:
   selector:
-    app: pubrush-backend # Dit au service de cibler ton conteneur FastAPI
+    app: pubrush-backend
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8000
+  - protocol: TCP
+    port: 80
+    targetPort: 8000

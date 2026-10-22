@@ -12,7 +12,10 @@ import {
   LogOut, 
   Shield, 
   Smartphone,
-  Calendar
+  Calendar,
+  AlertTriangle,
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { api } from "../admin/api";
 import styles from "./profile.module.css";
@@ -24,6 +27,12 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
+
+  // Deletion modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmChecked, setConfirmChecked] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -53,6 +62,18 @@ export default function UserProfile() {
   const handleLogout = () => {
     api.logout();
     router.push("/login");
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await api.deleteAccount();
+      router.push("/");
+    } catch (err: any) {
+      setIsDeleting(false);
+      setDeleteError(err.message || "Une erreur est survenue lors de la suppression de votre compte.");
+    }
   };
 
   if (loading) {
@@ -168,6 +189,42 @@ export default function UserProfile() {
                   Ouvrir l'application mobile PubRush
                 </a>
               </div>
+
+              {/* Danger Zone / Actions sensibles */}
+              <div className={styles.dangerCard}>
+                <div className={styles.dangerHeader}>
+                  <div className={styles.dangerIconBox}>
+                    <AlertTriangle className="w-5 h-5 text-rose-500" />
+                  </div>
+                  <div>
+                    <h3 className={styles.dangerTitle}>Zone de danger</h3>
+                    <p className={styles.dangerDesc}>
+                      Actions sensibles et irréversibles relatives à votre compte PubRush.
+                    </p>
+                  </div>
+                </div>
+
+                <div className={styles.dangerAction}>
+                  <div>
+                    <p className={styles.dangerActionTitle}>Supprimer mon compte</p>
+                    <p className={styles.dangerActionSubtitle}>
+                      Efface immédiatement et définitivement toutes vos données personnelles, barathons et participations (RGPD).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDeleteModal(true);
+                      setDeleteError(null);
+                      setConfirmChecked(false);
+                    }}
+                    className={styles.deleteAccountBtn}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Supprimer mon compte
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Right: Stats Card */}
@@ -196,6 +253,91 @@ export default function UserProfile() {
 
         </div>
       </main>
+
+      {/* Confirmation Modal */}
+      {showDeleteModal && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <div 
+            className={styles.modalBackdrop} 
+            onClick={() => !isDeleting && setShowDeleteModal(false)} 
+          />
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalIconBox}>
+                <AlertTriangle className="w-6 h-6 text-rose-500" />
+              </div>
+              <div>
+                <h3 id="modal-title" className={styles.modalTitle}>Supprimer définitivement le compte ?</h3>
+                <p className={styles.modalSubtitle}>Cette action est immédiate et irréversible.</p>
+              </div>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p className={styles.modalText}>
+                Êtes-vous sûr de vouloir supprimer le compte de <strong className="text-white">@{user?.username}</strong> ({user?.email}) ?
+              </p>
+
+              <div className={styles.modalWarningBox}>
+                <p className={styles.modalWarningTitle}>Conséquences immédiates :</p>
+                <ul className={styles.modalWarningList}>
+                  <li>Suppression irréversible de votre compte et identifiants de connexion</li>
+                  <li>Suppression de l'ensemble de vos barathons créés et participations</li>
+                  <li>Effacement complet de votre historique de dépenses et statistiques</li>
+                  <li>Déconnexion immédiate conformément au RGPD</li>
+                </ul>
+              </div>
+
+              {deleteError && (
+                <div className={styles.modalError}>
+                  {deleteError}
+                </div>
+              )}
+
+              <label className={styles.confirmCheckboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={confirmChecked}
+                  onChange={(e) => setConfirmChecked(e.target.checked)}
+                  disabled={isDeleting}
+                  className={styles.confirmCheckbox}
+                />
+                <span className={styles.confirmCheckboxText}>
+                  Je confirme vouloir supprimer définitivement mon compte PubRush et toutes mes données associées.
+                </span>
+              </label>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className={styles.cancelBtn}
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={!confirmChecked || isDeleting}
+                className={styles.confirmDeleteBtn}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Suppression en cours...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Supprimer définitivement
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <Footer />

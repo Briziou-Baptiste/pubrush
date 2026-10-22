@@ -1,14 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: pubrush-ingress
+  name: pubrush-ingress-http
+  namespace: default
   annotations:
     kubernetes.io/ingress.class: "traefik"
-    # Règle magique Traefik : Redirection automatique HTTP -> HTTPS
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    # On lie cet Ingress à notre résolveur Let's Encrypt
-    traefik.ingress.kubernetes.io/router.tls.certresolver: "le"
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.middlewares: "default-pubrush-redirect-https@kubernetescrd"
 spec:
   rules:
   - host: api.pubrush.com
@@ -21,7 +19,32 @@ spec:
             name: backend-service
             port:
               number: 80
-  tls: # Déclaration du certificat TLS
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pubrush-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.tls.certresolver: "le"
+    # Chaîne de middlewares Traefik : Compression, Rate Limit, Buffer anti-DDoS, Headers sécurisés
+    traefik.ingress.kubernetes.io/router.middlewares: default-pubrush-compress@kubernetescrd,default-pubrush-ratelimit@kubernetescrd,default-pubrush-buffering@kubernetescrd,default-pubrush-headers@kubernetescrd
+spec:
+  rules:
+  - host: api.pubrush.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 80
+  tls:
   - hosts:
     - api.pubrush.com
-    secretName: pubrush-api-tls # K3s va créer et stocker le certificat dans ce Secret tout seul
+    secretName: pubrush-api-tls

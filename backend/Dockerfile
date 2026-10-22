@@ -1,56 +1,63 @@
-# --- Étape 1 : Builder ---
-FROM python:3.9-slim AS builder
+# ==============================================================================
+# PUBRUSH BACKEND - DOCKERFILE FASTAPI MULTI-STAGE OPTIMISÉ
+# ==============================================================================
+
+# --- Étape 1 : Builder (Compilation et dépendances) ---
+FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
-# Installer les dépendances de compilation nécessaires
+# Dépendances de compilation et certificats racine
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libpq-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copier le fichier des dépendances
+# Création d'un environnement virtuel isolé
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Mise à niveau de sécurité de pip et installation des dépendances
 COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade "pip>=26.2.2" && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Installer les dépendances dans le répertoire utilisateur (/root/.local)
-RUN pip install --no-cache-dir --user -r requirements.txt
 
+# --- Étape 2 : Runner (Image finale minimale & durcie) ---
+FROM python:3.11-slim AS runner
 
-# --- Étape 2 : Runner ---
-FROM python:3.9-slim AS runner
+# Installation explicite des certificats racine à jour pour les requêtes TLS
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Configurer les variables d'environnement Python
+# Variables d'environnement Python pour la production
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PATH=/home/pubrush/.local/bin:$PATH
+    PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-# Installer libpq pour le client PostgreSQL
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Créer un utilisateur non-root sécurisé pour exécuter l'application
+# Sécurité : Création d'un groupe et utilisateur non-root dédié (UID/GID standard)
 RUN groupadd -g 10001 pubrush && \
-    useradd -u 10000 -g pubrush -m -s /sbin/nologin pubrush
+    useradd -u 10000 -g pubrush -m -d /home/pubrush -s /sbin/nologin pubrush
 
-# Copier les dépendances Python depuis l'étape de construction
-COPY --from=builder --chown=pubrush:pubrush /root/.local /home/pubrush/.local
+# Copie exclusive du venv depuis l'étape builder (sans compilateurs)
+COPY --from=builder --chown=pubrush:pubrush /opt/venv /opt/venv
 
-# Copier le code source de l'application et les configurations nécessaires
-COPY --chown=pubrush:pubrush app/ ./app
+# Copie du code applicatif et des fichiers de migration
 COPY --chown=pubrush:pubrush alembic/ ./alembic
 COPY --chown=pubrush:pubrush alembic.ini .
+COPY --chown=pubrush:pubrush app/ ./app
 
-# Changer de propriétaire pour le répertoire de travail
-RUN chown -R pubrush:pubrush /app
-
-# Passer à l'utilisateur non-root sécurisé
+# Utilisateur non-root actif
 USER pubrush
 
-# Exposer le port de FastAPI
 EXPOSE 8000
 
-# Commande par défaut pour exécuter l'application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Healthcheck natif Docker (sans dépendance à curl ou wget)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')" || exit 1
+
+# Démarrage de FastAPI via Uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=*"]

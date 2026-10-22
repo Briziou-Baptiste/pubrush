@@ -58,6 +58,16 @@ export const api = {
     return request('/me/stats');
   },
 
+  async deleteAccount() {
+    const data = await request('/me', {
+      method: 'DELETE',
+    });
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('pubrush_token');
+    }
+    return data;
+  },
+
   // Stats
   async getStats() {
     return request('/admin/stats');

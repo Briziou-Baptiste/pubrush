@@ -1,0 +1,63 @@
+# ==============================================================================
+# PUBRUSH - MIDDLEWARES TRAEFIK POUR K3S / KUBERNETES
+# ==============================================================================
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: pubrush-compress
+  namespace: default
+spec:
+  compress: {}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: pubrush-ratelimit
+  namespace: default
+spec:
+  rateLimit:
+    average: 100
+    burst: 50
+    period: 1m
+    sourceCriterion:
+      ipStrategy:
+        depth: 1
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: pubrush-buffering
+  namespace: default
+spec:
+  buffering:
+    maxRequestBodyBytes: 10485760     # 10 Mo max pour les uploads
+    memRequestBodyBytes: 2097152      # 2 Mo bufferisé en mémoire
+    maxResponseBodyBytes: 10485760    # 10 Mo
+    memResponseBodyBytes: 2097152     # 2 Mo
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: pubrush-headers
+  namespace: default
+spec:
+  headers:
+    sslRedirect: true
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    stsPreload: true
+    forceSTSHeader: true
+    frameDeny: true
+    contentTypeNosniff: true
+    browserXssFilter: true
+    referrerPolicy: "strict-origin-when-cross-origin"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: pubrush-redirect-https
+  namespace: default
+spec:
+  redirectScheme:
+    permanent: true
+    scheme: https

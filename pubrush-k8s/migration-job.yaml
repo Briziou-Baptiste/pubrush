@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pubrush-db-migration
+  namespace: default
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 300 # Nettoyage automatique après 5 minutes
+  template:
+    metadata:
+      labels:
+        app: pubrush-db-migration
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: alembic-upgrade
+        image: baptistebriziou/pubrush-backend:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "alembic upgrade head"]
+        env:
+        - name: _DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: DB_USER
+        - name: _DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: DB_NAME
+        - name: _DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pubrush-secrets
+              key: DB_PASSWORD
+        - name: DATABASE_URL
+          value: "postgresql+psycopg://$(_DB_USER):$(_DB_PASSWORD)@db:5432/$(_DB_NAME)"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-volume
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}

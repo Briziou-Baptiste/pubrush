@@ -2,8 +2,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pubrush-db
+  namespace: default
 spec:
   replicas: 1
+  # CRITIQUE : Toujours Recreate pour un Deployment de BDD avec PVC RWO
+  # pour éviter l'erreur Multi-Attach et la corruption de données.
+  # (Privilégier postgres-statefulset.yaml pour une architecture Kubernetes standard)
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: pubrush-db
@@ -12,9 +18,17 @@ spec:
       labels:
         app: pubrush-db
     spec:
+      securityContext:
+        fsGroup: 70
+        runAsUser: 70
+        runAsGroup: 70
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: postgres
         image: postgres:15-alpine
+        imagePullPolicy: IfNotPresent
         env:
         - name: POSTGRES_USER
           valueFrom:
@@ -31,20 +45,44 @@ spec:
             secretKeyRef:
               name: pubrush-secrets
               key: DB_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data
         ports:
         - containerPort: 5432
-        readinessProbe:
+          name: postgres
+        startupProbe:
           exec:
-            command: ["sh", "-c", "pg_isready -U pubrush -d pubrush"]
+            command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
           initialDelaySeconds: 5
           periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 12
+        livenessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
         resources:
           requests:
-            cpu: 100m
-            memory: 256Mi
+            cpu: 250m
+            memory: 512Mi
           limits:
             cpu: 1000m
             memory: 1Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
         - mountPath: /var/lib/postgresql/data
           name: db-storage
@@ -56,11 +94,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: db # <-- C'est ce nom qui sera résolu par le backend
+  name: db
+  namespace: default
 spec:
   selector:
-    app: pubrush-db # Oriente le trafic vers le pod de la BDD
+    app: pubrush-db
   ports:
-    - protocol: TCP
-      port: 5432
-      targetPort: 5432
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432

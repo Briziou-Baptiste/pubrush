@@ -32,6 +32,7 @@ export default function Footer() {
           <Link href="/cgu" className={styles.link}>CGU</Link>
           <Link href="/privacy" className={styles.link}>Confidentialité</Link>
           <Link href="/legal" className={styles.link}>Mentions légales</Link>
+          <Link href="/delete-account" className={styles.link}>Supprimer mon compte</Link>
         </div>
       </div>
     </footer>
