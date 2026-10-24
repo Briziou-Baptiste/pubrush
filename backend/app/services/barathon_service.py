@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -45,16 +46,20 @@ async def barathon_status_watcher():
 
         await asyncio.sleep(60)
 
-async def is_user_participant(barathon_id: int, user_id: int) -> bool:
+async def get_barathon_participant_info(barathon_id: int, user_id: int) -> tuple[Optional[str], bool]:
+    """
+    Returns (status, is_participant).
+    If barathon does not exist, returns (None, False).
+    """
     db: Session = SessionLocal()
     try:
         barathon = db.scalar(
             select(Barathon).where(Barathon.id == barathon_id)
         )
         if not barathon:
-            return False
+            return None, False
         if barathon.created_by_user_id == user_id:
-            return True
+            return barathon.status, True
 
         participant = db.scalar(
             select(BarathonParticipant).where(
@@ -62,7 +67,12 @@ async def is_user_participant(barathon_id: int, user_id: int) -> bool:
                 BarathonParticipant.user_id == user_id,
             )
         )
-        return participant is not None
+        return barathon.status, participant is not None
     finally:
         db.close()
+
+
+async def is_user_participant(barathon_id: int, user_id: int) -> bool:
+    _, allowed = await get_barathon_participant_info(barathon_id=barathon_id, user_id=user_id)
+    return allowed
 

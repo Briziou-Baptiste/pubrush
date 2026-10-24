@@ -24,6 +24,7 @@ from app.models import (
 )
 from app.security import hash_password, create_access_token
 from app.services.websocket_service import websocket_service
+from app.websocket.registry import ws_manager
 from app.api.deps.auth import get_current_user
 from app.api.deps.barathons import get_barathon_with_access
 from app.schemas import (
@@ -320,7 +321,7 @@ def get_barathon(
 
 
 @router.delete("/{barathon_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_barathon(
+async def delete_barathon(
     barathon_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -330,9 +331,10 @@ def delete_barathon(
     if not barathon:
         raise HTTPException(status_code=404, detail="Barathon introuvable")
 
-    if barathon.created_by_user_id != current_user.id:
+    if barathon.created_by_user_id != current_user.id and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Seul le créateur peut supprimer ce barathon")
 
+    await ws_manager.close_barathon_connections(barathon_id, code=1000, reason="Barathon deleted")
     db.delete(barathon)
     db.commit()
 
@@ -429,7 +431,7 @@ def add_participants_to_barathon(
 
 
 @router.delete("/{barathon_id}/participants/{user_id}", response_model=BarathonRead)
-def remove_participant_from_barathon(
+async def remove_participant_from_barathon(
     barathon_id: int,
     user_id: int,
     db: Session = Depends(get_db),
@@ -476,6 +478,17 @@ def remove_participant_from_barathon(
 
     db.delete(participant)
     db.commit()
+
+    # Purge participant location and close their barathon socket
+    ws_manager.clear_user_location(barathon_id, user_id)
+    user_ws_set = list(ws_manager.barathon_user_sockets.get(barathon_id, {}).pop(user_id, set()))
+    for ws in user_ws_set:
+        ws_manager.socket_barathon_user.pop(ws, None)
+        ws_manager.barathon_connections.get(barathon_id, set()).discard(ws)
+        try:
+            await ws.close(code=1008, reason="Removed from barathon")
+        except Exception:
+            pass
 
     updated_barathon = db.scalar(
         select(Barathon)
@@ -568,7 +581,7 @@ def get_active_barathon_by_id(
 
 
 @router.post("/{barathon_id}/finish", response_model=BarathonRead)
-def finish_barathon(
+async def finish_barathon(
     barathon_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -610,6 +623,15 @@ def finish_barathon(
         )
         .where(Barathon.id == barathon.id)
     )
+
+    participant_user_ids = [p.user_id for p in finished_barathon.participants]
+    await websocket_service.notify_barathon_stopped(
+        barathon_id=barathon.id,
+        participant_ids=participant_user_ids,
+        stopped_by_user_id=current_user.id,
+        stopped_at=barathon.ended_at.isoformat() if barathon.ended_at else now.isoformat(),
+    )
+    await ws_manager.close_barathon_connections(barathon.id, code=1000, reason="Barathon completed")
 
     return finished_barathon
 
@@ -783,6 +805,8 @@ async def stop_barathon(
         stopped_by_user_id=current_user.id,
         stopped_at=barathon.ended_at.isoformat() if barathon.ended_at else now.isoformat(),
     )
+
+    await ws_manager.close_barathon_connections(barathon.id, code=1000, reason="Barathon stopped")
 
     return {
         "id": barathon.id,

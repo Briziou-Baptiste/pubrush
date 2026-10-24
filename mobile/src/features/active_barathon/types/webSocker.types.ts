@@ -101,6 +101,14 @@ export type WSMessage =
       payload: {
         locations: ParticipantLocation[];
       };
+    }
+  | {
+      type: 'FRIEND_LOCATION_EXPIRED';
+      barathon_id: number;
+      timestamp?: string;
+      payload: {
+        user_id: number;
+      };
     };
 
 export type ParticipantLocation = {

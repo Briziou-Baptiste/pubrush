@@ -11,7 +11,9 @@ PubRush is the ultimate app for tracking, sharing, and conquering barathons with
 This is a monorepo containing both the frontend and backend applications:
 - `mobile/` - React Native Expo application (App Store / Google Play).
 - `backend/` - FastAPI backend with PostgreSQL, SQLAlchemy, Alembic, and WebSockets.
-- `docs/` - Project documentation and store metadata.
+- `web/` - Next.js application (Landing page, Store-compliant account deletion, Admin dashboard).
+- `pubrush-k8s/` - Kubernetes production manifests (Traefik v3, StatefulSet DB, Deployments, HPA).
+- `docs/` - Project documentation, technical state, and store metadata.
 
 ## Prerequisites
 - Node.js & npm (or yarn/bun)
@@ -49,6 +51,13 @@ docker-compose up -d
 ```
 
 ## Documentation
+- [Project Overview & Architecture](docs/PROJECT.md)
+- [Current Real State & Known Limitations](docs/CURRENT_STATE.md)
+- [Architecture Decisions (ADR)](docs/DECISIONS.md)
+- [Backlog & Roadmap](docs/BACKLOG.md)
+- [AI Agent Instructions](AGENTS.md)
+
+### App Store & Google Play
 Check out the `docs/store/` directory for app store release guidelines and policies:
 - [Privacy Policy](docs/store/PRIVACY_POLICY.md)
 - [Terms of Service](docs/store/TERMS_OF_SERVICE.md)

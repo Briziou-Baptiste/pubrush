@@ -3,7 +3,7 @@ from fastapi import APIRouter, WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from app.websocket.auth import authenticate_websocket
 from app.websocket.registry import ws_manager
-from app.services.barathon_service import is_user_participant
+from app.services.barathon_service import get_barathon_participant_info
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -38,26 +38,31 @@ async def ws_barathon(websocket: WebSocket, barathon_id: int):
     if not user:
         return
 
-    allowed = await is_user_participant(barathon_id=barathon_id, user_id=user.id)
-    if not allowed:
+    b_status, allowed = await get_barathon_participant_info(barathon_id=barathon_id, user_id=user.id)
+    if not allowed or b_status is None:
         await websocket.close(code=1008)
         return
 
-    await ws_manager.connect_barathon(barathon_id, websocket)
+    if b_status in ("completed", "stopped", "failed"):
+        await websocket.close(code=1008)
+        return
 
-    # Send current snapshot of friends locations if available
-    existing_locations = ws_manager.get_barathon_locations(barathon_id)
-    if existing_locations:
-        try:
-            await websocket.send_json({
-                "type": "FRIENDS_LOCATIONS_SNAPSHOT",
-                "barathon_id": barathon_id,
-                "payload": {
-                    "locations": existing_locations,
-                },
-            })
-        except Exception:
-            pass
+    await ws_manager.connect_barathon(barathon_id, user.id, websocket)
+
+    # Send current snapshot of friends locations ONLY if barathon is started
+    if b_status == "started":
+        existing_locations = ws_manager.get_barathon_locations(barathon_id)
+        if existing_locations:
+            try:
+                await websocket.send_json({
+                    "type": "FRIENDS_LOCATIONS_SNAPSHOT",
+                    "barathon_id": barathon_id,
+                    "payload": {
+                        "locations": existing_locations,
+                    },
+                })
+            except Exception:
+                pass
 
     try:
         while True:
@@ -66,14 +71,27 @@ async def ws_barathon(websocket: WebSocket, barathon_id: int):
             if msg_type == "PING":
                 await websocket.send_json({"type": "PONG"})
             elif msg_type == "UPDATE_LOCATION":
+                # Strict privacy check: only accept and broadcast location if barathon is active ('started')
+                curr_status, still_allowed = await get_barathon_participant_info(barathon_id=barathon_id, user_id=user.id)
+                if not still_allowed or curr_status != "started":
+                    continue
+
                 lat = data.get("latitude")
                 lng = data.get("longitude")
                 if lat is not None and lng is not None:
+                    try:
+                        flat = float(lat)
+                        flng = float(lng)
+                        if not (-90.0 <= flat <= 90.0 and -180.0 <= flng <= 180.0):
+                            continue
+                    except (ValueError, TypeError):
+                        continue
+
                     loc_payload = {
                         "user_id": user.id,
                         "username": user.username,
-                        "latitude": float(lat),
-                        "longitude": float(lng),
+                        "latitude": flat,
+                        "longitude": flng,
                         "is_guest": getattr(user, "is_guest", False),
                     }
                     ws_manager.set_user_location(barathon_id, user.id, loc_payload)

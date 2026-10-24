@@ -25,6 +25,7 @@ from app.models import Role, User, PasswordResetToken, BarathonParticipantRole, 
 from app.schemas import MeResponse, RoleRead, TokenResponse, UserCreate, UserLogin, UserRead, UserPublicRead, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, UserUpdatePayload, UserStatsResponse, PartnerEventRead, MapFilterRead, PartnerEventSpotRead, PartnerEventSpotCreate
 from app.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.services.email_service import send_reset_code_email
+from app.websocket.registry import ws_manager
 
 app = FastAPI(
     title="Pubrush API",
@@ -414,17 +415,28 @@ def _delete_user_data(user_to_delete: User, db: Session):
         if role_entry:
             db.delete(role_entry)
 
-    # 3. Delete the user
+    # 3. Purge password reset tokens associated with the user's email
+    db.execute(
+        delete(PasswordResetToken).where(
+            func.lower(PasswordResetToken.email) == func.lower(user_to_delete.email)
+        )
+    )
+
+    # 4. Delete the user
     db.delete(user_to_delete)
 
 
 @app.delete("/me")
-def delete_my_account(
+async def delete_my_account(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    target_user_id = current_user.id
     _delete_user_data(current_user, db)
     db.commit()
+
+    # Disconnect, close active WebSockets and purge in-memory locations
+    await ws_manager.disconnect_and_close_user(target_user_id, code=1008, reason="User deleted")
 
     return {"message": "Votre compte et toutes vos données associées ont été supprimés conformément au RGPD."}
 
@@ -667,7 +679,7 @@ def toggle_user_admin(
 
 
 @app.delete("/admin/users/{user_id}")
-def delete_user_by_admin(
+async def delete_user_by_admin(
     user_id: int,
     db: Session = Depends(get_db),
     admin_user: User = Depends(get_current_admin_user),
@@ -680,9 +692,14 @@ def delete_user_by_admin(
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
-    
+
+    target_id = user.id
     _delete_user_data(user, db)
     db.commit()
+
+    # Disconnect, close active WebSockets and purge in-memory locations
+    await ws_manager.disconnect_and_close_user(target_id, code=1008, reason="User deleted")
+
     return {"message": "Utilisateur supprimé avec succès."}
 
 

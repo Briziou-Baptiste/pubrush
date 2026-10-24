@@ -161,6 +161,50 @@ export default function ActiveBarathonScreen() {
           console.log('[WS][BARATHON] Connected to barathon room:', currentBarathon.id);
           setIsSousSolMode(false);
           void flushOfflineActionsQueue();
+
+          // Resynchronisation métier complète via REST après connexion ou reconnexion
+          if (token && currentBarathon.id) {
+            fetchBarathon(currentBarathon.id, token)
+              .then((freshData) => {
+                if (!isMounted || !freshData) return;
+
+                if (freshData.status === 'stopped' || freshData.status === 'completed') {
+                  void tracking.stopTracking();
+                  setFriendLocations({});
+                  const totalStops = freshData.stops?.length ?? currentBarathon.stops.length;
+                  const completedStopsCount = freshData.stops
+                    ? freshData.stops.filter((s: any) => s.is_completed).length
+                    : currentBarathon.stops.filter((s) => s.is_completed).length;
+
+                  router.replace({
+                    pathname: '/barathon-stop-summary',
+                    params: {
+                      barathonId: String(freshData.id),
+                      barathonName: freshData.name,
+                      totalStops: String(totalStops),
+                      completedStops: String(completedStopsCount),
+                      startDateTimeIso: freshData.start_datetime,
+                      endDateTimeIso: freshData.ended_at || freshData.end_datetime || new Date().toISOString(),
+                      stopsJson: JSON.stringify(freshData.stops || currentBarathon.stops),
+                      source: 'active',
+                    },
+                  });
+                  return;
+                }
+
+                if (freshData.stops && Array.isArray(freshData.stops)) {
+                  setBarathon((prev) => (prev ? { ...prev, ...freshData } : null));
+                  const firstIncompleteIdx = freshData.stops.findIndex((s: any) => !s.is_completed);
+                  const targetIndex = firstIncompleteIdx === -1 ? 0 : firstIncompleteIdx;
+                  if (targetIndex !== tracking.state.activeStopIndex) {
+                    void tracking.advanceToStop(targetIndex);
+                  }
+                }
+              })
+              .catch((err) => {
+                console.warn('[WS][BARATHON] Failed to resync barathon on reconnect:', err);
+              });
+          }
         },
         onClose: () => {
           console.log('[WS][BARATHON] Closed barathon room:', currentBarathon.id);
@@ -255,18 +299,28 @@ export default function ActiveBarathonScreen() {
               }));
             }
           } else if (message.type === 'FRIENDS_LOCATIONS_SNAPSHOT') {
+            // Remplacement COMPLET de l'état par le snapshot (élimine tout ami expiré ou déconnecté)
             const list = message.payload?.locations || [];
-            setFriendLocations((prev) => {
-              const updated = { ...prev };
-              for (const loc of list) {
-                if (loc.user_id !== currentUserId) {
-                  updated[loc.user_id] = loc;
-                }
+            const nextLocations: Record<number, ParticipantLocation> = {};
+            for (const loc of list) {
+              if (loc.user_id !== currentUserId) {
+                nextLocations[loc.user_id] = loc;
               }
-              return updated;
-            });
+            }
+            setFriendLocations(nextLocations);
+          } else if (message.type === 'FRIEND_LOCATION_EXPIRED') {
+            const expiredUserId = message.payload?.user_id;
+            if (expiredUserId) {
+              setFriendLocations((prev) => {
+                if (!prev[expiredUserId]) return prev;
+                const updated = { ...prev };
+                delete updated[expiredUserId];
+                return updated;
+              });
+            }
           } else if (message.type === 'BARATHON_STOPPED' || message.type === 'BARATHON_FINISHED') {
             void tracking.stopTracking();
+            setFriendLocations({});
             const totalStops = currentBarathon.stops.length;
             const completedStopsCount = currentBarathon.stops.filter((s) => s.is_completed).length;
 

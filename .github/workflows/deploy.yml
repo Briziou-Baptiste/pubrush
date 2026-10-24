@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: pubrush-production
+  cancel-in-progress: false
+
 jobs:
   # --- PHASE 0 : RUN AUTOMATED TESTS ---
   run-tests:
@@ -34,6 +38,8 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     needs: run-tests
+    outputs:
+      image_digest: ${{ steps.build_backend.outputs.digest }}
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
@@ -45,12 +51,15 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build et Push de l'image Docker
+        id: build_backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: baptistebriziou/pubrush-backend:latest
+          tags: |
+            baptistebriziou/pubrush-backend:latest
+            baptistebriziou/pubrush-backend:${{ github.sha }}
 
   # --- PHASE 2 : DEPLOIEMENT SECURISE VIA TUNNEL SSH ---
   deploy:
@@ -68,9 +77,19 @@ jobs:
           # Ajoute le VPS aux hôtes connus pour éviter le blocage "untrusted host"
           ssh-keyscan -p 22 ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Connexion au registre pour vérifier les images de repli
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Ouvrir le tunnel SSH et lancer le Déploiement
+        env:
+          BUILD_DIGEST: ${{ needs.build-and-push.outputs.image_digest }}
         run: |
-          # 1. Ouverture du tunnel
+          set -Eeuo pipefail
+
+          # 1. Ouverture du tunnel SSH vers l'API Kubernetes du VPS
           ssh -f -N -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -L 6443:127.0.0.1:6443 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i ~/.ssh/id_ed25519
           
           # 2. Installation de kubectl
@@ -82,14 +101,57 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG_DATA }}" | base64 --decode > ~/.kube/config
           
-          # LIGNE MAGIQUE CORRIGÉE : On force kubectl à utiliser le tunnel (localhost) au lieu de l'IP publique !
+          # Force kubectl à utiliser le tunnel localhost
           kubectl config set-cluster default --server=https://127.0.0.1:6443 --insecure-skip-tls-verify=true
           
-          # 4. Test de connexion réseau interne (Passera à travers le tunnel)
-          kubectl cluster-info
-          
-          # 5. Forcer le redémarrage du backend
-          kubectl rollout restart deployment/pubrush-backend
+          # 4. Même validation de cible et mêmes invariants que les scripts opérateur.
+          export KUBE_CONTEXT=default KUBE_NAMESPACE=default EXPECTED_CLUSTER=default
+          source pubrush-k8s/monopod/deployment-common.sh
+          prepare_workspace
+          validate_target
+          check_monopod
+
+          IMMUTABLE_IMAGE=$(python3 "$STATE_TOOL" image-ref "baptistebriziou/pubrush-backend@${BUILD_DIGEST}")
+          STATE_FILE="$RUNNER_TEMP/pubrush-predeploy.json"
+          capture_snapshot "$STATE_FILE"
+          PREVIOUS_BACKEND=$(python3 "$STATE_TOOL" image "$STATE_FILE" backend)
+          PREVIOUS_MIGRATION=$(python3 "$STATE_TOOL" image "$STATE_FILE" migration)
+          # Vérifier la récupération des deux références avant toute mutation.
+          docker buildx imagetools inspect "$PREVIOUS_BACKEND" > /dev/null
+          docker buildx imagetools inspect "$PREVIOUS_MIGRATION" > /dev/null
+
+          # Le lot P0 ne modifie pas le schéma : vérifier avant autorisation que
+          # l'ancienne image de migration reconnaît la révision SQL courante.
+          # Aucun downgrade n'est exécuté. Toute erreur après la première mutation
+          # (rollout OU convergence) entraîne le même rollback contrôlé.
+          rollback_on_error() {
+            local failure="$1"
+            trap - ERR
+            echo "Échec du déploiement ; tentative de restauration des deux digests sauvegardés."
+            if bash pubrush-k8s/monopod/rollback-backend.sh \
+              --from-env "$STATE_FILE" --context "$TARGET_CONTEXT" \
+              --namespace "$TARGET_NAMESPACE" --expected-cluster "$EXPECTED_CLUSTER"; then
+              echo "Rollback terminé et contrôlé ; le déploiement reste en échec."
+            else
+              echo "ERREUR : rollback non convergé, intervention opérateur requise." >&2
+            fi
+            exit "$failure"
+          }
+          trap 'rollback_on_error "$?"' ERR
+          kube set image deployment/pubrush-backend backend="$IMMUTABLE_IMAGE" migration="$IMMUTABLE_IMAGE"
+          wait_convergence monopod
+          check_images "$IMMUTABLE_IMAGE" "$IMMUTABLE_IMAGE"
+          trap - ERR
+          echo "Déploiement par digest validé en mode monopod."
+
+      - name: Conserver les paramètres et digests de repli
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pubrush-predeploy-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/pubrush-predeploy.json
+          if-no-files-found: ignore
+          retention-days: 14
 
   # --- PHASE 3 : DEPLOIEMENT EXPO / EAS UPDATE (MOBILE) ---
   deploy-mobile:
@@ -123,4 +185,3 @@ jobs:
           cd mobile
           eas update --branch preview --environment preview --message "Mise à jour automatique (iOS) - Build #${{ github.run_number }}" --platform ios --non-interactive
           eas update --branch preview --environment preview --message "Mise à jour automatique (Android) - Build #${{ github.run_number }}" --platform android --non-interactive
-
