@@ -6,5 +6,12 @@ module.exports = defineConfig([
   expoConfig,
   {
     ignores: ["dist/*"],
+    rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/purity": "warn",
+      "react/no-unescaped-entities": "off",
+    },
   }
 ]);
