@@ -211,7 +211,7 @@ export default function ActiveBarathonScreen() {
           setIsSousSolMode(true);
         },
         onMessage: (message: WSMessage) => {
-          console.log('[WS][BARATHON] Message received:', message);
+          console.log('[WS][BARATHON] Event received:', message.type);
 
           if (message.type === 'BARATHON_NEXT_STEP') {
             const completedStopId = message.payload?.completed_stop_id;
@@ -293,6 +293,7 @@ export default function ActiveBarathonScreen() {
           } else if (message.type === 'FRIEND_LOCATION_UPDATE') {
             const loc = message.payload;
             if (loc && loc.user_id !== currentUserId) {
+              console.log('[WS][BARATHON] Friend location update received for user:', loc.user_id);
               setFriendLocations((prev) => ({
                 ...prev,
                 [loc.user_id]: loc,
@@ -307,10 +308,12 @@ export default function ActiveBarathonScreen() {
                 nextLocations[loc.user_id] = loc;
               }
             }
+            console.log('[WS][BARATHON] Friends snapshot applied, count:', Object.keys(nextLocations).length);
             setFriendLocations(nextLocations);
           } else if (message.type === 'FRIEND_LOCATION_EXPIRED') {
             const expiredUserId = message.payload?.user_id;
             if (expiredUserId) {
+              console.log('[WS][BARATHON] Friend location expired for user:', expiredUserId);
               setFriendLocations((prev) => {
                 if (!prev[expiredUserId]) return prev;
                 const updated = { ...prev };
@@ -364,6 +367,7 @@ export default function ActiveBarathonScreen() {
       Math.abs(loc.longitude - lastSent.lng) > 0.0001
     ) {
       sendBarathonLocation(loc.latitude, loc.longitude);
+      console.log('[GPS] Location beacon transmitted to barathon room');
       lastLocationSentRef.current = { lat: loc.latitude, lng: loc.longitude, time: now };
     }
   }, [tracking.state.currentLocation, barathon?.id, isSousSolMode]);

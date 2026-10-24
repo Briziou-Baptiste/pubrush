@@ -56,7 +56,7 @@ export default function RootLayout() {
       apiBaseUrl: API_BASE_URL,
       token,
       onMessage: (message: WSMessage) => {
-          console.log('[WS][LAYOUT] Message received:', message);
+          console.log('[WS][LAYOUT] Event received:', message.type);
           if (message.type === 'BARATHON_STARTED' && message.barathon_id) {
             router.replace({
               pathname: '/active-barathon',
