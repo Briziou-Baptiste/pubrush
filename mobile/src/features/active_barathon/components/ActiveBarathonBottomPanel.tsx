@@ -82,14 +82,14 @@ function ActiveBarathonBottomPanel({
       <View style={styles.compactMetricsRow}>
         <View style={styles.compactMetricChip}>
           <Ionicons name="location-outline" size={14} color="#2563EB" />
-          <Text style={styles.compactMetricText}>{distanceLabel}</Text>
+          <Text style={styles.compactMetricText}>{distanceLabel} à vol d’oiseau</Text>
         </View>
 
         {estimatedMinutes !== undefined && estimatedMinutes !== null && (
           <View style={styles.compactMetricChip}>
             <Ionicons name="walk-outline" size={14} color="#16A34A" />
             <Text style={[styles.compactMetricText, { color: '#15803D' }]}>
-              ~{estimatedMinutes} min à pied
+              ≈ {estimatedMinutes} min (indicatif)
             </Text>
           </View>
         )}

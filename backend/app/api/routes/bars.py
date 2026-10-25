@@ -4,6 +4,7 @@ import urllib.request
 import urllib.parse
 import ssl
 import math
+from threading import Lock
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -308,48 +309,56 @@ def get_straight_line_walking_minutes(lat1: float, lon1: float, lat2: float, lon
     hours = dist_km / 4.8  # 4.8 km/h walking speed (brisk urban profile matching Google Maps)
     return max(1, int(round(hours * 60.0)))
 
+# Per-process admission limit; busy provider leaves durations unknown.
+_WALKING_REQUEST_LOCK = Lock()
+_walking_next_request_at = 0.0
+WALKING_BASE_URL = "https://routing.openstreetmap.de/routed-foot"
+
+
+def _walking_routing_enabled() -> bool:
+    # This demo is reserved for an explicit private test, never the production deployment.
+    return (os.getenv("ENVIRONMENT", "development").lower() != "production" and
+            os.getenv("WALKING_ROUTING_ENABLED", "").lower() == "true")
+
+
 def compute_real_walking_times(lat: float, lon: float, candidates: list[BarSearchResult]) -> list[BarSearchResult]:
+    global _walking_next_request_at
     if not candidates:
         return []
-
-    # OPTIMIZATION: Compute straight-line distances instantly locally,
-    # then pre-sort and only query OSRM for the top 20 closest candidates.
-    # This reduces OSRM Table workload by 60%, drastically improving response time.
-    for c in candidates:
-        c.estimated_minutes = get_straight_line_walking_minutes(lat, lon, c.latitude, c.longitude)
-
-    candidates.sort(key=lambda x: x.estimated_minutes or 999)
-    osrm_candidates = candidates[:20]
-    ignored_candidates = candidates[20:]
-
-    # Coordinates format for OSRM: lon,lat;lon,lat;...
-    coords = [f"{lon},{lat}"]  # source coordinate
-    for c in osrm_candidates:
-        coords.append(f"{c.longitude},{c.latitude}")
-
-    coords_str = ";".join(coords)
-    url = f"http://router.project-osrm.org/table/v1/foot/{coords_str}?sources=0"
-
-    try:
-        res_data = _http_get_json(url, timeout=5)
-
-        durations = res_data.get("durations", [])
-        if not durations or len(durations[0]) < len(osrm_candidates) + 1:
+    for candidate in candidates:
+        candidate.estimated_minutes = None
+    # The public demo is not eligible by default for substantial commercial routing use.
+    if not _walking_routing_enabled():
+        return candidates
+    # Query all search candidates in one matrix, so unqueried Haversine times cannot outrank routes.
+    coords = ";".join([f"{lon},{lat}"] + [f"{c.longitude},{c.latitude}" for c in candidates])
+    radiuses = ";".join(["75"] * (len(candidates) + 1))
+    url = f"{WALKING_BASE_URL}/table/v1/foot/{coords}?sources=0&radiuses={radiuses}"
+    with _WALKING_REQUEST_LOCK:
+        now = time.monotonic()
+        if now < _walking_next_request_at:
             return candidates
-
-        source_durations = durations[0]
-        for idx, c in enumerate(osrm_candidates):
-            duration_sec = source_durations[idx + 1]
-            if duration_sec is not None:
-                # OSRM foot routing uses realistic pedestrian network speeds (~4.8-5 km/h).
-                # Use raw duration without artificial penalty multipliers.
-                c.estimated_minutes = max(1, int(round(duration_sec / 60.0)))
-
-    except Exception as e:
-        print(f"Error calling OSRM Table API: {e}")
-        # If OSRM fails, the straight-line times computed above remain as perfect back-ups
-
-    return osrm_candidates + ignored_candidates
+        _walking_next_request_at = now + 1.1
+    try:
+        data = _http_get_json(url, timeout=5)
+        durations = data.get("durations")
+        if data.get("code") != "Ok" or not isinstance(durations, list) or len(durations) != 1:
+            return candidates
+        row = durations[0]
+        if not isinstance(row, list) or len(row) != len(candidates) + 1:
+            return candidates
+        if any(value is not None and (isinstance(value, bool) or not isinstance(value, (int, float)) or
+               not math.isfinite(value) or value < 0) for value in row):
+            return candidates
+        reachable = []
+        for candidate, seconds in zip(candidates, row[1:]):
+            if seconds is None:
+                continue  # Explicitly unreachable; never substitute a straight-line time.
+            candidate.estimated_minutes = max(1, int(round(seconds / 60)))
+            reachable.append(candidate)
+        return reachable
+    except Exception:
+        return candidates  # Network failure: retain unknown durations, unchanged API schema.
 
 @router.get("/nearby", response_model=list[BarSearchResult])
 def get_nearby_bars(
@@ -364,7 +373,8 @@ def get_nearby_bars(
         return []
 
     # Round coordinates to 4 decimal places (~11 meters of precision) to hit cache for identical points
-    cache_key = (round(lat, 4), round(lon, 4), max_travel_time_minutes, filter_key)
+    cache_key = (round(lat, 4), round(lon, 4), max_travel_time_minutes, filter_key,
+                 _walking_routing_enabled(), WALKING_BASE_URL)
     if cache_key in NEARBY_CACHE:
         return NEARBY_CACHE[cache_key]
 
@@ -398,21 +408,20 @@ def get_nearby_bars(
     filtered_results = []
     for c in candidates:
         if c.estimated_minutes is not None:
-            # Use exact pedestrian OSRM route time
+            # Duration from the explicit pedestrian graph
             if c.estimated_minutes <= max_travel_time_minutes:
                 filtered_results.append(c)
         else:
-            # Fallback to straight-line walking time
+            # Straight-line prefilter only; duration remains unknown to the client
             dist_minutes = get_straight_line_walking_minutes(lat, lon, c.latitude, c.longitude)
             if dist_minutes <= max_travel_time_minutes:
-                c.estimated_minutes = dist_minutes
                 filtered_results.append(c)
 
     filtered_results.sort(key=lambda x: x.estimated_minutes or 999)
     res = filtered_results[:50]  # Propose up to 50 sorted recommendations to the frontend
 
     # Prevent memory leaks in the nearby cache, and only cache if we got successful recommendations (res is not empty)
-    if len(res) > 0:
+    if len(res) > 0 and all(c.estimated_minutes is not None for c in res):
         if len(NEARBY_CACHE) > 200:
             NEARBY_CACHE.clear()
         NEARBY_CACHE[cache_key] = res

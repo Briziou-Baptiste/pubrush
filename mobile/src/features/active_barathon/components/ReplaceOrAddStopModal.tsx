@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { getModificationSearchCenter } from '../../create_barathon/services/routePlan.service';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -23,6 +24,7 @@ type Props = {
   visible: boolean;
   mode: 'replace' | 'add';
   currentStop: ActiveBarathonStop | null;
+  lastStop: ActiveBarathonStop | null;
   barathonId: number;
   userLocation: LatLng | null;
   onClose: () => void;
@@ -58,6 +60,7 @@ export default function ReplaceOrAddStopModal({
   visible,
   mode,
   currentStop,
+  lastStop,
   barathonId,
   userLocation,
   onClose,
@@ -72,12 +75,17 @@ export default function ReplaceOrAddStopModal({
   const [selectedBar, setSelectedBar] = useState<BarCandidate | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const requestVersion = useRef(0);
+  const center = getModificationSearchCenter(currentStop, lastStop, mode, position,
+    userLocation ?? { latitude: 43.6047, longitude: 1.4442 });
+
   // Reference coordinates for search/nearby (current stop or user location)
-  const centerLat = currentStop ? Number(currentStop.latitude) : userLocation?.latitude ?? 43.6047;
-  const centerLon = currentStop ? Number(currentStop.longitude) : userLocation?.longitude ?? 1.4442;
+  const centerLat = Number(center.latitude);
+  const centerLon = Number(center.longitude);
 
   // Load nearby bars around the reference coordinates
   const loadNearbySuggestions = useCallback(async () => {
+    const version = ++requestVersion.current;
     try {
       setLoadingBars(true);
       const token = await getAccessToken();
@@ -89,7 +97,6 @@ export default function ReplaceOrAddStopModal({
           const lat = Number(b.latitude || b.lat);
           const lon = Number(b.longitude || b.lon);
           const dist = getDistanceMeters(centerLat, centerLon, lat, lon);
-          const estMin = Math.max(1, Math.round(dist / 80));
           return {
             name: b.name,
             latitude: lat,
@@ -97,17 +104,17 @@ export default function ReplaceOrAddStopModal({
             stop_type: b.stop_type || 'bar',
             street: b.street || null,
             city: b.city || null,
-            estimated_minutes: b.estimated_minutes ?? estMin,
+            estimated_minutes: b.estimated_minutes ?? null,
             distanceMeters: dist,
           };
         });
         formatted.sort((a, b) => (a.distanceMeters ?? 0) - (b.distanceMeters ?? 0));
-        setBars(formatted);
+        if (version === requestVersion.current) setBars(formatted);
       }
     } catch (err) {
       console.error('Error loading nearby bars for modal:', err);
     } finally {
-      setLoadingBars(false);
+      if (version === requestVersion.current) setLoadingBars(false);
     }
   }, [centerLat, centerLon]);
 
@@ -119,17 +126,19 @@ export default function ReplaceOrAddStopModal({
       setReason('fermé');
       setCustomReason('');
       setPosition('after_current');
-      void loadNearbySuggestions();
     }
-  }, [visible, mode, currentStop?.id, loadNearbySuggestions]);
+  }, [visible, mode, currentStop?.id]);
 
   // Search when user changes text
   useEffect(() => {
+    const version = ++requestVersion.current;
+    setSelectedBar(null);
+    setBars([]);
     if (!visible || !searchQuery.trim()) {
       if (visible && searchQuery.trim() === '') {
         void loadNearbySuggestions();
       }
-      return;
+      return () => { requestVersion.current += 1; };
     }
 
     const timer = setTimeout(async () => {
@@ -144,7 +153,6 @@ export default function ReplaceOrAddStopModal({
             const lat = Number(b.latitude || b.lat);
             const lon = Number(b.longitude || b.lon);
             const dist = getDistanceMeters(centerLat, centerLon, lat, lon);
-            const estMin = Math.max(1, Math.round(dist / 80));
             return {
               name: b.name,
               latitude: lat,
@@ -152,21 +160,24 @@ export default function ReplaceOrAddStopModal({
               stop_type: b.stop_type || 'bar',
               street: b.street || null,
               city: b.city || null,
-              estimated_minutes: b.estimated_minutes ?? estMin,
+              estimated_minutes: b.estimated_minutes ?? null,
               distanceMeters: dist,
             };
           });
           formatted.sort((a, b) => (a.distanceMeters ?? 0) - (b.distanceMeters ?? 0));
-          setBars(formatted);
+          if (version === requestVersion.current) setBars(formatted);
         }
       } catch (err) {
         console.error('Error searching bars for modal:', err);
       } finally {
-        setLoadingBars(false);
+        if (version === requestVersion.current) setLoadingBars(false);
       }
     }, 350);
 
-    return () => clearTimeout(timer);
+    return () => {
+      requestVersion.current += 1;
+      clearTimeout(timer);
+    };
   }, [searchQuery, visible, centerLat, centerLon, loadNearbySuggestions]);
 
   // Handle submit action
@@ -414,7 +425,7 @@ export default function ReplaceOrAddStopModal({
                         {item.name}
                       </Text>
                       <Text style={styles.barItemAddress} numberOfLines={1}>
-                        {item.distanceMeters !== undefined ? `${item.distanceMeters} m • ` : ''}
+                        {item.distanceMeters !== undefined ? `${item.distanceMeters} m à vol d’oiseau • ` : ''}
                         {item.street ? `${item.street}${item.city ? ', ' + item.city : ''}` : (isBar ? 'Bar' : 'Restaurant')}
                       </Text>
                     </View>

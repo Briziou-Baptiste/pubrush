@@ -1,3 +1,4 @@
+import RoutingAttribution from '../../create_barathon/components/RoutingAttribution';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -32,7 +33,7 @@ import {
 } from '../../create_barathon/types/createBarathon.types';
 import { getCurrentUser, getAccessToken } from '../../../lib/authStorage';
 import { fetchBarathonExpenses } from '../../../lib/api';
-import { fetchWalkingRoute, RouteSegment } from '../../create_barathon/services/routing.service';
+import { fetchWalkingRoutesInParallel, getRouteSegmentKey, RouteSegment } from '../../create_barathon/services/routing.service';
 import { calculateSimplifiedDebts, DebtSettlement } from '../utils/debt.utils';
 
 type ExistingParticipant = {
@@ -365,56 +366,19 @@ export default function BarathonRecapScreen() {
       }));
   }, [stops]);
 
-  const [streetRouteCoordinates, setStreetRouteCoordinates] = useState<
-    { latitude: number; longitude: number }[]
-  >([]);
-
+  const routePoints = useMemo(() => [...stops].sort((a, b) => a.stopOrder - b.stopOrder)
+    .map(stop => ({ id: String(stop.id), latitude: stop.latitude, longitude: stop.longitude })), [stops]);
+  const [routeSegments, setRouteSegments] = useState<Record<string, RouteSegment>>({});
   useEffect(() => {
     let active = true;
-
-    async function loadFullStreetRoute() {
-      if (stops.length < 2) {
-        setStreetRouteCoordinates([]);
-        return;
-      }
-
-      const sortedStops = [...stops].sort((a, b) => a.stopOrder - b.stopOrder);
-      const allCoords: { latitude: number; longitude: number }[] = [];
-
-      for (let i = 0; i < sortedStops.length - 1; i++) {
-        if (!active) return;
-        const from = sortedStops[i];
-        const to = sortedStops[i + 1];
-
-        const seg = await fetchWalkingRoute(
-          { latitude: from.latitude, longitude: from.longitude },
-          { latitude: to.latitude, longitude: to.longitude }
-        );
-
-        if (active) {
-          if (allCoords.length > 0) {
-            allCoords.push(...seg.coordinates.slice(1));
-          } else {
-            allCoords.push(...seg.coordinates);
-          }
-        }
-      }
-
-      if (active && allCoords.length >= 2) {
-        setStreetRouteCoordinates(allCoords);
-      }
-    }
-
-    void loadFullStreetRoute();
-
-    return () => {
-      active = false;
-    };
-  }, [stops]);
+    void fetchWalkingRoutesInParallel(routePoints).then(segments => {
+      if (active) setRouteSegments(segments);
+    });
+    return () => { active = false; };
+  }, [routePoints]);
 
   useEffect(() => {
-    const coordsToFit =
-      streetRouteCoordinates.length > 0 ? streetRouteCoordinates : routeCoordinates;
+    const coordsToFit = routeCoordinates;
     if (coordsToFit.length > 0) {
       const t = setTimeout(() => {
         mapRef.current?.fitToCoordinates(coordsToFit, {
@@ -424,7 +388,7 @@ export default function BarathonRecapScreen() {
       }, 600);
       return () => clearTimeout(t);
     }
-  }, [routeCoordinates, streetRouteCoordinates]);
+  }, [routeCoordinates]);
 
   const initialRegion: Region = useMemo(() => {
     if (stops.length === 0) {
@@ -700,7 +664,7 @@ export default function BarathonRecapScreen() {
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Temps total de trajet</Text>
+            <Text style={styles.label}>Budget de trajet prévu</Text>
             <Text style={styles.value}>{totalTravelTimeMinutes} min</Text>
           </View>
 
@@ -954,22 +918,16 @@ export default function BarathonRecapScreen() {
               pitchEnabled={false}
               toolbarEnabled={false}
             >
-              {(streetRouteCoordinates.length >= 2 ? streetRouteCoordinates : routeCoordinates).length >= 2 ? (
-                <>
-                  <Polyline
-                    key="recap-glow-polyline"
-                    coordinates={streetRouteCoordinates.length >= 2 ? streetRouteCoordinates : routeCoordinates}
-                    strokeWidth={8}
-                    strokeColor="rgba(16, 185, 129, 0.25)"
-                  />
-                  <Polyline
-                    key="recap-polyline"
-                    coordinates={streetRouteCoordinates.length >= 2 ? streetRouteCoordinates : routeCoordinates}
-                    strokeWidth={4}
-                    strokeColor="#10B981"
-                  />
-                </>
-              ) : null}
+              {routePoints.slice(0, -1).map((from, index) => {
+                const to = routePoints[index + 1];
+                const key = getRouteSegmentKey(from, to);
+                const segment = routeSegments[key];
+                if (segment?.status === 'unavailable') return null;
+                const walking = segment?.status === 'walking';
+                return <Polyline key={key} coordinates={walking ? segment.coordinates : [from, to]}
+                  strokeWidth={4} strokeColor={walking ? '#10B981' : '#9CA3AF'}
+                  lineDashPattern={walking ? undefined : [6, 6]} />;
+              })}
 
               {[...stops]
                 .sort((a, b) => a.stopOrder - b.stopOrder)
@@ -1134,6 +1092,7 @@ export default function BarathonRecapScreen() {
               </TouchableOpacity>
             </View>
           </View>
+          <RoutingAttribution />
           <Text style={{ fontSize: 11, color: '#6B7280', textAlign: 'center', marginTop: 6 }}>
             Pincez l'écran ou utilisez les boutons + / - pour zoomer sur le trajet piéton.
           </Text>

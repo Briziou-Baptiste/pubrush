@@ -1,105 +1,144 @@
-export type LatLng = {
-  latitude: number;
-  longitude: number;
-};
+export type LatLng = { latitude: number; longitude: number };
+export type RoutePoint = LatLng & { id: string };
 
 export type RouteSegment = {
+  status: 'walking' | 'straight_line' | 'unavailable';
   coordinates: LatLng[];
-  durationMinutes: number;
-  distanceMeters: number;
+  durationMinutes: number | null;
+  distanceMeters: number | null;
+  requestKey: string;
+  fetchedAt: number;
 };
 
-// In-memory cache for route queries during the session
-const ROUTE_CACHE = new Map<string, RouteSegment>();
+// This prefix selects a graph built with the pedestrian profile (the URL's /foot alone does not).
+export const WALKING_BASE_URL = 'https://routing.openstreetmap.de/routed-foot';
+const CACHE_TTL_MS = 5 * 60_000;
+const CACHE_MAX_SIZE = 200;
+const REQUEST_INTERVAL_MS = 1100;
+const REQUEST_TIMEOUT_MS = 5000;
 
-function getCacheKey(from: LatLng, to: LatLng): string {
-  return `${from.latitude.toFixed(5)},${from.longitude.toFixed(5)}->${to.latitude.toFixed(5)},${to.longitude.toFixed(5)}`;
+export function getRouteRequestKey(from: LatLng, to: LatLng): string {
+  return `${WALKING_BASE_URL}:foot:${Number(from.latitude)},${Number(from.longitude)}->${Number(to.latitude)},${Number(to.longitude)}`;
 }
-
-/**
- * Calculates straight-line distance in kilometers using the Haversine formula.
- */
+export function getRouteSegmentKey(from: RoutePoint, to: RoutePoint): string {
+  return `${from.id}->${to.id}:${getRouteRequestKey(from, to)}`;
+}
 export function getHaversineDistanceKm(from: LatLng, to: LatLng): number {
-  const earthRadiusKm = 6371;
-  const dLat = ((to.latitude - from.latitude) * Math.PI) / 180;
-  const dLon = ((to.longitude - from.longitude) * Math.PI) / 180;
-  const lat1 = (from.latitude * Math.PI) / 180;
-  const lat2 = (to.latitude * Math.PI) / 180;
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return earthRadiusKm * c;
+  const rad = (value: number) => value * Math.PI / 180;
+  const a = Math.sin(rad(to.latitude - from.latitude) / 2) ** 2 +
+    Math.cos(rad(from.latitude)) * Math.cos(rad(to.latitude)) *
+    Math.sin(rad(to.longitude - from.longitude) / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(Math.min(1, a)));
 }
-
-/**
- * Calculates straight-line walking time assuming 4.0 km/h realistic urban pedestrian pace.
- */
 export function getStraightLineWalkingMinutes(from: LatLng, to: LatLng): number {
-  const distKm = getHaversineDistanceKm(from, to);
-  return Math.max(1, Math.round((distKm / 4.8) * 60));
+  return Math.max(1, Math.round(getHaversineDistanceKm(from, to) / 4.8 * 60));
 }
+const validPoint = (point: LatLng) => Number.isFinite(point.latitude) &&
+  Number.isFinite(point.longitude) && Math.abs(point.latitude) <= 90 && Math.abs(point.longitude) <= 180;
+const validMetric = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0;
 
-/**
- * Fetches the real pedestrian street-following route from OSRM.
- * Falls back to straight-line if offline, timed out, or in error.
- */
-export async function fetchWalkingRoute(from: LatLng, to: LatLng): Promise<RouteSegment> {
-  const cacheKey = getCacheKey(from, to);
-  if (ROUTE_CACHE.has(cacheKey)) {
-    return ROUTE_CACHE.get(cacheKey)!;
-  }
+// Dependencies make provider failures, expiry and the shared request queue deterministic in tests.
+export function createWalkingRouter(deps: {
+  enabled?: boolean;
+  fetch: typeof fetch;
+  now: () => number;
+  sleep: (ms: number) => Promise<void>;
+}) {
+  const cache = new Map<string, RouteSegment>();
+  const pending = new Map<string, Promise<RouteSegment>>();
+  let queue = Promise.resolve();
+  let lastStarted = -Infinity;
 
-  const fallbackDistanceMeters = Math.round(getHaversineDistanceKm(from, to) * 1000);
-  const fallbackMinutes = getStraightLineWalkingMinutes(from, to);
-  const fallbackSegment: RouteSegment = {
-    coordinates: [from, to],
-    durationMinutes: fallbackMinutes,
-    distanceMeters: fallbackDistanceMeters,
-  };
-
-  try {
+  async function request(from: LatLng, to: LatLng): Promise<RouteSegment> {
+    const requestKey = getRouteRequestKey(from, to);
+    const result = (status: RouteSegment['status']): RouteSegment => ({
+      status, requestKey, fetchedAt: deps.now(), durationMinutes: null,
+      distanceMeters: status === 'straight_line' ? Math.round(getHaversineDistanceKm(from, to) * 1000) : null,
+      coordinates: status === 'straight_line' ? [from, to] : [],
+    });
+    if (!validPoint(from) || !validPoint(to)) return result('unavailable');
+    // Public demo terms restrict substantial commercial use. Enable only for an eligible context.
+    if (!deps.enabled) return result('straight_line');
+    const cached = cache.get(requestKey);
+    if (cached && deps.now() - cached.fetchedAt < CACHE_TTL_MS) return cached;
+    cache.delete(requestKey);
+    await deps.sleep(Math.max(0, REQUEST_INTERVAL_MS - (deps.now() - lastStarted)));
+    lastStarted = deps.now();
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-    const url = `https://router.project-osrm.org/route/v1/foot/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?overview=simplified&geometries=geojson`;
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return fallbackSegment;
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const coords = `${from.longitude},${from.latitude};${to.longitude},${to.latitude}`;
+      const response = await deps.fetch(`${WALKING_BASE_URL}/route/v1/foot/${coords}?overview=simplified&geometries=geojson&radiuses=75;75`, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'PubRush/1.0 (+https://pubrush.com)' },
+      });
+      const data = await response.json();
+      if (data.code === 'NoRoute' || data.code === 'NoSegment') return result('unavailable');
+      if (!response.ok || data.code !== 'Ok') return result('straight_line');
+      const route = data.routes?.[0];
+      const rawCoords = route?.geometry?.coordinates;
+      if (!validMetric(route?.duration) || !validMetric(route?.distance) ||
+          route?.geometry?.type !== 'LineString' || !Array.isArray(rawCoords) || rawCoords.length < 2 ||
+          !rawCoords.every((c: unknown) => Array.isArray(c) && c.length >= 2 && validPoint({ longitude: c[0], latitude: c[1] })) ||
+          !Array.isArray(data.waypoints) || data.waypoints.length !== 2 ||
+          !data.waypoints.every((w: { distance: unknown }) => validMetric(w?.distance) && w.distance <= 75)) {
+        return result('straight_line');
+      }
+      const segment: RouteSegment = {
+        ...result('walking'),
+        coordinates: rawCoords.map(([longitude, latitude]: number[]) => ({ latitude, longitude })),
+        durationMinutes: Math.max(1, Math.round(route.duration / 60)),
+        distanceMeters: Math.round(route.distance),
+      };
+      if (cache.size >= CACHE_MAX_SIZE) cache.delete(cache.keys().next().value!);
+      cache.set(requestKey, segment);
+      return segment;
+    } catch {
+      return result('straight_line');
+    } finally {
+      clearTimeout(timer);
     }
-
-    const data = await response.json();
-    if (!data.routes || data.routes.length === 0) {
-      return fallbackSegment;
-    }
-
-    const route = data.routes[0];
-    const rawCoords = route.geometry?.coordinates || [];
-    const coordinates: LatLng[] = rawCoords.map(([lon, lat]: [number, number]) => ({
-      latitude: lat,
-      longitude: lon,
-    }));
-
-    // Exact optimized pedestrian footway duration (matching Google Maps pace)
-    const rawDurationSec = Number(route.duration) || 0;
-    const walkingMinutes = Math.max(1, Math.round(rawDurationSec / 60));
-    const distanceMeters = Math.round(Number(route.distance) || fallbackDistanceMeters);
-
-    const result: RouteSegment = {
-      coordinates: coordinates.length >= 2 ? coordinates : [from, to],
-      durationMinutes: walkingMinutes,
-      distanceMeters,
-    };
-
-    ROUTE_CACHE.set(cacheKey, result);
-    return result;
-  } catch {
-    return fallbackSegment;
   }
+
+  function fetchRoute(from: LatLng, to: LatLng): Promise<RouteSegment> {
+    // Snapshot inputs: an edit while waiting must not alter an in-flight request.
+    from = { latitude: Number(from.latitude), longitude: Number(from.longitude) };
+    to = { latitude: Number(to.latitude), longitude: Number(to.longitude) };
+    const key = getRouteRequestKey(from, to);
+    const inFlight = pending.get(key);
+    if (inFlight) return inFlight;
+    const task = queue.then(() => request(from, to));
+    queue = task.then(() => undefined, () => undefined);
+    pending.set(key, task);
+    void task.finally(() => pending.delete(key));
+    return task;
+  }
+  async function fetchRoutes(points: RoutePoint[]): Promise<Record<string, RouteSegment>> {
+    const entries = await Promise.all(points.slice(0, -1).map(async (from, i) => {
+      const to = points[i + 1];
+      return [getRouteSegmentKey(from, to), await fetchRoute(from, to)] as const;
+    }));
+    return Object.fromEntries(entries);
+  }
+  return { fetchRoute, fetchRoutes };
+}
+const router = createWalkingRouter({
+  // Release/OTA bundles must stay off even if an EAS environment accidentally carries the flag.
+  enabled: typeof __DEV__ !== 'undefined' && __DEV__ &&
+    process.env.EXPO_PUBLIC_WALKING_ROUTING_ENABLED === 'true',
+  fetch: (...args) => fetch(...args), now: Date.now,
+  sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
+});
+export const fetchWalkingRoute = router.fetchRoute;
+// Kept name for callers; the shared queue spaces all network requests, including other screens.
+export const fetchWalkingRoutesInParallel = router.fetchRoutes;
+
+export function getRouteLabel(segment?: RouteSegment | null): string {
+  if (!segment) return 'Calcul de l’itinéraire…';
+  if (segment.status === 'unavailable') return 'Aucun itinéraire piéton trouvé';
+  if (segment.status === 'straight_line') return `${segment.distanceMeters} m à vol d’oiseau · trajet indisponible`;
+  return `Piéton calculé : ${segment.durationMinutes} min • ${segment.distanceMeters} m`;
 }
 
 /**
@@ -114,56 +153,7 @@ export function getRouteMidpoint(coordinates: LatLng[]): LatLng | null {
 }
 
 /**
- * Efficiently computes walking routes for a list of points in parallel,
- * reusing any already cached or known segments to avoid redundant network calls.
- */
-export async function fetchWalkingRoutesInParallel(
-  points: { id: string; latitude: number; longitude: number }[],
-  existingSegments: Record<string, RouteSegment> = {}
-): Promise<Record<string, RouteSegment>> {
-  if (points.length < 2) {
-    return {};
-  }
-
-  const updatedSegments: Record<string, RouteSegment> = {};
-  const tasks: { key: string; from: LatLng; to: LatLng }[] = [];
-
-  for (let i = 0; i < points.length - 1; i++) {
-    const from = points[i];
-    const to = points[i + 1];
-    const key = `${from.id}->${to.id}`;
-
-    if (existingSegments[key]) {
-      updatedSegments[key] = existingSegments[key];
-    } else {
-      tasks.push({
-        key,
-        from: { latitude: Number(from.latitude), longitude: Number(from.longitude) },
-        to: { latitude: Number(to.latitude), longitude: Number(to.longitude) },
-      });
-    }
-  }
-
-  if (tasks.length === 0) {
-    return updatedSegments;
-  }
-
-  const results = await Promise.all(
-    tasks.map(async (task) => {
-      const seg = await fetchWalkingRoute(task.from, task.to);
-      return { key: task.key, seg };
-    })
-  );
-
-  for (const res of results) {
-    updatedSegments[res.key] = res.seg;
-  }
-
-  return updatedSegments;
-}
-
-/**
- * Optimizes the order of stops to minimize the total walking distance (TSP - Traveling Salesperson).
+ * Approximates stop order using straight-line distances, not a pedestrian travel matrix.
  * Keeps the first stop (the starting bar) fixed, and calculates the optimal sequence for the rest.
  */
 export function optimizeStopOrder<T extends LatLng>(stops: T[]): T[] {

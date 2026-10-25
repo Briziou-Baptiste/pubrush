@@ -1,0 +1,17 @@
+backend/app/api/routes/bars.py
+backend/tests/test_bars.py
+backend/tests/test_walking_routing.py
+mobile/src/features/active_barathon/components/ActiveBarathonBottomPanel.tsx
+mobile/src/features/active_barathon/components/ActiveBarathonMap.tsx
+mobile/src/features/active_barathon/components/ReplaceOrAddStopModal.tsx
+mobile/src/features/active_barathon/screens/ActiveBarathonScreen.tsx
+mobile/src/features/barathon_recap/screens/BarathonRecapScreen.tsx
+mobile/src/features/create_barathon/screens/CreateBarathonMapScreen.tsx
+mobile/src/features/create_barathon/services/routing.service.ts
+mobile/src/features/create_barathon/services/routePlan.service.ts
+mobile/src/features/create_barathon/components/RoutingAttribution.tsx
+mobile/tests/routing.test.cjs
+mobile/tests/fixtures/toulouse-route.json
+mobile/tests/fixtures/README.md
+docs/places-003/DEPLOYMENT.md
+docs/places-003/git-paths.txt

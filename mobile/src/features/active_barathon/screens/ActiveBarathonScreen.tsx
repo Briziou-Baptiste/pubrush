@@ -1,3 +1,4 @@
+import RoutingAttribution from '../../create_barathon/components/RoutingAttribution';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, View, TouchableOpacity, Text, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -601,6 +602,7 @@ export default function ActiveBarathonScreen() {
         </View>
 
         <View style={styles.bottomOverlay}>
+          <RoutingAttribution />
           <ActiveBarathonBottomPanel
             stopName={tracking.activeStop?.name ?? 'Aucun stop'}
             stopType={tracking.activeStop?.stop_type}
@@ -638,6 +640,7 @@ export default function ActiveBarathonScreen() {
         visible={modifyModalVisible}
         mode={modifyMode}
         currentStop={tracking.activeStop ?? null}
+        lastStop={barathon.stops[barathon.stops.length - 1] ?? null}
         barathonId={barathon.id}
         userLocation={tracking.state.currentLocation}
         onClose={() => setModifyModalVisible(false)}

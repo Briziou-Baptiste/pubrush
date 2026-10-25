@@ -1,3 +1,5 @@
+import { appendSelectedStops, getSearchCenter } from '../services/routePlan.service';
+import RoutingAttribution from '../components/RoutingAttribution';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -30,12 +32,12 @@ import { StopType, MapFilterItem, BarSearchResult } from '../types/createBaratho
 import { fetchBarsSearch, fetchNearbyBars, fetchMapFilters } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
 import {
-  fetchWalkingRoute,
+  getRouteSegmentKey,
+  getRouteLabel,
   fetchWalkingRoutesInParallel,
   RouteSegment,
   getRouteMidpoint,
   optimizeStopOrder,
-  getStraightLineWalkingMinutes,
 } from '../services/routing.service';
 
 type SelectedPoint = {
@@ -53,7 +55,6 @@ const DEFAULT_REGION: Region = {
   longitudeDelta: 0.08,
 };
 
-const WALKING_SPEED_KMH = 4.8;
 
 export default function CreateBarathonMapScreen() {
   const mapRef = useRef<MapView | null>(null);
@@ -113,10 +114,10 @@ export default function CreateBarathonMapScreen() {
       return;
     }
 
-    // Debounce parallel OSRM queries by 250ms to prevent request storms and 429 errors
+    // Debounce route queries by 250ms to prevent request storms and 429 errors
     const debounceTimer = setTimeout(async () => {
       try {
-        const updated = await fetchWalkingRoutesInParallel(points, routeSegments);
+        const updated = await fetchWalkingRoutesInParallel(points);
         if (active) {
           setRouteSegments(updated);
         }
@@ -159,8 +160,11 @@ export default function CreateBarathonMapScreen() {
   const { location, heading, permissionGranted, loadingLocation } =
     useUserLocation();
 
+  const textSearchCenter = getSearchCenter(points, location);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<BarSearchResult[]>([]);
+  const searchRequestVersion = useRef(0);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [suggestions, setSuggestions] = useState<BarSearchResult[]>([]);
@@ -169,9 +173,11 @@ export default function CreateBarathonMapScreen() {
 
 
   useEffect(() => {
+    const version = ++searchRequestVersion.current;
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
+    setSearchResults([]);
 
     const cleanText = searchQuery.trim();
     if (cleanText.length < 2) {
@@ -180,15 +186,16 @@ export default function CreateBarathonMapScreen() {
     }
 
     searchTimeoutRef.current = setTimeout(() => {
-      void performSearch(cleanText);
+      void performSearch(cleanText, version);
     }, 300);
 
     return () => {
+      searchRequestVersion.current += 1;
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, activeFilterKey]);
+  }, [searchQuery, activeFilterKey, textSearchCenter?.latitude, textSearchCenter?.longitude]);
 
   function handleSearchChange(text: string) {
     setSearchQuery(text);
@@ -196,13 +203,14 @@ export default function CreateBarathonMapScreen() {
 
 
   // Performs a text search for bars via the backend proxy
-  async function performSearch(query: string) {
+  async function performSearch(query: string, version: number) {
     try {
       const token = await getAccessToken();
       if (!token) return;
 
-      const searchLat = points.length > 0 ? points[points.length - 1].latitude : location?.latitude;
-      const searchLon = points.length > 0 ? points[points.length - 1].longitude : location?.longitude;
+      const center = getSearchCenter(points, location);
+      const searchLat = center?.latitude;
+      const searchLon = center?.longitude;
 
       // Calls our backend API which in turn queries Photon/OSM with caching and SSL bypass
       const data = await fetchBarsSearch(
@@ -223,7 +231,7 @@ export default function CreateBarathonMapScreen() {
         stopType: item.stop_type as StopType,
       }));
 
-      setSearchResults(parsedResults);
+      if (version === searchRequestVersion.current) setSearchResults(parsedResults);
     } catch (error) {
       console.error('Failed to search bars via backend:', error);
     }
@@ -285,7 +293,7 @@ export default function CreateBarathonMapScreen() {
         return;
       }
 
-      const lastPoint = points[points.length - 1];
+      const lastPoint = getSearchCenter(points, undefined)!;
       console.log('[loadSuggestions] lastPoint:', lastPoint);
 
       try {
@@ -327,12 +335,7 @@ export default function CreateBarathonMapScreen() {
 
         const filtered = (data || [])
           .map((item: any) => {
-            const dist = typeof item.estimated_minutes === 'number'
-              ? item.estimated_minutes
-              : getEstimatedWalkingTimeMinutes(
-                  lastPoint,
-                  { latitude: item.latitude, longitude: item.longitude } as any
-                );
+            const dist = typeof item.estimated_minutes === 'number' ? item.estimated_minutes : undefined;
 
             return {
               name: item.name || 'Lieu inconnu',
@@ -347,7 +350,7 @@ export default function CreateBarathonMapScreen() {
           })
           .filter((item: any) => {
             // Strict travel time constraint check to prevent far outliers
-            if (item.estimatedMinutes > allowedTravelTimeMinutes) {
+            if (item.estimatedMinutes != null && item.estimatedMinutes > allowedTravelTimeMinutes) {
               return false;
             }
 
@@ -375,7 +378,7 @@ export default function CreateBarathonMapScreen() {
               return isSameName || isSameCoords;
             });
           })
-          .sort((a, b) => a.estimatedMinutes - b.estimatedMinutes)
+          .sort((a, b) => (a.estimatedMinutes ?? Infinity) - (b.estimatedMinutes ?? Infinity))
           .slice(0, 50);
 
         console.log('[loadSuggestions] setting suggestions count:', filtered.length);
@@ -441,7 +444,7 @@ export default function CreateBarathonMapScreen() {
       return;
     }
 
-    const baseStops: SelectedPoint[] = points.length > 0 ? [points[0]] : [];
+    const baseStops = points;
     const needed = Math.max(2, 4 - baseStops.length);
 
     const newAdditions: SelectedPoint[] = candidates.slice(0, needed).map((c) => ({
@@ -452,14 +455,13 @@ export default function CreateBarathonMapScreen() {
       longitude: c.longitude,
     }));
 
-    const combined = [...baseStops, ...newAdditions];
-    const optimized = optimizeStopOrder(combined);
-    setPoints(optimized);
+    const combined = appendSelectedStops(baseStops, newAdditions);
+    setPoints(combined);
     setSelectedSuggestion(null);
 
     Alert.alert(
       'Parcours généré !',
-      `PubRush a composé un barathon de ${optimized.length} étapes optimisées pour minimiser votre marche.`
+      `PubRush a composé un barathon de ${combined.length} étapes, en conservant les bars déjà sélectionnés.`
     );
   }
 
@@ -562,7 +564,7 @@ export default function CreateBarathonMapScreen() {
     setPoints(optimized);
     Alert.alert(
       'Parcours optimisé',
-      'L’ordre des étapes a été réorganisé pour minimiser le temps de marche total entre les bars !'
+      'L’ordre des étapes a été réorganisé selon les distances à vol d’oiseau. Les trajets piétons sont recalculés.'
     );
   }
 
@@ -580,40 +582,6 @@ export default function CreateBarathonMapScreen() {
       },
       { duration: 600 }
     );
-  }
-
-  function toRadians(value: number) {
-    return (value * Math.PI) / 180;
-  }
-
-  function getDistanceInKm(from: SelectedPoint, to: SelectedPoint) {
-    const earthRadiusKm = 6371;
-
-    const dLat = toRadians(to.latitude - from.latitude);
-    const dLon = toRadians(to.longitude - from.longitude);
-
-    const lat1 = toRadians(from.latitude);
-    const lat2 = toRadians(to.latitude);
-
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.sin(dLon / 2) *
-        Math.sin(dLon / 2) *
-        Math.cos(lat1) *
-        Math.cos(lat2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return earthRadiusKm * c;
-  }
-
-  function getEstimatedWalkingTimeMinutes(from: SelectedPoint, to: SelectedPoint) {
-    const key = `${from.id}->${to.id}`;
-    if (routeSegments[key]?.durationMinutes) {
-      return routeSegments[key].durationMinutes;
-    }
-    const distanceKm = getDistanceInKm(from, to);
-    const timeHours = distanceKm / WALKING_SPEED_KMH;
-    return Math.max(1, Math.round(timeHours * 60));
   }
 
   function getTravelTimeTone(estimatedMinutes: number) {
@@ -635,13 +603,15 @@ export default function CreateBarathonMapScreen() {
 
     points.slice(0, -1).forEach((point, index) => {
       const nextPoint = points[index + 1];
-      const segmentKey = `${point.id}->${nextPoint.id}`;
+      const segmentKey = getRouteSegmentKey(point, nextPoint);
       const segment = routeSegments[segmentKey];
 
       const lat1 = Number(point.latitude);
       const lng1 = Number(point.longitude);
       const lat2 = Number(nextPoint.latitude);
       const lng2 = Number(nextPoint.longitude);
+
+      if (segment?.status === 'unavailable') return;
 
       if (Number.isNaN(lat1) || Number.isNaN(lng1) || Number.isNaN(lat2) || Number.isNaN(lng2)) {
         return;
@@ -660,7 +630,7 @@ export default function CreateBarathonMapScreen() {
         <Polyline
           key={`glow-${segmentKey}`}
           coordinates={coords}
-          strokeColor="rgba(16, 185, 129, 0.25)"
+          strokeColor={segment?.status === 'walking' ? 'rgba(16, 185, 129, 0.25)' : 'transparent'}
           strokeWidth={8}
         />
       );
@@ -670,7 +640,8 @@ export default function CreateBarathonMapScreen() {
         <Polyline
           key={`route-${segmentKey}`}
           coordinates={coords}
-          strokeColor="#10B981"
+          strokeColor={segment?.status === 'walking' ? '#10B981' : '#9CA3AF'}
+          lineDashPattern={segment?.status === 'walking' ? undefined : [6, 6]}
           strokeWidth={4}
         />
       );
@@ -678,11 +649,6 @@ export default function CreateBarathonMapScreen() {
       // 3. Midpoint floating badge with real minutes & meters
       const midpoint = getRouteMidpoint(coords);
       if (midpoint && segment) {
-        const distLabel =
-          segment.distanceMeters >= 1000
-            ? `${(segment.distanceMeters / 1000).toFixed(1)} km`
-            : `${segment.distanceMeters} m`;
-
         elements.push(
           <Marker
             key={`badge-${segmentKey}`}
@@ -707,7 +673,7 @@ export default function CreateBarathonMapScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                 <Ionicons name="walk" size={10} color="#94A3B8" />
                 <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>
-                  {segment.durationMinutes} min • {distLabel}
+                  {getRouteLabel(segment)}
                 </Text>
               </View>
             </View>
@@ -789,7 +755,7 @@ export default function CreateBarathonMapScreen() {
               coordinate={{ latitude: lat, longitude: lng }}
               pinColor={isBar ? 'yellow' : 'purple'}
               title={`${item.name} (${isBar ? 'Bar' : 'Restaurant'})`}
-              description={`${item.estimatedMinutes} min de marche • Toucher pour afficher`}
+              description={`${item.estimatedMinutes != null ? `≈ ${item.estimatedMinutes} min (indicatif)` : 'Durée piétonne indisponible'} • Toucher pour afficher`}
               onPress={() => setSelectedSuggestion(item)}
             />
           );
@@ -1089,7 +1055,7 @@ export default function CreateBarathonMapScreen() {
           </View>
 
           <Text style={styles.suggestionCardSub}>
-            À {selectedSuggestion.estimatedMinutes} min de marche du bar précédent
+            {selectedSuggestion.estimatedMinutes != null ? `≈ ${selectedSuggestion.estimatedMinutes} min (indicatif) depuis le bar précédent` : 'Durée piétonne indisponible depuis le bar précédent'}
             {selectedSuggestion.city ? ` • ${selectedSuggestion.city}` : ''}
           </Text>
 
@@ -1114,7 +1080,7 @@ export default function CreateBarathonMapScreen() {
         </View>
       )}
 
-      <View style={[styles.bottomSheet, isRouteListCollapsed && { maxHeight: 130, paddingBottom: 10 }]}>
+      <View style={[styles.bottomSheet, isRouteListCollapsed && { maxHeight: 170, paddingBottom: 10 }]}>
         <TouchableOpacity
           style={styles.sheetHeader}
           activeOpacity={0.75}
@@ -1155,6 +1121,8 @@ export default function CreateBarathonMapScreen() {
           </View>
         </TouchableOpacity>
 
+        <RoutingAttribution />
+
         {!isRouteListCollapsed && (
           <ScrollView
             style={styles.pointsList}
@@ -1171,22 +1139,17 @@ export default function CreateBarathonMapScreen() {
           ) : (
             points.map((point, index) => {
               const nextPoint = points[index + 1];
-              const segmentKey = nextPoint ? `${point.id}->${nextPoint.id}` : null;
+              const segmentKey = nextPoint ? getRouteSegmentKey(point, nextPoint) : null;
               const segment = segmentKey ? routeSegments[segmentKey] : null;
 
               const estimatedMinutes = nextPoint
-                ? (segment?.durationMinutes || getEstimatedWalkingTimeMinutes(point, nextPoint))
+                ? segment?.durationMinutes
                 : null;
 
               const tone = estimatedMinutes
                 ? getTravelTimeTone(estimatedMinutes)
                 : null;
 
-              const distanceLabel = segment?.distanceMeters
-                ? (segment.distanceMeters >= 1000
-                    ? ` • ${(segment.distanceMeters / 1000).toFixed(1)} km`
-                    : ` • ${segment.distanceMeters} m`)
-                : '';
 
               return (
                 <View key={point.id}>
@@ -1264,15 +1227,14 @@ export default function CreateBarathonMapScreen() {
                     </Text>
                   </View>
 
-                  {nextPoint && estimatedMinutes && tone ? (
+                  {nextPoint ? (
                     <View style={styles.travelBlock}>
                       <Text style={styles.travelArrow}>↓</Text>
 
                       <View style={styles.travelTextWrapper}>
                         <Text style={styles.travelLine}>
-                          <Text style={styles.travelLabel}>Temps de marche réel : </Text>
-                          <Text style={[styles.travelValue, { color: tone.color }]}>
-                            {estimatedMinutes} min{distanceLabel}
+                          <Text style={[styles.travelValue, { color: segment?.status === 'walking' ? tone?.color : '#6B7280' }]}>
+                            {getRouteLabel(segment)}
                           </Text>
                         </Text>
                       </View>

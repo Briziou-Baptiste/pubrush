@@ -37,7 +37,12 @@ def test_search_bars_photon_fallback(mock_urlopen, client, user_auth_headers):
     assert results[0]["stop_type"] == "bar"
 
 @patch("urllib.request.urlopen")
-def test_get_nearby_bars_overpass(mock_urlopen, client, user_auth_headers):
+def test_get_nearby_bars_overpass(mock_urlopen, client, user_auth_headers, monkeypatch):
+    monkeypatch.setenv("WALKING_ROUTING_ENABLED", "true")
+    monkeypatch.setenv("ENVIRONMENT", "test")
+    from app.api.routes import bars
+    bars.NEARBY_CACHE.clear()
+    bars._walking_next_request_at = 0
     # We have two API calls in get_nearby_bars:
     # 1. Overpass API call to retrieve candidates
     # 2. OSRM API call (compute_real_walking_times) to compute routing times
@@ -61,6 +66,7 @@ def test_get_nearby_bars_overpass(mock_urlopen, client, user_auth_headers):
     }
     
     osrm_data = {
+        "code": "Ok",
         "durations": [
             [0, 120]  # Source to source = 0s, source to Le Bar Central = 120s (2 mins)
         ]
@@ -85,4 +91,4 @@ def test_get_nearby_bars_overpass(mock_urlopen, client, user_auth_headers):
     
     assert len(results) == 1
     assert results[0]["name"] == "Le Bar Central"
-    assert results[0]["estimated_minutes"] == 2 # 120s * 1.25 = 150s -> 2.5 mins -> rounds to 2 (banker's rounding)
+    assert results[0]["estimated_minutes"] == 2 # 120 seconds on the pedestrian graph

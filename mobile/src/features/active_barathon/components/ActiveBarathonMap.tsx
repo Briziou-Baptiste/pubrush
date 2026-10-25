@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActiveBarathonStop, LatLng } from '../types/activeBarathon.types';
 import { ParticipantLocation } from '../types/webSocker.types';
 import { styles } from '../styles/activeBarathon.styles';
-import { fetchWalkingRoutesInParallel, RouteSegment } from '../../create_barathon/services/routing.service';
+import { fetchWalkingRoutesInParallel, RouteSegment, getRouteSegmentKey } from '../../create_barathon/services/routing.service';
 
 type Props = {
   initialRegion: Region;
@@ -30,7 +30,7 @@ function ActiveBarathonMap({
   const mapRef = useRef<MapView>(null);
   const [routeSegments, setRouteSegments] = useState<Record<string, RouteSegment>>({});
 
-  // Parallel OSRM route calculation with incremental caching
+  // Pedestrian route calculation with incremental caching
   useEffect(() => {
     let active = true;
 
@@ -47,7 +47,7 @@ function ActiveBarathonMap({
       }));
 
       try {
-        const updated = await fetchWalkingRoutesInParallel(points, routeSegments);
+        const updated = await fetchWalkingRoutesInParallel(points);
         if (active) {
           setRouteSegments(updated);
         }
@@ -104,7 +104,7 @@ function ActiveBarathonMap({
       >
         {allStops.slice(0, -1).map((stop, index) => {
           const nextStop = allStops[index + 1];
-          const segmentKey = `${stop.id}->${nextStop.id}`;
+          const segmentKey = getRouteSegmentKey({ ...stop, id: String(stop.id) }, { ...nextStop, id: String(nextStop.id) });
           const segment = routeSegments[segmentKey];
 
           const isCurrentLeg = index === activeStopIndex;
@@ -118,7 +118,8 @@ function ActiveBarathonMap({
 
           const strokeWidth = isCurrentLeg ? 5 : 3;
 
-          if (segment && segment.coordinates.length >= 2) {
+          if (segment?.status === 'unavailable') return null;
+          if (segment?.status === 'walking' && segment.coordinates.length >= 2) {
             return (
               <Polyline
                 key={`route-seg-${segmentKey}`}
@@ -137,9 +138,9 @@ function ActiveBarathonMap({
                 { latitude: Number(stop.latitude), longitude: Number(stop.longitude) },
                 { latitude: Number(nextStop.latitude), longitude: Number(nextStop.longitude) },
               ]}
-              strokeColor={strokeColor}
+              strokeColor="#9CA3AF"
               strokeWidth={strokeWidth}
-              lineDashPattern={isCurrentLeg ? undefined : [5, 5]}
+              lineDashPattern={[5, 5]}
             />
           );
         })}
