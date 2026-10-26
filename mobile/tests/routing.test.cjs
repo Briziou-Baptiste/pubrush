@@ -167,6 +167,8 @@ test('provider is disabled unless explicitly enabled for an eligible use', async
   const segment = await r.fetchRoute(A, B);
   assert.equal(segment.status, 'straight_line');
   assert.equal(segment.durationMinutes, null);
+  assert.match(getRouteLabel(segment), /m à vol d’oiseau$/);
+  assert.doesNotMatch(getRouteLabel(segment), /trajet indisponible|Piéton calculé/);
   assert.equal(r.calls.length, 0);
 });
 

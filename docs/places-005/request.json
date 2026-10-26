@@ -1,0 +1,8 @@
+{
+  "url": "https://overpass.openstreetmap.fr/api/interpreter",
+  "query": "[out:json][timeout:15];\nnwr[\"amenity\"~\"^(pub|bar|restaurant)$\"](around:1200,43.6070791,1.4512943);\nout center;",
+  "fetched_at": "2026-10-26T08:25:53.810463+00:00",
+  "sha256": "c076a00aac8aa58fe24e5773ab2a2b71d91cafa5af853471e0b92c6511633b3f",
+  "osm_base": "2026-08-10T00:10:23Z",
+  "attribution": "\u00a9 OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright"
+}

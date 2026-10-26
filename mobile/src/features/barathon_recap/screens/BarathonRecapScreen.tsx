@@ -1,4 +1,5 @@
 import RoutingAttribution from '../../create_barathon/components/RoutingAttribution';
+import WalkingDirectionsButton from '../../create_barathon/components/WalkingDirectionsButton';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -33,7 +34,7 @@ import {
 } from '../../create_barathon/types/createBarathon.types';
 import { getCurrentUser, getAccessToken } from '../../../lib/authStorage';
 import { fetchBarathonExpenses } from '../../../lib/api';
-import { fetchWalkingRoutesInParallel, getRouteSegmentKey, RouteSegment } from '../../create_barathon/services/routing.service';
+import { fetchWalkingRoutesInParallel, getRouteLabel, getRouteSegmentKey, RouteSegment } from '../../create_barathon/services/routing.service';
 import { calculateSimplifiedDebts, DebtSettlement } from '../utils/debt.utils';
 
 type ExistingParticipant = {
@@ -1094,7 +1095,7 @@ export default function BarathonRecapScreen() {
           </View>
           <RoutingAttribution />
           <Text style={{ fontSize: 11, color: '#6B7280', textAlign: 'center', marginTop: 6 }}>
-            Pincez l'écran ou utilisez les boutons + / - pour zoomer sur le trajet piéton.
+            Pincez l’écran ou utilisez + / − pour zoomer sur la carte.
           </Text>
 
           <View style={styles.stopList}>
@@ -1102,6 +1103,9 @@ export default function BarathonRecapScreen() {
               .sort((a, b) => a.stopOrder - b.stopOrder)
               .map((stop, index) => {
                 const isBar = stop.stopType === 'bar';
+                const from = routePoints[index];
+                const to = routePoints[index + 1];
+                const segment = from && to ? routeSegments[getRouteSegmentKey(from, to)] : undefined;
                 return (
                   <View key={stop.id} style={styles.stopCard}>
                     <Text style={styles.stopIndex}>Étape {index + 1}</Text>
@@ -1139,6 +1143,10 @@ export default function BarathonRecapScreen() {
                     <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 3 }}>
                       Arrêt n°{index + 1} • {isBar ? 'Bar' : 'Restaurant'}
                     </Text>
+                    {from && to && <View style={{ marginTop: 8 }}>
+                      <Text style={{ fontSize: 12, color: '#6B7280' }}>{getRouteLabel(segment)}</Text>
+                      {segment?.status !== 'walking' && <WalkingDirectionsButton from={from} to={to} />}
+                    </View>}
                   </View>
                 );
               })}

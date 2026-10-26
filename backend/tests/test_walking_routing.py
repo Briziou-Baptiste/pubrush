@@ -125,5 +125,6 @@ def test_create_barathon_without_walking_provider(mock_http, mock_search, enable
                   for i, c in enumerate(nearby.json())],
     })
     assert response.status_code == 201
-    assert [(s['name'], s['stop_order']) for s in response.json()['stops']] == [('Bar 0', 1), ('Bar 1', 2)]
+    assert [(s['name'], s['stop_order']) for s in response.json()['stops']] == [
+        (candidate['name'], i + 1) for i, candidate in enumerate(nearby.json())]
     assert mock_http.call_count == (1 if enabled else 0)

@@ -254,7 +254,7 @@ export default function CreateBarathonScreen() {
             <View style={{ height: 16 }} />
 
             {/* Temps de marche */}
-            <Text style={styles.fieldLabel}>Temps de marche max entre les bars</Text>
+            <Text style={styles.fieldLabel}>Budget de déplacement entre les bars</Text>
             <View style={styles.chipsContainer}>
               {TRAVEL_TIME_PRESETS.map((p) => {
                 const isActive = travelTime === p.value;
@@ -273,14 +273,14 @@ export default function CreateBarathonScreen() {
               })}
             </View>
             <BarathonField
-              label="Ou temps de trajet max personnalisé (en minutes)"
+              label="Ou budget personnalisé (en minutes)"
               value={travelTime}
               onChangeText={setTravelTime}
               placeholder="Ex: 12"
               keyboardType="numeric"
             />
             <Text style={styles.helperText}>
-              Ce temps définit le périmètre de recherche des bars accessibles à pied sur la carte.
+              Ce budget définit un rayon de recherche approximatif. Sans itinéraire calculé, le temps de marche réel reste à vérifier dans Maps.
             </Text>
             {travelError && <Text style={styles.inlineError}>{travelError}</Text>}
           </View>

@@ -1,7 +1,8 @@
 import RoutingAttribution from '../../create_barathon/components/RoutingAttribution';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, View, TouchableOpacity, Text, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Alert, View, TouchableOpacity, Text, Modal, ScrollView, useWindowDimensions } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getMapControlsLayout } from '../../create_barathon/services/mapLayout.service';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Region } from 'react-native-maps';
 
@@ -28,6 +29,13 @@ import {
 } from '../services/offlineSync.service';
 
 export default function ActiveBarathonScreen() {
+  const insets = useSafeAreaInsets();
+  const { height: screenHeight } = useWindowDimensions();
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [bottomHeight, setBottomHeight] = useState(0);
+  const availableHeight = screenHeight - insets.top - insets.bottom - 24;
+  const controlsLayout = getMapControlsLayout(screenHeight - insets.bottom - 12 - bottomHeight,
+    insets.top + 12 + headerHeight);
   const params = useLocalSearchParams<{ barathonId?: string }>();
   const [barathon, setBarathon] = useState<ActiveBarathonData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -572,9 +580,13 @@ export default function ActiveBarathonScreen() {
             activeStopIndex={tracking.state.activeStopIndex}
             friendLocations={Object.values(friendLocations)}
             currentUserId={currentUserId}
+            controlsLayout={headerHeight && bottomHeight ? controlsLayout : undefined}
+            rightInset={insets.right}
           />
 
-        <View style={styles.topOverlay}>
+        <View style={[styles.topOverlay, { top: insets.top + 12, left: insets.left + 12, right: insets.right + 12 }]}
+          onLayout={event => setHeaderHeight(event.nativeEvent.layout.height)}>
+          <ScrollView style={{ maxHeight: availableHeight * 0.30 }} bounces={false}>
           <ActiveBarathonHeader
             title={barathon.name}
             stepLabel={`Étape ${tracking.state.activeStopIndex + 1} / ${barathon.stops.length}`}
@@ -599,10 +611,12 @@ export default function ActiveBarathonScreen() {
                 : undefined
             }
           />
+          </ScrollView>
         </View>
 
-        <View style={styles.bottomOverlay}>
-          <RoutingAttribution />
+        <View style={[styles.bottomOverlay, { bottom: insets.bottom + 12, left: insets.left + 12, right: insets.right + 12 }]}
+          onLayout={event => setBottomHeight(event.nativeEvent.layout.height)}>
+          <ScrollView style={{ maxHeight: availableHeight * 0.40 }} bounces={false}>
           <ActiveBarathonBottomPanel
             stopName={tracking.activeStop?.name ?? 'Aucun stop'}
             stopType={tracking.activeStop?.stop_type}
@@ -626,6 +640,8 @@ export default function ActiveBarathonScreen() {
             isLastStop={isLastStop}
             isInsideStop={tracking.state.phase !== 'en_route'}
           />
+          <RoutingAttribution />
+          </ScrollView>
         </View>
       </View>
 

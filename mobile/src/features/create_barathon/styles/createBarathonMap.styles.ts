@@ -13,7 +13,6 @@ export const createBarathonMapStyles = StyleSheet.create({
     left: 12,
     right: 12,
     bottom: 12,
-    maxHeight: 280,
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 35,
     padding: 14,
@@ -305,8 +304,8 @@ export const createBarathonMapStyles = StyleSheet.create({
       gap: 6,
     },
     orderButton: {
-      width: 24,
-      height: 24,
+      width: 44,
+      height: 44,
       borderRadius: 12,
       backgroundColor: '#E5E7EB',
       alignItems: 'center',

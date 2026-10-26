@@ -4,6 +4,8 @@ import urllib.request
 import urllib.parse
 import ssl
 import math
+import re
+import unicodedata
 from threading import Lock
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
@@ -152,12 +154,16 @@ def search_bars(
 
 def search_photon(q: str, lat: Optional[float], lon: Optional[float], filter_key: Optional[str] = None):
     query_params = {"q": q, "limit": 15}  # Request slightly more to allow filtering
+    if filter_key == 'bar':
+        query_params['osm_tag'] = ['amenity:pub', 'amenity:bar', 'amenity:biergarten', 'amenity:nightclub']
+    elif filter_key == 'food':
+        query_params['osm_tag'] = ['amenity:restaurant', 'amenity:fast_food', 'amenity:cafe', 'amenity:food_court']
     if lat is not None and lon is not None:
         query_params["lat"] = str(lat)
         query_params["lon"] = str(lon)
         query_params["location_bias_scale"] = "0.2"
 
-    url = f"https://photon.komoot.io/api/?{urllib.parse.urlencode(query_params)}"
+    url = f"https://photon.komoot.io/api/?{urllib.parse.urlencode(query_params, doseq=True)}"
     
     try:
         data = _http_get_json(url, timeout=5)
@@ -177,7 +183,7 @@ def search_photon(q: str, lat: Optional[float], lon: Optional[float], filter_key
             if filter_key:
                 # Dynamic matching rules
                 if filter_key == "bar":
-                    if not (osm_key == "amenity" and osm_val in ["pub", "bar", "biergarten"]):
+                    if not (osm_key == "amenity" and osm_val in ["pub", "bar", "biergarten", "nightclub"]):
                         continue
                 elif filter_key == "food":
                     if not (osm_key == "amenity" and osm_val in ["restaurant", "fast_food", "cafe", "food_court"]):
@@ -196,7 +202,7 @@ def search_photon(q: str, lat: Optional[float], lon: Optional[float], filter_key
                 
                 stop_type = filter_key
             else:
-                stop_type = "bar" if osm_val in ["bar", "pub", "biergarten"] else "food"
+                stop_type = "bar" if osm_val in ["bar", "pub", "biergarten", "nightclub"] else "food"
             
             results.append(
                 BarSearchResult(
@@ -309,6 +315,31 @@ def get_straight_line_walking_minutes(lat1: float, lon1: float, lat2: float, lon
     hours = dist_km / 4.8  # 4.8 km/h walking speed (brisk urban profile matching Google Maps)
     return max(1, int(round(hours * 60.0)))
 
+
+def distance_meters(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    rad = math.radians
+    a = (math.sin(rad(lat2 - lat1) / 2) ** 2 + math.cos(rad(lat1)) *
+         math.cos(rad(lat2)) * math.sin(rad(lon2 - lon1) / 2) ** 2)
+    return 6371000 * 2 * math.asin(math.sqrt(min(1, a)))
+
+
+def _venue_name(name: str) -> str:
+    return ''.join(c for c in unicodedata.normalize('NFKD', name.casefold())
+                   if not unicodedata.combining(c)).strip()
+
+
+def _unique_nearby(results: list[BarSearchResult]) -> list[BarSearchResult]:
+    # Only merge coincident OSM representations of the same named venue.
+    # Two branches with the same name or adjacent, differently named bars stay distinct.
+    unique = []
+    for result in results:
+        if not any(_venue_name(result.name) == _venue_name(other.name) and
+                   (not result.street or not other.street or result.street == other.street) and
+                   distance_meters(result.latitude, result.longitude, other.latitude, other.longitude) <= 10
+                   for other in unique):
+            unique.append(result)
+    return unique
+
 # Per-process admission limit; busy provider leaves durations unknown.
 _WALKING_REQUEST_LOCK = Lock()
 _walking_next_request_at = 0.0
@@ -403,7 +434,7 @@ def get_nearby_bars(
         candidates = search_overpass_nearby(lat, lon, radius, osm_query, filter_key)
 
     # Compute real walking times
-    candidates = compute_real_walking_times(lat, lon, candidates)
+    candidates = compute_real_walking_times(lat, lon, _unique_nearby(candidates))
 
     filtered_results = []
     for c in candidates:
@@ -413,11 +444,12 @@ def get_nearby_bars(
                 filtered_results.append(c)
         else:
             # Straight-line prefilter only; duration remains unknown to the client
-            dist_minutes = get_straight_line_walking_minutes(lat, lon, c.latitude, c.longitude)
-            if dist_minutes <= max_travel_time_minutes:
+            if distance_meters(lat, lon, c.latitude, c.longitude) <= radius:
                 filtered_results.append(c)
 
-    filtered_results.sort(key=lambda x: x.estimated_minutes or 999)
+    filtered_results.sort(key=lambda x: (
+        x.estimated_minutes is None, x.estimated_minutes if x.estimated_minutes is not None else math.inf,
+        distance_meters(lat, lon, x.latitude, x.longitude), x.name.casefold()))
     res = filtered_results[:50]  # Propose up to 50 sorted recommendations to the frontend
 
     # Prevent memory leaks in the nearby cache, and only cache if we got successful recommendations (res is not empty)
@@ -429,14 +461,17 @@ def get_nearby_bars(
     return res
 
 def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optional[str] = None, filter_key: Optional[str] = None):
-    # Spatial Overpass API query searching for bars, pubs, and restaurants in the nearby area (cap to 50 results)
+    # Fetch the whole local inventory. A provider-side cap is by OSM ID, never by distance.
     # nwr: fetches Nodes, Ways, and Relations (supports polygon centers for large venues)
     # amenity regex filtering: extremely fast single-pass match
     # out center: computes gravity center coordinates for polygonal elements automatically
     
     # Sanitize osm_query to avoid Overpass QL syntax escape / injection
-    if osm_query:
-        import re
+    if filter_key in (None, 'bar', 'food'):
+        # Built-in filters used to be seeded with a narrower query than the parser.
+        # Include cafes/restaurants with an explicit bar activity, beer gardens and clubs.
+        query_body = 'nwr["amenity"~"^(pub|bar|biergarten|taphouse|nightclub|restaurant|cafe|fast_food|food_court)$"]'
+    elif osm_query:
         cleaned = osm_query.strip()
         if re.match(r'^[a-zA-Z0-9_\[\]"\'=~^$|:\s\-]+$', cleaned) and not any(c in cleaned for c in (";", ")", "(")):
             query_body = cleaned
@@ -448,9 +483,9 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
     overpass_query = f"""
     [out:json][timeout:5];
     (
-      {query_body}(around:{radius},{lat},{lon});
+      {query_body}["name"](around:{radius},{lat},{lon});
     );
-    out center 50;
+    out center;
     """
     
     servers = [
@@ -501,7 +536,7 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
             
     if not res_data:
         try:
-            return search_photon(filter_key or "bar", lat, lon)[:10]
+            return search_photon(filter_key or "bar", lat, lon, filter_key or 'bar')[:10]
         except Exception:
             return []
             
@@ -509,19 +544,25 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
         results = []
         for element in res_data.get("elements", []):
             # 'lat' and 'lon' are root fields for Node elements, but reside in 'center' for Way or Relation elements
-            el_lat = element.get("lat") or element.get("center", {}).get("lat")
-            el_lon = element.get("lon") or element.get("center", {}).get("lon")
+            el_lat = element.get("lat", element.get("center", {}).get("lat"))
+            el_lon = element.get("lon", element.get("center", {}).get("lon"))
             tags = element.get("tags", {})
             name = tags.get("name")
             
             if el_lat is None or el_lon is None or not name:
+                continue
+            if (not isinstance(el_lat, (int, float)) or not isinstance(el_lon, (int, float)) or
+                    not math.isfinite(el_lat) or not math.isfinite(el_lon) or
+                    abs(el_lat) > 90 or abs(el_lon) > 180):
+                continue
+            if any(tags.get(key) == 'yes' for key in ('disused', 'abandoned', 'demolished')):
                 continue
                 
             amenity = tags.get("amenity", "")
             
             # Strict Bar vs Restaurant taxonomy
             is_bar = False
-            if amenity in ["bar", "pub", "biergarten", "taphouse"]:
+            if amenity in ["bar", "pub", "biergarten", "taphouse", "nightclub"]:
                 is_bar = True
             elif amenity in ["restaurant", "cafe", "fast_food"]:
                 # Tolerate only if there is explicit bar/brewery activity
@@ -540,13 +581,15 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
             if filter_key:
                 if filter_key == "bar" and not is_bar:
                     continue
-                if filter_key == "food" and is_bar:
+                if filter_key == "food" and amenity not in ["restaurant", "cafe", "fast_food", "food_court"]:
                     continue
-                stop_type = filter_key if filter_key not in ["bar", "food"] else computed_stop_type
+                stop_type = filter_key
             else:
                 stop_type = computed_stop_type
             
-            street = tags.get("addr:street")
+            street_name = tags.get("addr:street") or tags.get("contact:street")
+            number = tags.get("addr:housenumber") or tags.get("contact:housenumber")
+            street = ' '.join(part for part in (number, street_name) if part) or None
             city = tags.get("addr:city")
             country = tags.get("addr:country")
             
@@ -564,7 +607,7 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
         return results
     except Exception:
         try:
-            return search_photon(filter_key or "bar", lat, lon)[:10]
+            return search_photon(filter_key or "bar", lat, lon, filter_key or 'bar')[:10]
         except Exception:
             return []
 

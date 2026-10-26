@@ -1,3 +1,7 @@
+import RouteSummarySheet from '../components/RouteSummarySheet';
+import WalkingDirectionsButton from '../components/WalkingDirectionsButton';
+import { selectNearbySuggestions } from '../services/nearbyPlaces.service';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { appendSelectedStops, getSearchCenter } from '../services/routePlan.service';
 import RoutingAttribution from '../components/RoutingAttribution';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -14,6 +18,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   Keyboard,
+  useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import MapView, {
@@ -57,6 +62,10 @@ const DEFAULT_REGION: Region = {
 
 
 export default function CreateBarathonMapScreen() {
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const [sheetHeight, setSheetHeight] = useState(0);
+  const [topHeight, setTopHeight] = useState(180);
   const mapRef = useRef<MapView | null>(null);
   const [hasCenteredInitially, setHasCenteredInitially] = useState(false);
 
@@ -333,53 +342,16 @@ export default function CreateBarathonMapScreen() {
           return;
         }
 
-        const filtered = (data || [])
-          .map((item: any) => {
-            const dist = typeof item.estimated_minutes === 'number' ? item.estimated_minutes : undefined;
-
-            return {
-              name: item.name || 'Lieu inconnu',
-              street: item.street || '',
-              city: item.city || '',
-              country: item.country || '',
-              latitude: item.latitude,
-              longitude: item.longitude,
-              stopType: (item.stop_type || 'bar') as StopType,
-              estimatedMinutes: dist,
-            };
-          })
-          .filter((item: any) => {
-            // Strict travel time constraint check to prevent far outliers
-            if (item.estimatedMinutes != null && item.estimatedMinutes > allowedTravelTimeMinutes) {
-              return false;
-            }
-
-            // Robust normalize function handling potentially missing or malformed names safely
-            const normalize = (str: any) => {
-              if (typeof str !== 'string') return '';
-              return str
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "") // remove accents
-                .replace(/^(le|la|les|the|l')\s+/, "") // remove articles
-                .trim();
-            };
-
-            const normalizedItemName = normalize(item.name);
-
-            // Avoid duplicate points
-            return !points.some((p) => {
-              const normalizedPointName = normalize(p.name);
-              const isSameName = normalizedPointName.includes(normalizedItemName) || normalizedItemName.includes(normalizedPointName);
-              const isSameCoords =
-                Math.abs(Number(p.latitude) - Number(item.latitude)) < 0.0005 &&
-                Math.abs(Number(p.longitude) - Number(item.longitude)) < 0.0005;
-
-              return isSameName || isSameCoords;
-            });
-          })
-          .sort((a, b) => (a.estimatedMinutes ?? Infinity) - (b.estimatedMinutes ?? Infinity))
-          .slice(0, 50);
+        const filtered = selectNearbySuggestions((data || []).map((item: any) => ({
+          name: item.name,
+          street: item.street || '',
+          city: item.city || '',
+          country: item.country || '',
+          latitude: Number(item.latitude),
+          longitude: Number(item.longitude),
+          stopType: (item.stop_type || 'bar') as StopType,
+          estimatedMinutes: typeof item.estimated_minutes === 'number' ? item.estimated_minutes : undefined,
+        })), points, lastPoint, allowedTravelTimeMinutes);
 
         console.log('[loadSuggestions] setting suggestions count:', filtered.length);
         setSuggestions(filtered);
@@ -396,6 +368,7 @@ export default function CreateBarathonMapScreen() {
     // Synchronously clear suggestions immediately when points change to prevent stale rendering state
     // and eliminate dynamic native MapKit subview index-shifting crashes
     setSuggestions([]);
+    setSelectedSuggestion(null);
     void loadSuggestions();
 
     return () => {
@@ -755,7 +728,7 @@ export default function CreateBarathonMapScreen() {
               coordinate={{ latitude: lat, longitude: lng }}
               pinColor={isBar ? 'yellow' : 'purple'}
               title={`${item.name} (${isBar ? 'Bar' : 'Restaurant'})`}
-              description={`${item.estimatedMinutes != null ? `≈ ${item.estimatedMinutes} min (indicatif)` : 'Durée piétonne indisponible'} • Toucher pour afficher`}
+              description={`${item.estimatedMinutes != null ? `≈ ${item.estimatedMinutes} min à pied` : `${item.distanceMeters} m à vol d’oiseau`} • Toucher pour afficher`}
               onPress={() => setSelectedSuggestion(item)}
             />
           );
@@ -774,7 +747,10 @@ export default function CreateBarathonMapScreen() {
         initialRegion={initialRegion}
         showsUserLocation={permissionGranted}
         showsMyLocationButton={false}
-        onPress={() => Keyboard.dismiss()}
+        onPress={() => {
+          Keyboard.dismiss();
+          setIsRouteListCollapsed(true);
+        }}
       >
         {[
           ...(points.length > 0 ? [
@@ -822,7 +798,8 @@ export default function CreateBarathonMapScreen() {
         </View>
       )}
 
-      <View style={homeStyles.topBarWrapper}>
+      <View style={[homeStyles.topBarWrapper, { top: insets.top + 12, left: insets.left + 16, right: insets.right + 16 }]}
+        onLayout={event => setTopHeight(event.nativeEvent.layout.height)}>
         <View style={homeStyles.topBar}>
           <View style={homeStyles.brandBlock}>
             <View style={styles.stepperHeader}>
@@ -835,7 +812,7 @@ export default function CreateBarathonMapScreen() {
             </Text>
             <Text style={homeStyles.brand}>{barathonName}</Text>
             <Text style={styles.metaText}>
-              {dateLabel} à {timeLabel} • Max {allowedTravelTimeMinutes}m de marche / étape
+              {dateLabel} à {timeLabel} • Budget {allowedTravelTimeMinutes} min / étape
             </Text>
           </View>
 
@@ -873,6 +850,7 @@ export default function CreateBarathonMapScreen() {
               placeholderTextColor="#8A8A8A"
               value={searchQuery}
               onChangeText={handleSearchChange}
+              onFocus={() => setIsRouteListCollapsed(true)}
               style={{
                 flex: 1,
                 paddingLeft: 8,
@@ -1007,7 +985,7 @@ export default function CreateBarathonMapScreen() {
         </View>
       </View>
 
-      <View style={homeStyles.locationControlWrapper}>
+      <View style={[homeStyles.locationControlWrapper, { right: insets.right + 12, bottom: insets.bottom + sheetHeight + 32 }]}>
         <LocationButton
           onPress={centerOnUser}
           heading={heading}
@@ -1019,7 +997,7 @@ export default function CreateBarathonMapScreen() {
 
       {/* Floating Suggestion Preview Card */}
       {selectedSuggestion && (
-        <View style={styles.suggestionCard}>
+        <View style={[styles.suggestionCard, { bottom: insets.bottom + sheetHeight + 32, right: insets.right + 78 }]}>
           <View style={styles.suggestionCardTop}>
             <Text style={styles.suggestionCardTitle} numberOfLines={1}>
               {selectedSuggestion.name}
@@ -1055,7 +1033,7 @@ export default function CreateBarathonMapScreen() {
           </View>
 
           <Text style={styles.suggestionCardSub}>
-            {selectedSuggestion.estimatedMinutes != null ? `≈ ${selectedSuggestion.estimatedMinutes} min (indicatif) depuis le bar précédent` : 'Durée piétonne indisponible depuis le bar précédent'}
+            {selectedSuggestion.estimatedMinutes != null ? `≈ ${selectedSuggestion.estimatedMinutes} min à pied` : `${selectedSuggestion.distanceMeters} m à vol d’oiseau depuis le bar précédent`}
             {selectedSuggestion.city ? ` • ${selectedSuggestion.city}` : ''}
           </Text>
 
@@ -1066,7 +1044,7 @@ export default function CreateBarathonMapScreen() {
               activeOpacity={0.85}
             >
               <Ionicons name="add" size={16} color="#FFFFFF" />
-              <Text style={styles.suggestionAddBtnText}>Ajouter au parcours</Text>
+              <Text style={styles.suggestionAddBtnText}>Ajouter</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1080,24 +1058,13 @@ export default function CreateBarathonMapScreen() {
         </View>
       )}
 
-      <View style={[styles.bottomSheet, isRouteListCollapsed && { maxHeight: 170, paddingBottom: 10 }]}>
-        <TouchableOpacity
-          style={styles.sheetHeader}
-          activeOpacity={0.75}
-          onPress={() => setIsRouteListCollapsed((prev) => !prev)}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-            <Ionicons
-              name={isRouteListCollapsed ? 'chevron-up-circle' : 'chevron-down-circle'}
-              size={18}
-              color="#2563EB"
-            />
-            <Text style={[styles.sheetTitle, { marginBottom: 0 }]} numberOfLines={1}>
-              {isRouteListCollapsed
-                ? `Parcours (${points.length}) • Déplier`
-                : `Lieux sélectionnés (${points.length})`}
-            </Text>
-          </View>
+      <RouteSummarySheet style={[styles.bottomSheet, {
+        bottom: insets.bottom + 12, left: insets.left + 12, right: insets.right + 12,
+        maxHeight: Math.min(360, Math.max(190, windowHeight - insets.top - topHeight - insets.bottom - 100)),
+      }]} onLayout={event => setSheetHeight(event.nativeEvent.layout.height)}
+        collapsed={isRouteListCollapsed} onCollapsedChange={setIsRouteListCollapsed} count={points.length}
+        attribution={<RoutingAttribution />}>
+        <View style={[styles.sheetHeader, { flexWrap: 'wrap' }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             {points.length <= 1 && suggestions.length >= 2 && (
               <TouchableOpacity
@@ -1119,11 +1086,8 @@ export default function CreateBarathonMapScreen() {
               </TouchableOpacity>
             )}
           </View>
-        </TouchableOpacity>
+        </View>
 
-        <RoutingAttribution />
-
-        {!isRouteListCollapsed && (
           <ScrollView
             style={styles.pointsList}
             contentContainerStyle={styles.pointsListContent}
@@ -1133,7 +1097,7 @@ export default function CreateBarathonMapScreen() {
             <View style={styles.emptyCard}>
               <Text style={styles.emptyTitle}>Aucun lieu sélectionné</Text>
               <Text style={styles.emptySubtitle}>
-                Appuie sur la carte pour ajouter un lieu ou utilise la recherche ci-dessus.
+                Utilise la recherche ci-dessus pour choisir ton premier lieu.
               </Text>
             </View>
           ) : (
@@ -1237,6 +1201,7 @@ export default function CreateBarathonMapScreen() {
                             {getRouteLabel(segment)}
                           </Text>
                         </Text>
+                        {segment?.status !== 'walking' && <WalkingDirectionsButton from={point} to={nextPoint} />}
                       </View>
                     </View>
                   ) : null}
@@ -1245,13 +1210,12 @@ export default function CreateBarathonMapScreen() {
             })
           )}
         </ScrollView>
-        )}
 
-        {cannotCreateBarathon && !isRouteListCollapsed && (
+        {cannotCreateBarathon && (
           <View style={styles.guidanceCard}>
             <Ionicons name="information-circle" size={15} color="#2563EB" />
             <Text style={styles.guidanceText}>
-              Ajoutez au moins 2 lieux pour calculer le trajet piéton et continuer.
+              Ajoutez au moins 2 lieux pour continuer. Les distances sont à vol d’oiseau sans itinéraire calculé.
             </Text>
           </View>
         )}
@@ -1283,7 +1247,7 @@ export default function CreateBarathonMapScreen() {
             <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
           </View>
         </TouchableOpacity>
-      </View>
+      </RouteSummarySheet>
 
       <Modal
         visible={modalVisible}

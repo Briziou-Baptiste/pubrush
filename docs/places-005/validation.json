@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-26T08:39:11.072725+00:00",
+  "base": "de86a86",
+  "branch": "fix/places-005-map-and-nearby",
+  "verdict": "PARTIAL",
+  "mobile_tests": {
+    "passed": 34,
+    "failed": 0
+  },
+  "backend_tests": {
+    "passed": 86,
+    "skipped": 3,
+    "failed": 0,
+    "isolation": "SQLite; dotenv disabled; unavailable loopback PG test URL"
+  },
+  "typescript": {
+    "mobile": "PASS",
+    "web": "PASS"
+  },
+  "expo_export": {
+    "ios": "PASS",
+    "android": "PASS",
+    "directory": "/private/tmp/pubrush-places005-export-final"
+  },
+  "toulouse_replay": {
+    "status": "PASS",
+    "old_seeded_bar_position": 133,
+    "new_backend_position": 2,
+    "new_mobile_position": 1,
+    "straight_line_meters": 84
+  },
+  "production_routing": "BLOCKED: no approved provider account/configuration; external Maps fallback delivered",
+  "not_run": [
+    "real iPhone/Android",
+    "native simulator",
+    "native gesture arbitration/visual QA",
+    "native Maps opening",
+    "PostgreSQL real",
+    "field walking",
+    "provider load/availability"
+  ],
+  "deployment": "NONE",
+  "commit": "NONE",
+  "paid_api_calls": 0,
+  "protected_scope": "No GPS/WebSocket/role/expense logic, Kubernetes, runtime or dependencies changed"
+}

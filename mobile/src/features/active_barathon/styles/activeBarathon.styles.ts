@@ -679,14 +679,13 @@ export const styles = StyleSheet.create({
     mapControlsContainer: {
       position: 'absolute',
       right: 14,
-      bottom: 210,
-      gap: 10,
+      gap: 12,
       alignItems: 'center',
       zIndex: 10,
     },
     mapControlButton: {
-      width: 44,
-      height: 44,
+      width: 48,
+      height: 48,
       borderRadius: 22,
       backgroundColor: '#FFFFFF',
       alignItems: 'center',
@@ -737,6 +736,7 @@ export const styles = StyleSheet.create({
     },
     compactMetricsRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       alignItems: 'center',
       gap: 8,
       marginBottom: 10,
@@ -759,12 +759,15 @@ export const styles = StyleSheet.create({
     },
     compactActionsRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       alignItems: 'center',
       gap: 8,
       marginBottom: 10,
     },
     compactActionChip: {
       flex: 1,
+      minWidth: 92,
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',

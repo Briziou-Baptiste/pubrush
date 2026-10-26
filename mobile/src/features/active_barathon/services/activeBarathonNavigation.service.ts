@@ -1,28 +1,18 @@
 import { Alert, Linking } from 'react-native';
 
 import { LatLng } from '../types/activeBarathon.types';
+import { getWalkingDirectionsUrl } from '../../create_barathon/services/mapLinks.service';
 
 export async function openWalkingDirectionsInGoogleMaps(
   origin: LatLng | null,
   destination: LatLng | null
 ) {
-  if (!origin || !destination) {
-    Alert.alert('Erreur', 'Origine ou destination indisponible.');
+  const url = getWalkingDirectionsUrl(origin, destination);
+  if (!url) {
+    Alert.alert('Navigation', 'Destination ou coordonnées indisponibles.');
     return;
   }
 
-  const url =
-    `https://www.google.com/maps/dir/?api=1` +
-    `&origin=${origin.latitude},${origin.longitude}` +
-    `&destination=${destination.latitude},${destination.longitude}` +
-    `&travelmode=walking`;
-
-  const supported = await Linking.canOpenURL(url);
-
-  if (!supported) {
-    Alert.alert('Erreur', 'Impossible d’ouvrir Google Maps.');
-    return;
-  }
-
-  await Linking.openURL(url);
+  try { await Linking.openURL(url); }
+  catch { Alert.alert('Navigation', 'Impossible d’ouvrir Google Maps pour le moment.'); }
 }

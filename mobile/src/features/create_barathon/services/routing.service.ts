@@ -12,6 +12,8 @@ export type RouteSegment = {
 
 // This prefix selects a graph built with the pedestrian profile (the URL's /foot alone does not).
 export const WALKING_BASE_URL = 'https://routing.openstreetmap.de/routed-foot';
+export const WALKING_ROUTING_ENABLED = typeof __DEV__ !== 'undefined' && __DEV__ &&
+  process.env.EXPO_PUBLIC_WALKING_ROUTING_ENABLED === 'true';
 const CACHE_TTL_MS = 5 * 60_000;
 const CACHE_MAX_SIZE = 200;
 const REQUEST_INTERVAL_MS = 1100;
@@ -125,8 +127,7 @@ export function createWalkingRouter(deps: {
 }
 const router = createWalkingRouter({
   // Release/OTA bundles must stay off even if an EAS environment accidentally carries the flag.
-  enabled: typeof __DEV__ !== 'undefined' && __DEV__ &&
-    process.env.EXPO_PUBLIC_WALKING_ROUTING_ENABLED === 'true',
+  enabled: WALKING_ROUTING_ENABLED,
   fetch: (...args) => fetch(...args), now: Date.now,
   sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
 });
@@ -137,7 +138,7 @@ export const fetchWalkingRoutesInParallel = router.fetchRoutes;
 export function getRouteLabel(segment?: RouteSegment | null): string {
   if (!segment) return 'Calcul de l’itinéraire…';
   if (segment.status === 'unavailable') return 'Aucun itinéraire piéton trouvé';
-  if (segment.status === 'straight_line') return `${segment.distanceMeters} m à vol d’oiseau · trajet indisponible`;
+  if (segment.status === 'straight_line') return `${segment.distanceMeters} m à vol d’oiseau`;
   return `Piéton calculé : ${segment.durationMinutes} min • ${segment.distanceMeters} m`;
 }
 

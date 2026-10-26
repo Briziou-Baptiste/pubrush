@@ -103,7 +103,7 @@ function ActiveBarathonBottomPanel({
           activeOpacity={0.75}
         >
           <Ionicons name="navigate-circle-outline" size={16} color="#111827" />
-          <Text style={styles.compactActionChipText}>Itinéraire</Text>
+          <Text style={styles.compactActionChipText}>À pied · Maps ↗</Text>
         </TouchableOpacity>
 
         {isMaitreDuTrajet && onReplacePress && (

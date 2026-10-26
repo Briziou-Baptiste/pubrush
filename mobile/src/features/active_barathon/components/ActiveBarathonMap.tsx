@@ -16,6 +16,8 @@ type Props = {
   activeStopIndex: number;
   friendLocations?: ParticipantLocation[];
   currentUserId?: number;
+  controlsLayout?: { top: number; horizontal: boolean; fits: boolean };
+  rightInset?: number;
 };
 
 function ActiveBarathonMap({
@@ -26,6 +28,8 @@ function ActiveBarathonMap({
   activeStopIndex,
   friendLocations,
   currentUserId,
+  controlsLayout,
+  rightInset = 0,
 }: Props) {
   const mapRef = useRef<MapView>(null);
   const [routeSegments, setRouteSegments] = useState<Record<string, RouteSegment>>({});
@@ -258,12 +262,19 @@ function ActiveBarathonMap({
       </MapView>
 
       {/* Boutons flottants de recentrage carte */}
-      <View style={styles.mapControlsContainer}>
+      {controlsLayout?.fits && <View style={[styles.mapControlsContainer, {
+        top: controlsLayout.top, right: rightInset + 14,
+        flexDirection: controlsLayout.horizontal ? 'row' : 'column',
+      }]}>
         <TouchableOpacity
           style={styles.mapControlButton}
           activeOpacity={0.85}
           onPress={handleCenterOnMe}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          disabled={!currentLocation}
+          accessibilityRole="button"
+          accessibilityLabel="Recentrer sur ma position"
+          accessibilityState={{ disabled: !currentLocation }}
+          hitSlop={4}
         >
           <Ionicons name="locate" size={22} color="#2563EB" />
         </TouchableOpacity>
@@ -272,11 +283,13 @@ function ActiveBarathonMap({
           style={styles.mapControlButton}
           activeOpacity={0.85}
           onPress={handleCenterOnActiveStop}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Recentrer sur l’étape actuelle"
+          hitSlop={4}
         >
           <Ionicons name="flag" size={20} color="#16A34A" />
         </TouchableOpacity>
-      </View>
+      </View>}
     </View>
   );
 }

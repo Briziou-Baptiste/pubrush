@@ -58,7 +58,9 @@ export type BarSearchResult = {
   category?: string;
   vicinity?: string;
   address?: string;
+  street?: string;
   city?: string;
   country?: string;
   estimatedMinutes?: number;
+  distanceMeters?: number;
 };
