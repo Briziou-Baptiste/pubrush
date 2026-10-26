@@ -1,3 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -127,11 +130,18 @@ export default function ChangeStartTimeModal({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={() => { if (!loading) onClose(); }}
     >
-      <View style={styles.overlay}>
+      <SafeAreaView style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>{"Changer l'heure"}</Text>
+          <View style={navigationControlStyles.row}>
+            <View style={navigationControlStyles.title}>
+              <Text style={styles.title}>{"Changer l'heure"}</Text>
+            </View>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={() => { if (!loading) onClose(); }} disabled={loading} style={navigationControlStyles.close}>
+              <Ionicons name="close" size={22} color="#4B5563" />
+            </TouchableOpacity>
+          </View>
 
           {barathon ? (
             <>
@@ -196,14 +206,6 @@ export default function ChangeStartTimeModal({
           ) : null}
 
           <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={onClose}
-              disabled={loading}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.cancelButtonText}>Annuler</Text>
-            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.confirmButton, loading ? styles.disabledButton : null]}
@@ -217,7 +219,7 @@ export default function ChangeStartTimeModal({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }

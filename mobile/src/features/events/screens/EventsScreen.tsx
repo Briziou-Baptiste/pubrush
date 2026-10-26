@@ -1,6 +1,7 @@
+import { navigationControlStyles } from '../../../lib/navigation.styles';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
-  SafeAreaView, 
   Text, 
   TouchableOpacity, 
   View, 
@@ -230,15 +231,8 @@ export default function EventsScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.topRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={16} color="#FFF" />
-            <Text style={styles.backButtonText}>Retour</Text>
-          </TouchableOpacity>
-        </View>
 
         <View style={styles.header}>
           <Text style={styles.title}>Événements</Text>
@@ -354,19 +348,19 @@ export default function EventsScreen() {
         onRequestClose={() => setActivationModalOpen(false)}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.modalContainer}>
+          <SafeAreaView style={styles.modalContainer}>
             <KeyboardAvoidingView 
               behavior={Platform.OS === 'ios' ? 'padding' : undefined}
               style={styles.modalContent}
             >
               <View style={styles.modalHeader}>
-                <View style={styles.modalHeaderTitleRow}>
+                <View style={[styles.modalHeaderTitleRow, { flex: 1 }]}>
                   <Ionicons name="ticket" size={22} color="#BE123C" />
-                  <Text style={styles.modalTitleText}>Activer l'événement</Text>
+                  <Text style={[styles.modalTitleText, { flexShrink: 1 }]}>Activer l'événement</Text>
                 </View>
                 <TouchableOpacity 
                   onPress={() => setActivationModalOpen(false)}
-                  style={styles.closeModalBtn}
+                  accessibilityRole="button" accessibilityLabel="Fermer" style={[styles.closeModalBtn, navigationControlStyles.close]}
                 >
                   <Ionicons name="close" size={20} color="#6B7280" />
                 </TouchableOpacity>
@@ -510,7 +504,7 @@ export default function EventsScreen() {
                 </View>
               </ScrollView>
             </KeyboardAvoidingView>
-          </View>
+          </SafeAreaView>
         </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>

@@ -1,7 +1,7 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  SafeAreaView,
   Text,
   TouchableOpacity,
   View,
@@ -59,12 +59,9 @@ export default function ProfileScreen() {
   const initialLetter = username ? username.charAt(0).toUpperCase() : '?';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <View style={styles.container}>
         {/* Header */}
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
 
         <View style={styles.header}>
           <Text style={styles.title}>Infos personnelles</Text>

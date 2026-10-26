@@ -1,3 +1,8 @@
+import { useNavigation, useLocalSearchParams } from 'expo-router';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
+import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import { summaryHistory } from '../../../lib/navigation';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -5,14 +10,12 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from '../styles/barathonStopSummary.styles';
@@ -84,6 +87,14 @@ type Stop = {
 };
 
 export default function BarathonStopSummaryScreen() {
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  useEffect(() => {
+    const state = navigation.getState();
+    if (!state) return;
+    const current = state.routes[state.index];
+    const routes = summaryHistory(state.routes, current);
+    if (routes !== state.routes) navigation.reset({ index: routes.length - 1, routes });
+  }, [navigation]);
   const params = useLocalSearchParams<{
     barathonId?: string;
     barathonName?: string;
@@ -277,7 +288,7 @@ export default function BarathonStopSummaryScreen() {
   const isSuccessfulRun = completedPercentage >= 70;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.headerCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -492,40 +503,29 @@ export default function BarathonStopSummaryScreen() {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => {
-            if (params.source === 'past') {
-              router.replace('/past');
-              return;
-            }
 
-            if (params.source === 'active') {
-              router.replace('/planned');
-              return;
-            }
-
-            // default case (e.g. active)
-            router.replace('/home');
-          }}
-        >
-          <Text style={styles.primaryButtonText}>Retour à mes barathons</Text>
-        </TouchableOpacity>
       </ScrollView>
 
       <Modal
         visible={isSaveModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setIsSaveModalVisible(false)}
+        onRequestClose={() => { if (!isSaving) setIsSaveModalVisible(false); }}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
-          <View style={styles.modalOverlay}>
+          <SafeAreaView style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Nommer le barathon enregistré</Text>
+              <View style={navigationControlStyles.row}>
+                <View style={navigationControlStyles.title}>
+                  <Text style={styles.modalTitle}>Nommer le barathon enregistré</Text>
+                </View>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={() => { if (!isSaving) setIsSaveModalVisible(false); }} disabled={isSaving} style={navigationControlStyles.close}>
+                  <Ionicons name="close" size={22} color="#4B5563" />
+                </TouchableOpacity>
+              </View>
               <TextInput
                 style={styles.modalInput}
                 placeholder="Ex: Ma tournée d'anniversaire"
@@ -535,15 +535,6 @@ export default function BarathonStopSummaryScreen() {
               />
               {saveError ? <Text style={styles.modalErrorText}>{saveError}</Text> : null}
               <View style={styles.modalButtonsRow}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalButtonCancel]}
-                  onPress={() => {
-                    setIsSaveModalVisible(false);
-                    setSaveError('');
-                  }}
-                >
-                  <Text style={styles.modalButtonCancelText}>Annuler</Text>
-                </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.modalButtonConfirm]}
                   onPress={handleConfirmSave}
@@ -557,7 +548,7 @@ export default function BarathonStopSummaryScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </SafeAreaView>
         </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>

@@ -1,9 +1,11 @@
+import { useUnsavedNavigation } from '../../../hooks/useUnsavedNavigation';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -17,8 +19,10 @@ import { isValidEmail } from '../../../lib/validators';
 import { styles } from '../styles/login.styles';
 
 export default function ForgotPasswordScreen() {
+  const headerHeight = useHeaderHeight();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  useUnsavedNavigation(Boolean(email.trim()), loading);
 
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
   const emailTouched = email.length > 0;
@@ -57,8 +61,9 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <KeyboardAvoidingView
+        keyboardVerticalOffset={headerHeight}
         style={styles.keyboardWrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
@@ -68,9 +73,6 @@ export default function ForgotPasswordScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.container}>
-            <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#6B7280' }}>← Retour</Text>
-            </TouchableOpacity>
 
             <View style={styles.header}>
               <Text style={styles.brand}>Mot de passe oublié ?</Text>

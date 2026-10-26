@@ -1,10 +1,12 @@
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useNavigation, useLocalSearchParams } from 'expo-router';
+import { NavigationProp, ParamListBase, usePreventRemove } from '@react-navigation/native';
 import RoutingAttribution from '../../create_barathon/components/RoutingAttribution';
 import WalkingDirectionsButton from '../../create_barathon/components/WalkingDirectionsButton';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  BackHandler,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,7 +16,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
 import MapView, { Marker, Polyline, Region } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -78,6 +79,12 @@ type UnifiedStop = {
 };
 
 export default function BarathonRecapScreen() {
+  const headerHeight = useHeaderHeight();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const [created, setCreated] = useState(false);
+  useEffect(() => {
+    if (created) navigation.reset({ index: 1, routes: [{ name: 'home' }, { name: 'planned' }] });
+  }, [created, navigation]);
   const params = useLocalSearchParams<{
     barathonId?: string;
     name?: string;
@@ -476,7 +483,7 @@ export default function BarathonRecapScreen() {
       setSubmitting(true);
       await createBarathon(payload);
       Alert.alert('Succès', 'Barathon créé avec succès.');
-      router.replace('/planned');
+      setCreated(true);
     } catch (error) {
       Alert.alert(
         'Erreur',
@@ -522,56 +529,25 @@ export default function BarathonRecapScreen() {
     }
   }, [params.barathonId, addedParticipantIds]);
 
-  const handleBack = useCallback(async () => {
-    if (isDetailsMode && addedParticipantIds.length > 0) {
-      Alert.alert(
-        'Ajouts non validés',
-        "Tu as ajouté des participants mais tu n'as pas validé l'ajout. Que souhaites-tu faire ?",
-        [
-          { text: 'Annuler', style: 'cancel' },
-          {
-            text: 'Ne pas ajouter',
-            style: 'destructive',
-            onPress: () => {
-              router.back();
-            },
-          },
-          {
-            text: "Valider l'ajout",
-            onPress: async () => {
-              const success = await handleAddParticipantsOnExistingBarathon();
-              if (success) {
-                router.back();
-              }
-            },
-          },
-        ]
-      );
-    } else {
-      router.back();
+  usePreventRemove(!created && (submitting || addedParticipantIds.length > 0), ({ data }) => {
+    if (submitting) {
+      Alert.alert('Enregistrement en cours', 'Patiente un instant avant de quitter cet écran.');
+      return;
     }
-  }, [isDetailsMode, addedParticipantIds, handleAddParticipantsOnExistingBarathon]);
-
-  useEffect(() => {
-    const backAction = () => {
-      if (isDetailsMode && addedParticipantIds.length > 0) {
-        handleBack();
-        return true;
-      }
-      return false;
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction
-    );
-
-    return () => backHandler.remove();
-  }, [isDetailsMode, addedParticipantIds, handleBack]);
+    const leave = () => navigation.dispatch(data.action);
+    Alert.alert('Ajouts non validés',
+      'Les participants ajoutés ne sont pas encore enregistrés.', [
+        { text: 'Rester', style: 'cancel' },
+        { text: 'Abandonner les ajouts', style: 'destructive', onPress: leave },
+        ...(isDetailsMode ? [{ text: "Valider l’ajout", onPress: async () => {
+          if (await handleAddParticipantsOnExistingBarathon()) leave();
+        } }] : []),
+      ]);
+  });
 
   if (loadingBarathon) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
         <View style={styles.loadingWrapper}>
           <ActivityIndicator size="large" />
         </View>
@@ -580,19 +556,13 @@ export default function BarathonRecapScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <KeyboardAvoidingView
+        keyboardVerticalOffset={headerHeight}
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <TouchableOpacity
-            onPress={handleBack}
-            style={[styles.backButton, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}
-          >
-            <Ionicons name="arrow-back" size={16} color="#FFFFFF" />
-            <Text style={styles.backButtonText}>Retour</Text>
-          </TouchableOpacity>
 
           {!isDetailsMode && (
             <View style={{ marginBottom: 18 }}>

@@ -1,4 +1,8 @@
-import { Link, router } from 'expo-router';
+import { useUnsavedNavigation } from '../../../hooks/useUnsavedNavigation';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useNavigation, Link } from 'expo-router';
+import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -6,7 +10,6 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -20,10 +23,17 @@ import { isValidEmail, isValidPassword } from '../../../lib/validators';
 import { styles } from '../styles/register.styles';
 
 export default function RegisterScreen() {
+  const headerHeight = useHeaderHeight();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  useUnsavedNavigation(!authenticated && Boolean(email || username || password), !authenticated && loading);
+  useEffect(() => {
+    if (authenticated) navigation.reset({ index: 0, routes: [{ name: 'home' }] });
+  }, [authenticated, navigation]);
   const [usernameIsTaken, setUsernameIsTaken] = useState<boolean | null>(null);
 
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
@@ -108,7 +118,7 @@ export default function RegisterScreen() {
       });
 
       await saveSession(result.access_token);
-      router.replace('/home');
+      setAuthenticated(true);
     } catch (error) {
       Alert.alert(
         'Inscription impossible',
@@ -120,8 +130,9 @@ export default function RegisterScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <KeyboardAvoidingView
+        keyboardVerticalOffset={headerHeight}
         style={styles.keyboardWrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
@@ -244,7 +255,7 @@ export default function RegisterScreen() {
 
               <View style={styles.footer}>
                 <Text style={styles.footerText}>Déjà inscrit ? </Text>
-                <Link href="/login" style={styles.footerLink}>
+                <Link href="/login" dismissTo style={styles.footerLink}>
                   Se connecter
                 </Link>
               </View>

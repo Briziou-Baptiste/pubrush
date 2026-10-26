@@ -1,10 +1,11 @@
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useUnsavedNavigation } from '../../../hooks/useUnsavedNavigation';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -16,7 +17,6 @@ import BarathonField from '../components/BarathonField';
 import DateTimeModalField from '../components/DateTimeModalField';
 import { styles } from '../styles/createBarathon.styles';
 import { mergeDateAndTime } from '../utils/createBarathon.validators';
-import { getAccessToken } from '../../../lib/authStorage';
 
 const TIME_IN_BAR_PRESETS = [
   { label: '30 min', value: '30' },
@@ -33,16 +33,24 @@ const TRAVEL_TIME_PRESETS = [
 ];
 
 export default function CreateBarathonScreen() {
+  const headerHeight = useHeaderHeight();
   const params = useLocalSearchParams<{
     initialName?: string;
     initialTravelTime?: string;
     initialMaxTimeInBar?: string;
     initialStopsJson?: string;
+    initialStartDateTimeIso?: string;
   }>();
 
   const [name, setName] = useState(params.initialName ?? '');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(() => {
+    const date = new Date(params.initialStartDateTimeIso ?? '');
+    return Number.isNaN(date.getTime()) ? null : date;
+  });
+  const [startTime, setStartTime] = useState<Date | null>(() => {
+    const date = new Date(params.initialStartDateTimeIso ?? '');
+    return Number.isNaN(date.getTime()) ? null : date;
+  });
   const [travelTime, setTravelTime] = useState(params.initialTravelTime ?? '12');
   const [maxTimeInBar, setMaxTimeInBar] = useState(params.initialMaxTimeInBar ?? '45');
   const [submitted, setSubmitted] = useState(false);
@@ -52,6 +60,8 @@ export default function CreateBarathonScreen() {
     if (params.initialTravelTime) setTravelTime(params.initialTravelTime);
     if (params.initialMaxTimeInBar) setMaxTimeInBar(params.initialMaxTimeInBar);
   }, [params.initialName, params.initialTravelTime, params.initialMaxTimeInBar]);
+
+  useUnsavedNavigation(Boolean(name.trim() || startDate || startTime || params.initialStopsJson));
 
   // Quick DateTime shortcuts
   function handleQuickTime(type: 'tonight' | 'tomorrow' | 'saturday') {
@@ -122,8 +132,9 @@ export default function CreateBarathonScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <KeyboardAvoidingView
+        keyboardVerticalOffset={headerHeight}
         style={styles.keyboardWrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
@@ -132,15 +143,6 @@ export default function CreateBarathonScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Top Row / Back */}
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={[styles.backButton, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}
-          >
-            <Ionicons name="arrow-back" size={16} color="#FFFFFF" />
-            <Text style={styles.backButtonText}>Retour</Text>
-          </TouchableOpacity>
-
           {/* Visual Stepper */}
           <View style={styles.stepperWrapper}>
             <View style={styles.stepperBar}>

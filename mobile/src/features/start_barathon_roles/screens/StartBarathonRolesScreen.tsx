@@ -1,8 +1,9 @@
+import { useUnsavedNavigation } from '../../../hooks/useUnsavedNavigation';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -130,6 +131,7 @@ export default function StartBarathonRolesScreen() {
   }, [assignments]);
 
   const selectedRolesCount = usedRoleIds.length;
+  useUnsavedNavigation(selectedRolesCount > 0, submittingWithRoles || submittingWithoutRoles, 'active-barathon');
   const participantCount = config?.participants.length ?? 0;
 
   const canStartWithRoles =
@@ -303,7 +305,7 @@ export default function StartBarathonRolesScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
         <View style={styles.loadingWrapper}>
           <ActivityIndicator size="large" />
         </View>
@@ -313,7 +315,7 @@ export default function StartBarathonRolesScreen() {
 
   if (!config) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
         <View style={styles.loadingWrapper}>
           <Text style={styles.emptyText}>Configuration introuvable.</Text>
         </View>
@@ -322,15 +324,8 @@ export default function StartBarathonRolesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
 
         <View style={styles.headerCard}>
           <Text style={styles.title}>Attribution des rôles</Text>

@@ -1,3 +1,5 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -55,20 +57,20 @@ export default function InviteFriendsModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
+      <SafeAreaView style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           {/* Header */}
           <View style={styles.headerRow}>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="qr-code-outline" size={20} color="#2563EB" />
-                <Text style={styles.title}>Inviter des amis</Text>
+                <Text style={[styles.title, { flexShrink: 1 }]}>Inviter des amis</Text>
               </View>
               <Text style={styles.subtitle}>
                 Rejoindre en 1 seconde sans créer de compte !
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} style={[styles.closeButton, navigationControlStyles.close]}>
               <Ionicons name="close" size={22} color="#4B5563" />
             </TouchableOpacity>
           </View>
@@ -122,7 +124,7 @@ export default function InviteFriendsModal({
             </Text>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }

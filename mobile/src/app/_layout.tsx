@@ -1,5 +1,9 @@
+import { CommonActions } from '@react-navigation/native';
 import { getAccessToken, subscribeToAuthChanges } from '../lib/authStorage';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useNavigationContainerRef, usePathname } from 'expo-router';
+import { BackHandler, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { fallbackRoute, navigationTitles, NavigationRoute } from '../lib/navigation';
 import { useEffect, useState } from 'react';
 
 import {
@@ -12,6 +16,19 @@ import { initializeLocationCache } from '../features/home/hooks/useUserLocation'
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? '';
 
 export default function RootLayout() {
+  const navigationRef = useNavigationContainerRef();
+  const pathname = usePathname();
+  useEffect(() => {
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (!navigationRef.isReady() || navigationRef.canGoBack()) return false;
+      const route = navigationRef.getCurrentRoute() as NavigationRoute | undefined;
+      if (!route || !navigationTitles[route.name]) return false;
+      navigationRef.dispatch(CommonActions.reset({ index: 0, routes: [fallbackRoute(route.name, route.params)] }));
+      return true;
+    });
+    return () => listener.remove();
+  }, [navigationRef, pathname]);
+
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -95,9 +112,36 @@ export default function RootLayout() {
   }, [token]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={({ route, navigation }) => ({
+      headerShown: Boolean(navigationTitles[route.name]),
+      title: navigationTitles[route.name],
+      headerStyle: { backgroundColor: '#F4F6FA' },
+      headerTintColor: '#111827',
+      headerShadowVisible: false,
+      headerBackVisible: false,
+      headerLeft: () => (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          onPress={() => {
+            if (navigation.canGoBack()) navigation.goBack();
+            else navigation.reset({ index: 0, routes: [fallbackRoute(route.name, route.params)] });
+          }}
+          style={({ pressed }) => ({
+            width: 48, height: 48, alignItems: 'center', justifyContent: 'center',
+            borderRadius: 16, backgroundColor: '#111827', opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+        </Pressable>
+      ),
+    })}>
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />
+      <Stack.Screen name="forgot-password" />
+      <Stack.Screen name="reset-password" />
+      <Stack.Screen name="events" />
+      <Stack.Screen name="start-barathon-roles" />
       <Stack.Screen name="register" />
       <Stack.Screen name="home" />
       <Stack.Screen name="planned" options={{ gestureEnabled: false }} />

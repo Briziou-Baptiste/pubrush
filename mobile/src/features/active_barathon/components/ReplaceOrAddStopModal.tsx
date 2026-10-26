@@ -1,3 +1,5 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
 import { getModificationSearchCenter } from '../../create_barathon/services/routePlan.service';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -66,6 +68,7 @@ export default function ReplaceOrAddStopModal({
   onClose,
   onSuccess,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const [reason, setReason] = useState<'fermé' | 'bondé' | 'autre'>('fermé');
   const [customReason, setCustomReason] = useState('');
   const [position, setPosition] = useState<'before_current' | 'after_current' | 'at_end'>('after_current');
@@ -233,15 +236,20 @@ export default function ReplaceOrAddStopModal({
     }
   }
 
+  function handleClose() {
+    if (submitting) return;
+    onClose();
+  }
+
   return (
     <Modal
       visible={visible}
       transparent
       animationType="slide"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.modalCard}>
@@ -264,7 +272,7 @@ export default function ReplaceOrAddStopModal({
                 </Text>
               </View>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={handleClose} disabled={submitting} style={[styles.closeButton, navigationControlStyles.close]}>
               <Ionicons name="close" size={22} color="#4B5563" />
             </TouchableOpacity>
           </View>
@@ -442,13 +450,6 @@ export default function ReplaceOrAddStopModal({
 
           {/* Actions */}
           <View style={styles.bottomButtonsRow}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={onClose}
-              disabled={submitting}
-            >
-              <Text style={styles.cancelButtonText}>Annuler</Text>
-            </TouchableOpacity>
 
             <TouchableOpacity
               style={[

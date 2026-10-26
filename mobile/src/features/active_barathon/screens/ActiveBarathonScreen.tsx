@@ -1,9 +1,11 @@
+import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
 import RoutingAttribution from '../../create_barathon/components/RoutingAttribution';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, View, TouchableOpacity, Text, Modal, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getMapControlsLayout } from '../../create_barathon/services/mapLayout.service';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, useNavigation } from 'expo-router';
 import { Region } from 'react-native-maps';
 
 import { getBarathonById, getMyActiveBarathon, stopBarathon, completeBarathonStop, advanceBarathonNextStep } from '../services/activeBarathon.service';
@@ -29,6 +31,13 @@ import {
 } from '../services/offlineSync.service';
 
 export default function ActiveBarathonScreen() {
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  useEffect(() => {
+    const state = navigation.getState();
+    if (!state || state.index === 0) return;
+    const current = state.routes[state.index];
+    if (current.name === 'active-barathon') navigation.reset({ index: 0, routes: [{ key: current.key, name: current.name, params: current.params }] });
+  }, [navigation]);
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -677,9 +686,9 @@ export default function ActiveBarathonScreen() {
         visible={stopModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setStopModalVisible(false)}
+        onRequestClose={() => { if (!stopping) setStopModalVisible(false); }}
       >
-        <View style={styles.stopModalOverlay}>
+        <SafeAreaView style={styles.stopModalOverlay}>
           <View style={styles.stopModalCard}>
             <Text style={styles.stopModalTitle}>Arrêter le barathon ?</Text>
             <Text style={styles.stopModalText}>
@@ -688,25 +697,25 @@ export default function ActiveBarathonScreen() {
 
             <View style={styles.stopModalButtonsRow}>
               <TouchableOpacity
-                style={styles.stopModalCancelButton}
+                style={[styles.stopModalCancelButton, navigationControlStyles.action]}
                 onPress={() => setStopModalVisible(false)}
                 disabled={stopping}
               >
-                <Text style={styles.stopModalCancelButtonText}>Non</Text>
+                <Text style={styles.stopModalCancelButtonText}>Annuler</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.stopModalConfirmButton}
+                style={[styles.stopModalConfirmButton, navigationControlStyles.action]}
                 onPress={handleConfirmStopBarathon}
                 disabled={stopping}
               >
                 <Text style={styles.stopModalConfirmButtonText}>
-                  {stopping ? 'Arrêt...' : 'Oui'}
+                  {stopping ? 'Arrêt...' : 'Arrêter'}
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
     </View>
   );

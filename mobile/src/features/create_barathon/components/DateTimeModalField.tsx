@@ -1,3 +1,5 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
 import { useEffect, useState } from 'react';
 import {
   Modal,
@@ -83,10 +85,10 @@ export default function DateTimeModalField({
         animationType="fade"
         onRequestClose={closePicker}
       >
-        <View style={styles.pickerModalOverlay}>
+        <SafeAreaView style={styles.pickerModalOverlay}>
           <View style={styles.pickerModalCard}>
             <View style={styles.pickerModalHeader}>
-              <TouchableOpacity onPress={closePicker} style={styles.pickerHeaderButton}>
+              <TouchableOpacity onPress={closePicker} accessibilityRole="button" style={[styles.pickerHeaderButton, navigationControlStyles.action]}>
                 <Text style={styles.pickerHeaderButtonText}>Annuler</Text>
               </TouchableOpacity>
 
@@ -94,7 +96,7 @@ export default function DateTimeModalField({
                 {mode === 'date' ? 'Choisir une date' : 'Choisir une heure'}
               </Text>
 
-              <TouchableOpacity onPress={handleConfirm} style={styles.pickerHeaderButton}>
+              <TouchableOpacity onPress={handleConfirm} accessibilityRole="button" style={[styles.pickerHeaderButton, navigationControlStyles.action]}>
                 <Text style={styles.pickerHeaderButtonText}>Valider</Text>
               </TouchableOpacity>
             </View>
@@ -107,16 +109,18 @@ export default function DateTimeModalField({
                   themeVariant={Platform.OS === 'ios' ? 'light' : undefined}
                   textColor={Platform.OS === 'ios' ? '#111827' : undefined}
                 is24Hour
-                onChange={(_, selectedDate) => {
+                onChange={(event, selectedDate) => {
+                  if (event.type === 'dismissed') { closePicker(); return; }
                   if (selectedDate) {
                     setTempValue(selectedDate);
+                    if (Platform.OS === 'android') { onConfirm(selectedDate); setVisible(false); }
                   }
                 }}
                 minimumDate={mode === 'date' ? today : undefined}
               />
             </View>
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
     </View>
   );

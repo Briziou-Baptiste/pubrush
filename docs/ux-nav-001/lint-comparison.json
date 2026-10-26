@@ -1,0 +1,212 @@
+[
+  {
+    "file": "mobile/src/app/_layout.tsx",
+    "errors": 0,
+    "warnings": 0,
+    "baselineWarnings": 0,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/active_barathon/components/BarathonRolesModal.tsx",
+    "errors": 0,
+    "warnings": 0,
+    "baselineWarnings": 0,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/active_barathon/components/InviteFriendsModal.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/active_barathon/components/ReplaceOrAddStopModal.tsx",
+    "errors": 0,
+    "warnings": 2,
+    "baselineWarnings": 2,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/active_barathon/screens/ActiveBarathonScreen.tsx",
+    "errors": 0,
+    "warnings": 5,
+    "baselineWarnings": 5,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/active_barathon/screens/BarathonExpensesScreen.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/active_barathon/screens/BarathonStopSummaryScreen.tsx",
+    "errors": 0,
+    "warnings": 2,
+    "baselineWarnings": 2,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/auth/screens/ForgotPasswordScreen.tsx",
+    "errors": 0,
+    "warnings": 0,
+    "baselineWarnings": 0,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/auth/screens/LoginScreen.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/auth/screens/RegisterScreen.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/auth/screens/ResetPasswordScreen.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/barathon_recap/screens/BarathonRecapScreen.tsx",
+    "errors": 0,
+    "warnings": 5,
+    "baselineWarnings": 5,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/create_barathon/components/DateTimeModalField.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/create_barathon/screens/CreateBarathonMapScreen.tsx",
+    "errors": 0,
+    "warnings": 8,
+    "baselineWarnings": 9,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/create_barathon/screens/CreateBarathonScreen.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 4,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/events/screens/EventsScreen.tsx",
+    "errors": 0,
+    "warnings": 2,
+    "baselineWarnings": 2,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/events/screens/PartnerEventMapScreen.tsx",
+    "errors": 0,
+    "warnings": 4,
+    "baselineWarnings": 4,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/expenses/screens/ExpensesScreen.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/home/components/HomeMenu.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/past/screens/PastScreen.tsx",
+    "errors": 0,
+    "warnings": 2,
+    "baselineWarnings": 2,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/planned/components/ChangeStartTimeModal.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/planned/components/ManageParticipantsModal.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/planned/screens/PlannedScreen.tsx",
+    "errors": 0,
+    "warnings": 2,
+    "baselineWarnings": 2,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/profile/screens/ProfileDetailsScreen.tsx",
+    "errors": 0,
+    "warnings": 2,
+    "baselineWarnings": 2,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/profile/screens/ProfileScreen.tsx",
+    "errors": 0,
+    "warnings": 1,
+    "baselineWarnings": 1,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/profile/screens/SavedBarathonsScreen.tsx",
+    "errors": 0,
+    "warnings": 2,
+    "baselineWarnings": 2,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/start_barathon_roles/screens/StartBarathonRolesScreen.tsx",
+    "errors": 0,
+    "warnings": 3,
+    "baselineWarnings": 3,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/lib/navigation.ts",
+    "errors": 0,
+    "warnings": 0,
+    "baselineWarnings": 0,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/lib/navigation.styles.ts",
+    "errors": 0,
+    "warnings": 0,
+    "baselineWarnings": 0,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/hooks/useUnsavedNavigation.ts",
+    "errors": 0,
+    "warnings": 0,
+    "baselineWarnings": 0,
+    "introduced": []
+  }
+]

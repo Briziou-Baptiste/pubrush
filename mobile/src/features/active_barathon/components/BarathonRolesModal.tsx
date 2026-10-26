@@ -1,3 +1,5 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -57,18 +59,21 @@ export default function BarathonRolesModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
+      <SafeAreaView style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.headerRow}>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="ribbon-outline" size={22} color="#8B5CF6" />
-                <Text style={styles.title}>Qui est le maître de quoi ?</Text>
+                <Text style={[styles.title, { flexShrink: 1 }]}>Qui est le maître de quoi ?</Text>
               </View>
               <Text style={styles.subtitle}>
                 Rappel des missions et pouvoirs de chacun
               </Text>
             </View>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} style={navigationControlStyles.close}>
+                <Ionicons name="close" size={22} color="#4B5563" />
+              </TouchableOpacity>
           </View>
 
           {loading ? (
@@ -121,16 +126,8 @@ export default function BarathonRolesModal({
               })}
             </ScrollView>
           )}
-
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.closeButtonText}>Compris !</Text>
-          </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }

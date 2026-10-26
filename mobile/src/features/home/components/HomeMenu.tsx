@@ -1,3 +1,5 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,6 +50,7 @@ export default function HomeMenu({
     }
   }
 
+  const insets = useSafeAreaInsets();
   const firstLetter = user?.username ? user.username.charAt(0).toUpperCase() : '?';
 
   return (
@@ -60,11 +63,16 @@ export default function HomeMenu({
       <View style={styles.modalRoot}>
         <Pressable style={styles.backdrop} onPress={onClose} />
 
-        <View style={styles.menuPanel}>
+        <View style={[styles.menuPanel, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+          <View style={{ alignItems: 'flex-end', paddingHorizontal: 16 }}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} style={navigationControlStyles.close}>
+              <Ionicons name="close" size={22} color="#4B5563" />
+            </TouchableOpacity>
+          </View>
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
-              paddingTop: 72,
+              paddingTop: 12,
               paddingHorizontal: 16,
               paddingBottom: 28,
               flexGrow: 1,

@@ -5,7 +5,7 @@ import {
   Alert,
   FlatList,
   Text,
-  TouchableOpacity,
+
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -176,11 +176,8 @@ export default function PlannedScreen() {
       });
     }
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <View style={styles.container}>
-        <TouchableOpacity onPress={() => router.replace('/')} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
 
         <Text style={styles.title}>Barathons prévus</Text>
         <Text style={styles.subtitle}>

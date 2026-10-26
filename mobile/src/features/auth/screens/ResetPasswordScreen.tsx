@@ -1,10 +1,13 @@
-import { useLocalSearchParams, router } from 'expo-router';
+import { useUnsavedNavigation } from '../../../hooks/useUnsavedNavigation';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -16,6 +19,8 @@ import { resetPassword } from '../../../lib/api';
 import { styles } from '../styles/login.styles';
 
 export default function ResetPasswordScreen() {
+  const headerHeight = useHeaderHeight();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const params = useLocalSearchParams<{ email?: string }>();
   const initialEmail = params.email ?? '';
 
@@ -24,6 +29,8 @@ export default function ResetPasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  useUnsavedNavigation(!completed && Boolean(code || newPassword || confirmPassword), !completed && loading);
 
   const isFormValid =
     email.trim() &&
@@ -61,11 +68,12 @@ export default function ResetPasswordScreen() {
         new_password: newPassword,
       });
 
+      setCompleted(true);
       Alert.alert('Succès', result.message, [
         {
           text: 'Se connecter',
           onPress: () => {
-            router.replace('/login');
+            navigation.reset({ index: 0, routes: [{ name: 'login' }] });
           },
         },
       ]);
@@ -80,16 +88,14 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <KeyboardAvoidingView
+        keyboardVerticalOffset={headerHeight}
         style={styles.keyboardWrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View style={styles.container}>
-            <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: '#6B7280' }}>← Retour</Text>
-            </TouchableOpacity>
 
             <View style={styles.header}>
               <Text style={styles.brand}>Réinitialisation</Text>

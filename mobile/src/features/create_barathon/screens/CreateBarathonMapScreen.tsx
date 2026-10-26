@@ -1,7 +1,12 @@
+import { useHeaderHeight } from '@react-navigation/elements';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NavigationProp, ParamListBase, CommonActions, useRoute } from '@react-navigation/native';
+import { useLocalSearchParams, router, useNavigation } from 'expo-router';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
+import { draftParentUpdate } from '../../../lib/navigation';
 import RouteSummarySheet from '../components/RouteSummarySheet';
 import WalkingDirectionsButton from '../components/WalkingDirectionsButton';
 import { selectNearbySuggestions } from '../services/nearbyPlaces.service';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { appendSelectedStops, getSearchCenter } from '../services/routePlan.service';
 import RoutingAttribution from '../components/RoutingAttribution';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -9,7 +14,6 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -20,7 +24,6 @@ import {
   Keyboard,
   useWindowDimensions,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
 import MapView, {
   Circle,
   Marker,
@@ -62,7 +65,11 @@ const DEFAULT_REGION: Region = {
 
 
 export default function CreateBarathonMapScreen() {
-  const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
+  const safeInsets = useSafeAreaInsets();
+  const insets = { ...safeInsets, top: 0 };
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const route = useRoute();
   const { height: windowHeight } = useWindowDimensions();
   const [sheetHeight, setSheetHeight] = useState(0);
   const [topHeight, setTopHeight] = useState(180);
@@ -100,6 +107,15 @@ export default function CreateBarathonMapScreen() {
     }
     return [];
   });
+  useEffect(() => {
+    const state = navigation.getState();
+    if (!state) return;
+    const update = draftParentUpdate(state.routes, route.key, JSON.stringify(points));
+    if (update) navigation.dispatch({ ...CommonActions.setParams(update.params), source: update.key });
+    // Also make a directly opened map recoverable through its header fallback.
+    navigation.dispatch({ ...CommonActions.setParams({ initialStopsJson: JSON.stringify(points) }), source: route.key });
+  }, [navigation, points, route.key]);
+
   const [pendingPoint, setPendingPoint] = useState<{
     latitude: number;
     longitude: number;
@@ -815,14 +831,6 @@ export default function CreateBarathonMapScreen() {
               {dateLabel} à {timeLabel} • Budget {allowedTravelTimeMinutes} min / étape
             </Text>
           </View>
-
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={[styles.backButton, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}
-          >
-            <Ionicons name="arrow-back" size={14} color="#FFFFFF" />
-            <Text style={styles.backButtonText}>Retour</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Barre de Recherche de Bars */}
@@ -998,6 +1006,11 @@ export default function CreateBarathonMapScreen() {
       {/* Floating Suggestion Preview Card */}
       {selectedSuggestion && (
         <View style={[styles.suggestionCard, { bottom: insets.bottom + sheetHeight + 32, right: insets.right + 78 }]}>
+          <View style={{ alignItems: 'flex-end' }}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={() => setSelectedSuggestion(null)} style={navigationControlStyles.close}>
+              <Ionicons name="close" size={22} color="#4B5563" />
+            </TouchableOpacity>
+          </View>
           <View style={styles.suggestionCardTop}>
             <Text style={styles.suggestionCardTitle} numberOfLines={1}>
               {selectedSuggestion.name}
@@ -1046,21 +1059,13 @@ export default function CreateBarathonMapScreen() {
               <Ionicons name="add" size={16} color="#FFFFFF" />
               <Text style={styles.suggestionAddBtnText}>Ajouter</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.suggestionDismissBtn}
-              onPress={() => setSelectedSuggestion(null)}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.suggestionDismissBtnText}>Fermer</Text>
-            </TouchableOpacity>
           </View>
         </View>
       )}
 
       <RouteSummarySheet style={[styles.bottomSheet, {
         bottom: insets.bottom + 12, left: insets.left + 12, right: insets.right + 12,
-        maxHeight: Math.min(360, Math.max(190, windowHeight - insets.top - topHeight - insets.bottom - 100)),
+        maxHeight: Math.min(360, Math.max(190, windowHeight - headerHeight - insets.top - topHeight - insets.bottom - 100)),
       }]} onLayout={event => setSheetHeight(event.nativeEvent.layout.height)}
         collapsed={isRouteListCollapsed} onCollapsedChange={setIsRouteListCollapsed} count={points.length}
         attribution={<RoutingAttribution />}>
@@ -1259,11 +1264,16 @@ export default function CreateBarathonMapScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
-          <View style={styles.modalBackdrop}>
+          <SafeAreaView style={styles.modalBackdrop}>
             <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>
-                Ajouter ce lieu au barathon ?
-              </Text>
+              <View style={navigationControlStyles.row}>
+                <View style={navigationControlStyles.title}>
+                  <Text style={styles.modalTitle}>Ajouter ce lieu au barathon ?</Text>
+                </View>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={closeModal} style={navigationControlStyles.close}>
+                  <Ionicons name="close" size={22} color="#4B5563" />
+                </TouchableOpacity>
+              </View>
               <Text style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', marginBottom: 12 }}>
                 Précisez le type d'établissement pour l'intégrer au barathon.
               </Text>
@@ -1303,22 +1313,16 @@ export default function CreateBarathonMapScreen() {
               </View>
 
               <View style={styles.modalActions}>
-                <TouchableOpacity
-                  onPress={closeModal}
-                  style={styles.cancelButton}
-                >
-                  <Text style={styles.cancelButtonText}>Non</Text>
-                </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={confirmAddPoint}
-                  style={styles.confirmButton}
+                  style={[styles.confirmButton, { flex: 1 }, navigationControlStyles.action]}
                 >
-                  <Text style={styles.confirmButtonText}>Oui</Text>
+                  <Text style={styles.confirmButtonText}>Ajouter ce lieu</Text>
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </SafeAreaView>
         </KeyboardAvoidingView>
       </Modal>
     </View>

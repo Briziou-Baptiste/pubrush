@@ -1,0 +1,53 @@
+{
+  "task": "UX-NAV-001",
+  "checked_at": "2026-10-26T11:28:15.411580+01:00",
+  "branch": "fix/ux-nav-001",
+  "base_main": "709694c6b718d54e7cb8313f4950f1a54c7c40e7",
+  "verdict": "PARTIAL",
+  "reason": "Physical iPhone and Android visual/gesture acceptance pending",
+  "checks": {
+    "mobile_typescript": {
+      "exit_code": 0
+    },
+    "mobile_tests": {
+      "exit_code": 0,
+      "passed": 44,
+      "ux_nav_tests": 10
+    },
+    "lint_changed_sources": {
+      "exit_code": 0,
+      "files": 30,
+      "errors": 0,
+      "warnings": 51,
+      "baseline_warnings": 55,
+      "introduced": 0
+    },
+    "expo_export": {
+      "exit_code": 0,
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "output": "/private/tmp/ux-nav-001-export",
+      "published": false
+    },
+    "backend_pytest": {
+      "exit_code": 0,
+      "passed": 86,
+      "skipped": 3,
+      "seconds": 5.85,
+      "skip_scope": "real PostgreSQL integration"
+    },
+    "web_typescript": {
+      "exit_code": 0
+    },
+    "git_diff_check": {
+      "exit_code": 0
+    }
+  },
+  "physical_devices_tested": [],
+  "commit_created": false,
+  "pushed": false,
+  "deployed": false,
+  "ota_published": false
+}

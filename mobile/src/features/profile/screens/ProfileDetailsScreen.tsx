@@ -1,10 +1,12 @@
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useUnsavedNavigation } from '../../../hooks/useUnsavedNavigation';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -19,6 +21,7 @@ import { changePassword, fetchMe, updateUsername, deleteAccount, checkUsernameAv
 import { getAccessToken, clearSession } from '../../../lib/authStorage';
 
 export default function ProfileDetailsScreen() {
+  const headerHeight = useHeaderHeight();
   const [username, setUsername] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
@@ -43,6 +46,10 @@ export default function ProfileDetailsScreen() {
 
   // Account deletion state
   const [deleting, setDeleting] = useState<boolean>(false);
+
+  useUnsavedNavigation(!deleting && !loading && Boolean(
+    newUsername.trim() !== username || oldPassword || newPassword || confirmPassword
+  ), !deleting && (usernameSubmitting || submitting));
 
   useEffect(() => {
     const clean = newUsername.trim();
@@ -214,17 +221,15 @@ export default function ProfileDetailsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <KeyboardAvoidingView
+        keyboardVerticalOffset={headerHeight}
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View style={styles.container}>
             {/* Header */}
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton} activeOpacity={0.7}>
-              <Text style={styles.backButtonText}>Retour</Text>
-            </TouchableOpacity>
 
             <View style={styles.header}>
               <Text style={styles.title}>Gérer mon profil</Text>

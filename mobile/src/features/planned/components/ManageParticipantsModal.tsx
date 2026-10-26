@@ -1,3 +1,5 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -116,6 +118,15 @@ export default function ManageParticipantsModal({
       .filter((id) => !initialParticipantIds.includes(id));
   }, [participants, initialParticipantIds]);
 
+  function handleClose() {
+    if (actionUserId !== null) return;
+    if (!addedParticipantIds.length) { onClose(); return; }
+    Alert.alert('Ajouts non validés', 'Fermer et abandonner les participants ajoutés ?', [
+      { text: 'Rester', style: 'cancel' },
+      { text: 'Abandonner les ajouts', style: 'destructive', onPress: onClose },
+    ]);
+  }
+
   function handleAddParticipant(user: SearchUserResult) {
     setParticipants((prev) => [
       ...prev,
@@ -194,11 +205,18 @@ export default function ManageParticipantsModal({
         visible={visible}
         transparent
         animationType="fade"
-        onRequestClose={onClose}
+        onRequestClose={handleClose}
       >
-      <View style={styles.overlay}>
+      <SafeAreaView style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>{"Gérer les participants"}</Text>
+          <View style={navigationControlStyles.row}>
+            <View style={navigationControlStyles.title}>
+              <Text style={styles.title}>{"Gérer les participants"}</Text>
+            </View>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={handleClose} disabled={actionUserId !== null} style={navigationControlStyles.close}>
+              <Ionicons name="close" size={22} color="#4B5563" />
+            </TouchableOpacity>
+          </View>
           {barathon && <Text style={styles.subtitle}>{barathon.name}</Text>}
 
           {loadingDetails ? (
@@ -338,17 +356,8 @@ export default function ManageParticipantsModal({
               <Text style={styles.saveButtonText}>{"Valider l'ajout"}</Text>
             )}
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-            disabled={actionUserId !== null || loadingDetails}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.closeButtonText}>{"Fermer"}</Text>
-          </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
 
     <InviteFriendsModal

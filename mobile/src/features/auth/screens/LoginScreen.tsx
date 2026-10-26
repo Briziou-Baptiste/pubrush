@@ -1,3 +1,5 @@
+import { useNavigation, Link } from 'expo-router';
+import { NavigationProp, ParamListBase } from '@react-navigation/native';
 //
 //  HomeScreen.tsx
 //  
@@ -6,7 +8,6 @@
 //
 
 import * as SecureStore from 'expo-secure-store';
-import { Link, router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -27,6 +28,7 @@ import { styles } from '../styles/login.styles';
 import { saveSession } from '../../../lib/authStorage';
 
 export default function LoginScreen() {
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -55,7 +57,7 @@ export default function LoginScreen() {
       });
 
         await saveSession(result.access_token);
-      router.replace('/home');
+      navigation.reset({ index: 0, routes: [{ name: 'home' }] });
     } catch (error) {
       Alert.alert(
         'Connexion impossible',

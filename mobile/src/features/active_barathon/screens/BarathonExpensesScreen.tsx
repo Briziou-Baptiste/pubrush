@@ -1,11 +1,12 @@
-import { useLocalSearchParams, router } from 'expo-router';
+import { navigationControlStyles } from '../../../lib/navigation.styles';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Modal,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -55,6 +56,15 @@ export default function BarathonExpensesScreen() {
   useEffect(() => {
     void loadExpenses();
   }, [barathonId]);
+
+  function handleCloseExpense() {
+    if (saving) return;
+    if (!amount.trim()) { setModalVisible(false); return; }
+    Alert.alert('Dépense non enregistrée', 'Fermer et abandonner cette dépense ?', [
+      { text: 'Rester', style: 'cancel' },
+      { text: 'Abandonner', style: 'destructive', onPress: () => setModalVisible(false) },
+    ]);
+  }
 
   async function loadExpenses() {
     try {
@@ -150,7 +160,7 @@ export default function BarathonExpensesScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
         <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}>
           <ActivityIndicator size="large" />
         </View>
@@ -159,13 +169,8 @@ export default function BarathonExpensesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <View style={styles.screenPadding}>
-        {/* Back and Header */}
-        <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
-          <Ionicons name="arrow-back" size={18} color="#2563EB" />
-          <Text style={styles.backButtonText}>Retour</Text>
-        </TouchableOpacity>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
           <Ionicons name="wallet-outline" size={26} color="#10B981" />
@@ -242,11 +247,18 @@ export default function BarathonExpensesScreen() {
         visible={modalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={handleCloseExpense}
       >
-        <View style={styles.stopModalOverlay}>
+        <SafeAreaView style={styles.stopModalOverlay}>
           <View style={[styles.stopModalCard, { maxHeight: '90%', paddingBottom: 24 }]}>
-            <Text style={[styles.stopModalTitle, { marginBottom: 16 }]}>Nouvelle Dépense</Text>
+            <View style={navigationControlStyles.row}>
+              <View style={navigationControlStyles.title}>
+                <Text style={[styles.stopModalTitle, { marginBottom: 16 }]}>Nouvelle Dépense</Text>
+              </View>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={handleCloseExpense} disabled={saving} style={navigationControlStyles.close}>
+                <Ionicons name="close" size={22} color="#4B5563" />
+              </TouchableOpacity>
+            </View>
 
             <ScrollView keyboardShouldPersistTaps="handled">
               {/* Amount input */}
@@ -334,13 +346,6 @@ export default function BarathonExpensesScreen() {
 
             {/* Modal Actions */}
             <View style={styles.stopModalButtonsRow}>
-              <TouchableOpacity
-                style={styles.stopModalCancelButton}
-                onPress={() => setModalVisible(false)}
-                disabled={saving}
-              >
-                <Text style={styles.stopModalCancelButtonText}>Annuler</Text>
-              </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.stopModalConfirmButton, { backgroundColor: '#10B981' }]}
@@ -353,7 +358,7 @@ export default function BarathonExpensesScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );

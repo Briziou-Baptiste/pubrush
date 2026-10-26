@@ -1,3 +1,5 @@
+import { navigationControlStyles } from '../../../lib/navigation.styles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useRef } from 'react';
 import { 
   View, 
@@ -28,6 +30,7 @@ const DEFAULT_REGION = {
 };
 
 export default function PartnerEventMapScreen() {
+  const insets = useSafeAreaInsets();
   const { eventId, eventName } = useLocalSearchParams<{ eventId: string; eventName: string }>();
   const mapRef = useRef<MapView | null>(null);
   const justPressedMarker = useRef(false);
@@ -272,7 +275,7 @@ export default function PartnerEventMapScreen() {
         </MapView>
 
         {/* Floating Top Header & Filters bar */}
-        <View style={styles.topBarWrapper}>
+        <View style={[styles.topBarWrapper, { top: 12, left: insets.left + 16, right: insets.right + 16 }]}>
           
           {/* Header Band */}
           <View style={styles.topBar}>
@@ -282,14 +285,6 @@ export default function PartnerEventMapScreen() {
               </Text>
               <Text style={styles.brandSubtitle}>Carte de l'Événement Partenaire</Text>
             </View>
-
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
           </View>
 
           {/* Map Filters Horizontal Row */}
@@ -338,7 +333,7 @@ export default function PartnerEventMapScreen() {
         {/* Floating Location Control Button */}
         <View style={[
           styles.locationControlWrapper,
-          { bottom: selectedSpot ? (Platform.OS === 'ios' ? 245 : 225) : (Platform.OS === 'ios' ? 40 : 30) }
+          { right: insets.right + 16, bottom: selectedSpot ? Math.max(insets.bottom + 220, Platform.OS === 'ios' ? 245 : 225) : Math.max(insets.bottom + 12, Platform.OS === 'ios' ? 40 : 30) }
         ]}>
           <LocationButton
             onPress={centerOnUser}
@@ -349,7 +344,7 @@ export default function PartnerEventMapScreen() {
 
         {/* Spot Details Card */}
         {selectedSpot && (
-          <View style={styles.spotDetailsCard}>
+          <View style={[styles.spotDetailsCard, { left: insets.left + 16, right: insets.right + 16, bottom: Math.max(insets.bottom + 12, Platform.OS === 'ios' ? 40 : 30) }]}>
             <View style={styles.spotDetailsHeader}>
               <View style={styles.spotTitleContainer}>
                 <View style={[styles.spotBadge, { backgroundColor: getMarkerColor(selectedSpot.spot_type), alignItems: 'center', justifyContent: 'center' }]}>
@@ -358,7 +353,7 @@ export default function PartnerEventMapScreen() {
                 <Text style={styles.spotTitle} numberOfLines={1}>{selectedSpot.name}</Text>
               </View>
               <TouchableOpacity 
-                style={styles.spotCloseButton} 
+                accessibilityRole="button" accessibilityLabel="Fermer" style={[styles.spotCloseButton, navigationControlStyles.close]}
                 onPress={() => setSelectedSpot(null)}
                 activeOpacity={0.7}
               >
