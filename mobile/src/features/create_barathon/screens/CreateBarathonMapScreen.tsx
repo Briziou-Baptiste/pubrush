@@ -6,6 +6,7 @@ import { navigationControlStyles } from '../../../lib/navigation.styles';
 import { draftParentUpdate } from '../../../lib/navigation';
 import RouteSummarySheet from '../components/RouteSummarySheet';
 import WalkingDirectionsButton from '../components/WalkingDirectionsButton';
+import { getSuggestionsPadding } from '../services/mapLayout.service';
 import { selectNearbySuggestions } from '../services/nearbyPlaces.service';
 import { appendSelectedStops, getSearchCenter } from '../services/routePlan.service';
 import RoutingAttribution from '../components/RoutingAttribution';
@@ -37,7 +38,7 @@ import { useUserLocation } from '../../home/hooks/useUserLocation';
 import { styles as homeStyles } from '../../home/styles/home.styles';
 import { createBarathonMapStyles as styles } from '../styles/createBarathonMap.styles';
 import { StopType, MapFilterItem, BarSearchResult } from '../types/createBarathon.types';
-import { fetchBarsSearch, fetchNearbyBars, fetchMapFilters } from '../../../lib/api';
+import { fetchBarsSearch, fetchNearbyBarsWithDiagnostics, fetchMapFilters, NearbyDiagnostics } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
 import {
   getRouteSegmentKey,
@@ -72,9 +73,19 @@ export default function CreateBarathonMapScreen() {
   const route = useRoute();
   const { height: windowHeight } = useWindowDimensions();
   const [sheetHeight, setSheetHeight] = useState(0);
-  const [topHeight, setTopHeight] = useState(180);
+  const [topHeight, setTopHeight] = useState(0);
   const mapRef = useRef<MapView | null>(null);
-  const [hasCenteredInitially, setHasCenteredInitially] = useState(false);
+  const hasCenteredInitially = useRef(false);
+  const [mapReady, setMapReady] = useState(false);
+  const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
+  const autoFitPending = useRef(false);
+  const userMovedMap = useRef(false);
+  const [fitRevision, setFitRevision] = useState(0);
+  const [nearbyRevision, setNearbyRevision] = useState(0);
+  const [nearbyStatus, setNearbyStatus] = useState<'idle' | 'complete' | 'limited' | 'error'>('idle');
+  const [compactSearch, setCompactSearch] = useState(false);
+  const markerDiagnostic = useRef<NearbyDiagnostics | null>(null);
+  const framingResults = useRef<BarSearchResult[]>([]);
 
 
 
@@ -266,16 +277,9 @@ export default function CreateBarathonMapScreen() {
     setSearchQuery('');
     setSearchResults([]);
 
-    mapRef.current?.animateCamera(
-      {
-        center: {
-          latitude: result.latitude,
-          longitude: result.longitude,
-        },
-        zoom: 17,
-      },
-      { duration: 800 }
-    );
+    Keyboard.dismiss();
+    mapRef.current?.animateToRegion({ latitude: result.latitude, longitude: result.longitude,
+      latitudeDelta: 0.006, longitudeDelta: 0.006 }, 800);
 
     setPendingPoint({
       latitude: result.latitude,
@@ -299,99 +303,98 @@ export default function CreateBarathonMapScreen() {
 
   useEffect(() => {
     let active = true;
-    let didTimeout = false;
-
-    // Set a client-side timeout of 12 seconds to prevent hanging the loader
-    // in case of slow or blocked VPS/Overpass server responses
+    const controller = new AbortController();
+    autoFitPending.current = true;
+    framingResults.current = [];
+    markerDiagnostic.current = null;
+    setSuggestions([]);
+    setSelectedSuggestion(null);
+    setNearbyStatus('idle');
+    if (points.length === 0) {
+      setLoadingSuggestions(false);
+      setCompactSearch(false);
+      return () => { active = false; controller.abort(); };
+    }
+    setLoadingSuggestions(true);
     const timeoutId = setTimeout(() => {
-      if (active) {
-        didTimeout = true;
-        setLoadingSuggestions(false);
-        console.warn('[suggestions] La requête suggestions a expiré (timeout client de 12s).');
-      }
+      if (!active) return;
+      controller.abort();
+      setNearbyStatus('error');
+      setLoadingSuggestions(false);
     }, 12000);
 
     async function loadSuggestions() {
-      console.log('[loadSuggestions] points length:', points.length);
-      if (points.length === 0) {
-        setSuggestions([]);
-        return;
-      }
-
-      const lastPoint = getSearchCenter(points, undefined)!;
-      console.log('[loadSuggestions] lastPoint:', lastPoint);
-
       try {
-        setLoadingSuggestions(true);
         const token = await getAccessToken();
-        console.log('[loadSuggestions] token fetched:', !!token, 'active:', active);
-        if (!token) {
-          console.warn('[loadSuggestions] Missing auth token.');
-          return;
-        }
-        if (!active) {
-          console.log('[loadSuggestions] exited because active was false (cleanup ran)');
-          return;
-        }
-
-        console.log('[loadSuggestions] calling fetchNearbyBars with filter:', activeFilterKey);
-        const data = await fetchNearbyBars(
-          lastPoint.latitude,
-          lastPoint.longitude,
-          allowedTravelTimeMinutes,
-          token,
-          activeFilterKey
+        if (!active || controller.signal.aborted) return;
+        if (!token) throw new Error('session_unavailable');
+        const lastPoint = getSearchCenter(points, undefined)!;
+        const { items, diagnostics } = await fetchNearbyBarsWithDiagnostics(
+          lastPoint.latitude, lastPoint.longitude, allowedTravelTimeMinutes,
+          token, activeFilterKey, controller.signal,
         );
-        console.log('[loadSuggestions] response received count:', data?.length);
-
-        if (!data || data.length === 0) {
-          console.log('[loadSuggestions] 0 venues returned.');
-        }
-
-        // If the query took too long and already timed out, or if this effect was cleaned up, ignore results
-        if (!active) {
-          console.log('[loadSuggestions] exited after fetch because active was false');
-          return;
-        }
-        if (didTimeout) {
-          console.log('[loadSuggestions] exited after fetch because client timed out');
-          return;
-        }
-
-        const filtered = selectNearbySuggestions((data || []).map((item: any) => ({
-          name: item.name,
-          street: item.street || '',
-          city: item.city || '',
-          country: item.country || '',
-          latitude: Number(item.latitude),
-          longitude: Number(item.longitude),
+        if (!active || controller.signal.aborted) return;
+        const filtered = selectNearbySuggestions(items.map((item: any) => ({
+          name: item.name, street: item.street || '', city: item.city || '', country: item.country || '',
+          latitude: Number(item.latitude), longitude: Number(item.longitude),
           stopType: (item.stop_type || 'bar') as StopType,
           estimatedMinutes: typeof item.estimated_minutes === 'number' ? item.estimated_minutes : undefined,
         })), points, lastPoint, allowedTravelTimeMinutes);
-
-        console.log('[loadSuggestions] setting suggestions count:', filtered.length);
+        markerDiagnostic.current = diagnostics;
+        framingResults.current = filtered;
         setSuggestions(filtered);
-      } catch (error: any) {
-        console.warn('[loadSuggestions] Failed to load suggestions:', error);
+        setNearbyStatus(diagnostics.limited ? 'limited' : 'complete');
+      } catch {
+        if (active && !controller.signal.aborted) setNearbyStatus('error');
       } finally {
         clearTimeout(timeoutId);
-        if (active && !didTimeout) {
-          setLoadingSuggestions(false);
-        }
+        if (active) setLoadingSuggestions(false);
       }
     }
-
-    // Synchronously clear suggestions immediately when points change to prevent stale rendering state
-    // and eliminate dynamic native MapKit subview index-shifting crashes
-    setSuggestions([]);
-    setSelectedSuggestion(null);
     void loadSuggestions();
-
     return () => {
       active = false;
+      controller.abort();
       clearTimeout(timeoutId);
     };
-  }, [points, allowedTravelTimeMinutes, activeFilterKey]);
+  }, [points, allowedTravelTimeMinutes, activeFilterKey, nearbyRevision]);
+
+  // Consume a framing request once, after native map/layout and markers are ready.
+  // Later pans, layout changes and opening the summary never recenter the map.
+  useEffect(() => {
+    if (!autoFitPending.current || suggestions !== framingResults.current ||
+        !mapReady || loadingSuggestions || !suggestions.length) return;
+    if (!mapSize.width || !mapSize.height || !topHeight || !sheetHeight) return;
+    const padding = getSuggestionsPadding(mapSize, topHeight, sheetHeight, safeInsets);
+    const frame = requestAnimationFrame(() => {
+      if (!autoFitPending.current) return;
+      if (!padding) {
+        if (topHeight && sheetHeight) {
+          if (!isRouteListCollapsed) setIsRouteListCollapsed(true);
+          else if (!compactSearch) setCompactSearch(true);
+        }
+        return;
+      }
+      const center = getSearchCenter(points, undefined);
+      if (!center || !mapRef.current) return;
+      autoFitPending.current = false;
+      mapRef.current.fitToCoordinates([center, ...suggestions], { edgePadding: padding, animated: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [suggestions, points, loadingSuggestions, mapReady, mapSize, topHeight, sheetHeight,
+    safeInsets, isRouteListCollapsed, compactSearch, fitRevision]);
+
+  function cancelAutomaticFraming() {
+    autoFitPending.current = false;
+    userMovedMap.current = true;
+  }
+
+  function showSuggestions() {
+    Keyboard.dismiss();
+    setSelectedSuggestion(null);
+    autoFitPending.current = true;
+    setFitRevision(value => value + 1);
+  }
 
   function handleAddSuggestedPoint(item: any) {
     setPoints((prev) => [
@@ -406,13 +409,8 @@ export default function CreateBarathonMapScreen() {
     ]);
     setSelectedSuggestion(null);
 
-    mapRef.current?.animateCamera(
-      {
-        center: { latitude: item.latitude, longitude: item.longitude },
-        zoom: 17,
-      },
-      { duration: 800 }
-    );
+    mapRef.current?.animateToRegion({ latitude: item.latitude, longitude: item.longitude,
+      latitudeDelta: 0.006, longitudeDelta: 0.006 }, 800);
   }
 
   function handleAutoGenerate() {
@@ -473,31 +471,18 @@ export default function CreateBarathonMapScreen() {
     : '--:--';
 
   const initialRegion = useMemo(() => {
-    if (!location) return DEFAULT_REGION;
-
-    return {
-      latitude: location.latitude,
-      longitude: location.longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    };
-  }, [location]);
-
+    const center = getSearchCenter(points, location);
+    if (!center) return DEFAULT_REGION;
+    return { latitude: center.latitude, longitude: center.longitude,
+      latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  }, [points, location]);
 
 
   useEffect(() => {
-    if (!location || hasCenteredInitially || !mapRef.current) return;
-
-    mapRef.current.animateCamera(
-      {
-        center: location,
-        zoom: 16,
-      },
-      { duration: 800 }
-    );
-
-    setHasCenteredInitially(true);
-  }, [location, hasCenteredInitially]);
+    if (!location || !mapReady || hasCenteredInitially.current || points.length || userMovedMap.current) return;
+    hasCenteredInitially.current = true;
+    mapRef.current?.animateToRegion({ ...location, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 800);
+  }, [location, mapReady, points.length]);
     const cannotCreateBarathon = points.length < 2;
 
 
@@ -564,13 +549,8 @@ export default function CreateBarathonMapScreen() {
   function centerOnUser() {
     if (!location) return;
 
-    mapRef.current?.animateCamera(
-      {
-        center: location,
-        zoom: 17,
-      },
-      { duration: 600 }
-    );
+    cancelAutomaticFraming();
+    mapRef.current?.animateToRegion({ ...location, latitudeDelta: 0.006, longitudeDelta: 0.006 }, 600);
   }
 
   function getTravelTimeTone(estimatedMinutes: number) {
@@ -755,12 +735,26 @@ export default function CreateBarathonMapScreen() {
     return list;
   }, [points, pendingPoint, suggestions, mapFilters]);
 
+  useEffect(() => {
+    const diagnostic = markerDiagnostic.current;
+    if (!diagnostic || loadingSuggestions) return;
+    markerDiagnostic.current = null;
+    const created = allMarkers.filter(marker => String(marker.key).startsWith('suggestion-marker-')).length;
+    console.info('[places.nearby]', { provider: diagnostic.provider, raw: diagnostic.rawCount,
+      filtered: diagnostic.filteredCount, transmitted: diagnostic.returnedCount,
+      mobileFiltered: suggestions.length, markersCreated: created, limited: diagnostic.limited });
+  }, [allMarkers, suggestions.length, loadingSuggestions]);
+
   return (
     <View style={homeStyles.safeArea}>
       <MapView
         ref={mapRef}
         style={homeStyles.map}
         initialRegion={initialRegion}
+        onMapReady={() => setMapReady(true)}
+        onLayout={event => setMapSize({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })}
+        onTouchStart={cancelAutomaticFraming}
+        onPanDrag={cancelAutomaticFraming}
         showsUserLocation={permissionGranted}
         showsMyLocationButton={false}
         onPress={() => {
@@ -792,7 +786,7 @@ export default function CreateBarathonMapScreen() {
       {loadingSuggestions && (
         <View style={{
           position: 'absolute',
-          top: 180,
+          top: topHeight + 24,
           alignSelf: 'center',
           backgroundColor: 'rgba(255, 255, 255, 0.95)',
           borderRadius: 20,
@@ -816,7 +810,7 @@ export default function CreateBarathonMapScreen() {
 
       <View style={[homeStyles.topBarWrapper, { top: insets.top + 12, left: insets.left + 16, right: insets.right + 16 }]}
         onLayout={event => setTopHeight(event.nativeEvent.layout.height)}>
-        <View style={homeStyles.topBar}>
+        <View style={[homeStyles.topBar, compactSearch && { display: 'none' }]}>
           <View style={homeStyles.brandBlock}>
             <View style={styles.stepperHeader}>
               <View style={[styles.stepperBarMini, styles.stepperBarMiniActive]} />
@@ -848,6 +842,7 @@ export default function CreateBarathonMapScreen() {
           padding: 4,
         }}>
           <View style={{
+            display: compactSearch ? 'none' : 'flex',
             flexDirection: 'row',
             alignItems: 'center',
             paddingHorizontal: 14,
@@ -872,6 +867,7 @@ export default function CreateBarathonMapScreen() {
           {mapFilters.length > 0 && (
             <ScrollView
               horizontal
+              style={compactSearch ? { display: 'none' } : undefined}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{
                 flexDirection: 'row',
@@ -926,9 +922,43 @@ export default function CreateBarathonMapScreen() {
             </ScrollView>
           )}
 
+          {points.length > 0 && (
+            <View style={{ paddingHorizontal: 10, paddingBottom: 4 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+                <Text accessibilityLiveRegion="polite" style={{ flex: 1, fontSize: 12, color: '#4B5563' }}>
+                  {loadingSuggestions ? 'Recherche…' : `${suggestions.length} lieux à proximité`}
+                </Text>
+                {compactSearch && (
+                  <TouchableOpacity accessibilityRole="button" accessibilityLabel="Ouvrir la recherche de lieux"
+                    onPress={() => setCompactSearch(false)}
+                    style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="search" size={20} color="#2563EB" />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Voir les lieux à proximité"
+                  disabled={!suggestions.length || loadingSuggestions} onPress={showSuggestions}
+                  style={{ minHeight: 44, paddingHorizontal: 8, justifyContent: 'center', opacity: suggestions.length ? 1 : 0.4 }}>
+                  <Text style={{ color: '#2563EB', fontWeight: '600' }}>Voir</Text>
+                </TouchableOpacity>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Relancer la recherche à proximité"
+                  disabled={loadingSuggestions} onPress={() => setNearbyRevision(value => value + 1)}
+                  style={{ minHeight: 44, paddingHorizontal: 8, justifyContent: 'center', opacity: loadingSuggestions ? 0.4 : 1 }}>
+                  <Text style={{ color: '#2563EB', fontWeight: '600' }}>Relancer</Text>
+                </TouchableOpacity>
+              </View>
+              {(nearbyStatus === 'limited' || nearbyStatus === 'error') && (
+                <Text accessibilityLiveRegion="polite" style={{ fontSize: 12, color: '#92400E', paddingBottom: 4 }}>
+                  {nearbyStatus === 'limited' ? 'Résultats limités. Relancez ou recherchez un lieu par son nom.'
+                    : 'Recherche indisponible. Relancez ou recherchez un lieu par son nom.'}
+                </Text>
+              )}
+            </View>
+          )}
+
           {searchResults.length > 0 && (
             <ScrollView
               style={{
+                display: compactSearch ? 'none' : 'flex',
                 maxHeight: 180,
                 borderTopWidth: 1,
                 borderTopColor: '#E5E7EB',

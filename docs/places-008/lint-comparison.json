@@ -1,0 +1,30 @@
+[
+  {
+    "file": "mobile/src/features/active_barathon/components/ReplaceOrAddStopModal.tsx",
+    "errors": 0,
+    "warnings": 2,
+    "baselineWarnings": 2,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/create_barathon/screens/CreateBarathonMapScreen.tsx",
+    "errors": 0,
+    "warnings": 8,
+    "baselineWarnings": 8,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/features/create_barathon/services/mapLayout.service.ts",
+    "errors": 0,
+    "warnings": 0,
+    "baselineWarnings": 0,
+    "introduced": []
+  },
+  {
+    "file": "mobile/src/lib/api.ts",
+    "errors": 0,
+    "warnings": 0,
+    "baselineWarnings": 0,
+    "introduced": []
+  }
+]

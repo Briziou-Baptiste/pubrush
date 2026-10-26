@@ -17,3 +17,21 @@ export function getMapControlsLayout(bottomTop: number, headerBottom: number) {
   return { top: Math.max(headerBottom + gap, bottomTop - gap - (height >= 108 ? 108 : 48)),
     horizontal: height < 108, fits: height >= 48 };
 }
+
+// MapView occupies the scene below the native navigation header. Both native map
+// providers support fitToCoordinates + edgePadding; camera.zoom is Google-only.
+export function getSuggestionsPadding(
+  size: { width: number; height: number }, topHeight: number, sheetHeight: number,
+  insets: { left: number; right: number; bottom: number },
+) {
+  if (!size.width || !size.height || !topHeight || !sheetHeight) return null;
+  const padding = {
+    top: Math.ceil(topHeight + 12 + 40), // top overlay plus pin headroom
+    bottom: Math.ceil(sheetHeight + insets.bottom + 12 + 24),
+    left: Math.ceil(insets.left + 36),
+    right: Math.ceil(insets.right + 36),
+  };
+  if (size.height - padding.top - padding.bottom < 96 ||
+      size.width - padding.left - padding.right < 96) return null;
+  return padding;
+}

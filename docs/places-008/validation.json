@@ -1,0 +1,99 @@
+{
+  "task": "PLACES-008",
+  "branch": "fix/places-008-nearby-reliability",
+  "base": "7aec88bc7b49a1a2b34d2ffd03842c13003dcd4b",
+  "verdict": "PARTIAL",
+  "reason": "Physical iPhone / Android native rendering and gestures not run",
+  "production_actions": {
+    "commit": false,
+    "push": false,
+    "deploy": false,
+    "ota": false,
+    "provider_network_calls": 0,
+    "kubernetes_changes": false,
+    "gps_websocket_changes": false
+  },
+  "validation": {
+    "backend": {
+      "status": "PASS",
+      "passed": 95,
+      "skipped": 3,
+      "log": "backend-tests.txt"
+    },
+    "mobile": {
+      "status": "PASS",
+      "passed": 64,
+      "new_places_008_tests": 20,
+      "log": "mobile-tests.txt"
+    },
+    "mobile_types": {
+      "status": "PASS",
+      "log": "mobile-types.txt"
+    },
+    "web_types": {
+      "status": "PASS",
+      "log": "web-types.txt"
+    },
+    "targeted_lint": {
+      "status": "PASS",
+      "errors": 0,
+      "existing_warnings": 10,
+      "introduced_warnings": 0,
+      "log": "lint-comparison.json"
+    },
+    "expo_export": {
+      "status": "PASS",
+      "platforms": [
+        "ios",
+        "android"
+      ],
+      "log": "expo-export.txt",
+      "directory": "/private/tmp/places-008-export"
+    },
+    "diff_check": "PASS",
+    "native_devices": "NOT_RUN",
+    "real_network_latency": "NOT_RUN"
+  },
+  "replay": {
+    "normal": {
+      "provider": "overpass",
+      "raw": 673,
+      "filtered": 116,
+      "returned": 50,
+      "limited": false,
+      "reason": "complete",
+      "supplier_calls_mocked": 1
+    },
+    "partial_recovered": {
+      "provider": "overpass",
+      "raw": 673,
+      "filtered": 116,
+      "returned": 50,
+      "limited": false,
+      "reason": "complete",
+      "supplier_calls_mocked": 2
+    },
+    "photon_limited": {
+      "provider": "photon",
+      "raw": 15,
+      "filtered": 3,
+      "returned": 3,
+      "limited": true,
+      "reason": "overpass_partial",
+      "supplier_calls_mocked": 3
+    }
+  },
+  "changed_application_files": {
+    "backend/app/api/routes/bars.py": "5b6415476ff43f4f9760e7cc82a50e6024b502fadb94172dee57dde62addf088",
+    "mobile/src/features/active_barathon/components/ReplaceOrAddStopModal.tsx": "8afa7065ec56760aa2c810c4f4565e99b7b40a317337943421fef742b2a98a98",
+    "mobile/src/features/create_barathon/screens/CreateBarathonMapScreen.tsx": "de3b27ff3f6bd0ebe89df9554fea4770b78179358f5543858bb2507abb240fc6",
+    "mobile/src/features/create_barathon/services/mapLayout.service.ts": "39317dcae7516397c0c7347a5f52efc3ca77e224a2f72e386da0f7a58e175813",
+    "mobile/src/lib/api.ts": "3f342ccf7c35a3ae48598835b733cb88b4fb124fa2c8a930c107c4a959aa8d10"
+  },
+  "fixtures": {
+    "captured": "2026-10-26 during AUDIT-PLACES-007",
+    "osm_base": "2026-08-10T00:10:23Z",
+    "public_place": "Tito Mojito Merly / OSM node 7700449713",
+    "attribution": "© OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright"
+  }
+}

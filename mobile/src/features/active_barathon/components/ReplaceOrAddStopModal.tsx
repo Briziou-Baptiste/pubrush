@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { fetchBarsSearch, fetchNearbyBars } from '../../../lib/api';
+import { fetchBarsSearch, fetchNearbyBarsWithDiagnostics } from '../../../lib/api';
 import { getAccessToken } from '../../../lib/authStorage';
 import { addBarathonStop, replaceBarathonStop } from '../services/activeBarathon.service';
 import { ActiveBarathonData, ActiveBarathonStop, LatLng } from '../types/activeBarathon.types';
@@ -74,6 +74,7 @@ export default function ReplaceOrAddStopModal({
   const [position, setPosition] = useState<'before_current' | 'after_current' | 'at_end'>('after_current');
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingBars, setLoadingBars] = useState(false);
+  const [nearbyStatus, setNearbyStatus] = useState<'complete' | 'limited' | 'error'>('complete');
   const [bars, setBars] = useState<BarCandidate[]>([]);
   const [selectedBar, setSelectedBar] = useState<BarCandidate | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -91,10 +92,11 @@ export default function ReplaceOrAddStopModal({
     const version = ++requestVersion.current;
     try {
       setLoadingBars(true);
+      setNearbyStatus('complete');
       const token = await getAccessToken();
       if (!token) return;
 
-      const data = await fetchNearbyBars(centerLat, centerLon, 15, token);
+      const { items: data, diagnostics } = await fetchNearbyBarsWithDiagnostics(centerLat, centerLon, 15, token);
       if (Array.isArray(data)) {
         const formatted: BarCandidate[] = data.map((b: any) => {
           const lat = Number(b.latitude || b.lat);
@@ -112,10 +114,13 @@ export default function ReplaceOrAddStopModal({
           };
         });
         formatted.sort((a, b) => (a.distanceMeters ?? 0) - (b.distanceMeters ?? 0));
-        if (version === requestVersion.current) setBars(formatted);
+        if (version === requestVersion.current) {
+          setBars(formatted);
+          setNearbyStatus(diagnostics.limited ? 'limited' : 'complete');
+        }
       }
-    } catch (err) {
-      console.error('Error loading nearby bars for modal:', err);
+    } catch {
+      if (version === requestVersion.current) setNearbyStatus('error');
     } finally {
       if (version === requestVersion.current) setLoadingBars(false);
     }
@@ -397,6 +402,20 @@ export default function ReplaceOrAddStopModal({
             </Text>
             {loadingBars && <ActivityIndicator size="small" color="#2563EB" />}
           </View>
+
+          {!searchQuery.trim() && nearbyStatus !== 'complete' && !loadingBars && (
+            <View style={{ paddingHorizontal: 4, paddingBottom: 8 }}>
+              <Text accessibilityLiveRegion="polite" style={{ color: '#92400E', fontSize: 12 }}>
+                {nearbyStatus === 'limited' ? 'Résultats limités. Relancez ou recherchez un lieu par son nom.'
+                  : 'Recherche indisponible. Relancez ou recherchez un lieu par son nom.'}
+              </Text>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Relancer la recherche à proximité"
+                onPress={() => void loadNearbySuggestions()}
+                style={{ minHeight: 44, justifyContent: 'center' }}>
+                <Text style={{ color: '#2563EB', fontWeight: '600' }}>Relancer</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <ScrollView style={styles.barsList} keyboardShouldPersistTaps="handled">
             {bars.length === 0 && !loadingBars ? (

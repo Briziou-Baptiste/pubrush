@@ -282,26 +282,56 @@ export async function fetchBarsSearch(
   return handleResponse<any[]>(response);
 }
 
-export async function fetchNearbyBars(
-  lat: number,
-  lon: number,
-  maxTravelTimeMinutes: number,
-  token: string,
-  filterKey?: string
-): Promise<any[]> {
+export type NearbyDiagnostics = {
+  provider: 'overpass' | 'photon' | 'google' | 'none' | 'unknown';
+  rawCount: number | null;
+  filteredCount: number | null;
+  returnedCount: number | null;
+  limited: boolean;
+};
+
+export function readNearbyDiagnostics(headers: Pick<Headers, 'get'>): NearbyDiagnostics {
+  const provider = headers.get('X-Places-Provider');
+  const count = (key: string) => {
+    const value = headers.get(key);
+    return value !== null && /^\d+$/.test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : null;
+  };
+  return {
+    provider: provider === 'overpass' || provider === 'photon' || provider === 'google' || provider === 'none' ? provider : 'unknown',
+    rawCount: count('X-Places-Raw-Count'),
+    filteredCount: count('X-Places-Filtered-Count'),
+    returnedCount: count('X-Places-Returned-Count'),
+    // Photon is a geocoder with a small candidate cap, not a complete local inventory.
+    limited: provider === 'photon' || headers.get('X-Places-Limited') === 'true',
+  };
+}
+
+export async function fetchNearbyBarsWithDiagnostics(
+  lat: number, lon: number, maxTravelTimeMinutes: number, token: string,
+  filterKey?: string, signal?: AbortSignal,
+): Promise<{ items: any[]; diagnostics: NearbyDiagnostics }> {
   let url = `${API_BASE_URL}/bars/nearby?lat=${lat}&lon=${lon}&max_travel_time_minutes=${maxTravelTimeMinutes}`;
-  if (filterKey) {
-    url += `&filter_key=${encodeURIComponent(filterKey)}`;
+  if (filterKey) url += `&filter_key=${encodeURIComponent(filterKey)}`;
+  // Map callers manage cancellation on center changes; other consumers still
+  // receive a bounded request without changing the existing array interface.
+  const controller = signal ? null : new AbortController();
+  const timer = controller ? setTimeout(() => controller.abort(), 12000) : undefined;
+  try {
+    const response = await fetch(url, {
+      method: 'GET', headers: { Authorization: `Bearer ${token}` }, signal: signal ?? controller?.signal,
+    });
+    const items = await handleResponse<any[]>(response);
+    return { items, diagnostics: readNearbyDiagnostics(response.headers) };
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
   }
+}
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return handleResponse<any[]>(response);
+// Preserve the array API used by the other existing selection screens.
+export async function fetchNearbyBars(
+  lat: number, lon: number, maxTravelTimeMinutes: number, token: string, filterKey?: string,
+): Promise<any[]> {
+  return (await fetchNearbyBarsWithDiagnostics(lat, lon, maxTravelTimeMinutes, token, filterKey)).items;
 }
 
 export async function updateUsername(username: string, token: string): Promise<MeResponse> {

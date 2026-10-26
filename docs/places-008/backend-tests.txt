@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/baptistebriziou/Projects/pubrush/backend
+plugins: anyio-4.12.1, cov-7.1.0
+collected 98 items
+
+tests/test_auth.py .........................                             [ 25%]
+tests/test_barathon_dynamic_stops.py .....                               [ 30%]
+tests/test_barathon_guest_invitation.py .....                            [ 35%]
+tests/test_barathons.py .........                                        [ 44%]
+tests/test_bars.py ..                                                    [ 46%]
+tests/test_expenses.py ..                                                [ 48%]
+tests/test_main.py ......                                                [ 55%]
+tests/test_p0_fixes.py .........                                         [ 64%]
+tests/test_places_005.py ....                                            [ 68%]
+tests/test_places_008.py .........                                       [ 77%]
+tests/test_postgres_real_integration.py sss                              [ 80%]
+tests/test_rate_limiter.py .                                             [ 81%]
+tests/test_saved_barathons.py .                                          [ 82%]
+tests/test_walking_routing.py ................                           [ 98%]
+tests/test_ws_friend_locations.py .                                      [100%]
+
+======================== 95 passed, 3 skipped in 4.65s =========================

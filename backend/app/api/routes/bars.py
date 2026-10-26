@@ -6,10 +6,10 @@ import ssl
 import math
 import re
 import unicodedata
+import logging
 from threading import Lock
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from typing import Optional
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -18,6 +18,40 @@ from app.api.deps.auth import get_current_user
 from app.models import User, MapFilter
 import time
 from app.schemas import BarSearchResult
+
+
+# A list preserves the existing JSON contract; metadata travels in response headers.
+class NearbyResults(list):
+    def __init__(self, items=(), *, provider="overpass", raw_count=0, limited=False, reason="complete", filtered_count=None):
+        super().__init__(items)
+        self.provider = provider
+        self.raw_count = raw_count
+        self.limited = limited
+        self.reason = reason
+        self.filtered_count = len(self) if filtered_count is None else filtered_count
+
+
+def _nearby_response(results, response=None, *, cached=False):
+    provider = getattr(results, "provider", "unknown")
+    raw = getattr(results, "raw_count", len(results))
+    filtered = getattr(results, "filtered_count", len(results))
+    limited = getattr(results, "limited", False)
+    reason = getattr(results, "reason", "unknown")
+    if response is not None:
+        response.headers.update({
+            "X-Places-Provider": provider,
+            "X-Places-Raw-Count": str(raw),
+            "X-Places-Filtered-Count": str(filtered),
+            "X-Places-Returned-Count": str(len(results)),
+            "X-Places-Limited": "true" if limited else "false",
+            "X-Places-Reason": reason,
+        })
+    # Enumerated reasons and counts only: never URLs, positions, names or exception text.
+    logging.getLogger("uvicorn.error").info(
+        "places.nearby provider=%s raw=%d filtered=%d returned=%d limited=%s reason=%s cached=%s",
+        provider, raw, filtered, len(results), limited, reason, cached,
+    )
+    return results
 
 
 class ExpiringCache:
@@ -152,7 +186,7 @@ def search_bars(
 
     return results
 
-def search_photon(q: str, lat: Optional[float], lon: Optional[float], filter_key: Optional[str] = None):
+def search_photon(q: str, lat: Optional[float], lon: Optional[float], filter_key: Optional[str] = None, *, timeout: float = 5):
     query_params = {"q": q, "limit": 15}  # Request slightly more to allow filtering
     if filter_key == 'bar':
         query_params['osm_tag'] = ['amenity:pub', 'amenity:bar', 'amenity:biergarten', 'amenity:nightclub']
@@ -166,7 +200,7 @@ def search_photon(q: str, lat: Optional[float], lon: Optional[float], filter_key
     url = f"https://photon.komoot.io/api/?{urllib.parse.urlencode(query_params, doseq=True)}"
     
     try:
-        data = _http_get_json(url, timeout=5)
+        data = _http_get_json(url, timeout=timeout)
             
         results = []
         for feature in data.get("features", []):
@@ -215,7 +249,8 @@ def search_photon(q: str, lat: Optional[float], lon: Optional[float], filter_key
                     stop_type=stop_type
                 )
             )
-        return results[:10]  # Return capped list
+        return NearbyResults(results[:10], provider="photon", raw_count=len(data.get("features", [])),
+                             limited=True, reason="photon_geocoder", filtered_count=len(results))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -397,17 +432,18 @@ def get_nearby_bars(
     lon: float,
     max_travel_time_minutes: int,
     filter_key: Optional[str] = None,
+    response: Response = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     if max_travel_time_minutes <= 0:
-        return []
+        return _nearby_response(NearbyResults(), response)
 
     # Round coordinates to 4 decimal places (~11 meters of precision) to hit cache for identical points
     cache_key = (round(lat, 4), round(lon, 4), max_travel_time_minutes, filter_key,
                  _walking_routing_enabled(), WALKING_BASE_URL)
     if cache_key in NEARBY_CACHE:
-        return NEARBY_CACHE[cache_key]
+        return _nearby_response(NEARBY_CACHE[cache_key], response, cached=True)
 
     # Calculate travel distance limit: 4.8 km/h = 80 meters per minute
     radius = int(80.0 * max_travel_time_minutes)
@@ -433,6 +469,12 @@ def get_nearby_bars(
     else:
         candidates = search_overpass_nearby(lat, lon, radius, osm_query, filter_key)
 
+    # Retain supplier status while the existing filtering/routing produces new lists.
+    diagnostics = dict(provider=getattr(candidates, "provider", "google" if provider == "google" else "unknown"),
+                       raw_count=getattr(candidates, "raw_count", len(candidates)),
+                       limited=getattr(candidates, "limited", False),
+                       reason=getattr(candidates, "reason", "unknown"))
+
     # Compute real walking times
     candidates = compute_real_walking_times(lat, lon, _unique_nearby(candidates))
 
@@ -450,15 +492,15 @@ def get_nearby_bars(
     filtered_results.sort(key=lambda x: (
         x.estimated_minutes is None, x.estimated_minutes if x.estimated_minutes is not None else math.inf,
         distance_meters(lat, lon, x.latitude, x.longitude), x.name.casefold()))
-    res = filtered_results[:50]  # Propose up to 50 sorted recommendations to the frontend
+    res = NearbyResults(filtered_results[:50], **diagnostics, filtered_count=len(filtered_results))
 
     # Prevent memory leaks in the nearby cache, and only cache if we got successful recommendations (res is not empty)
-    if len(res) > 0 and all(c.estimated_minutes is not None for c in res):
+    if len(res) > 0 and not res.limited and all(c.estimated_minutes is not None for c in res):
         if len(NEARBY_CACHE) > 200:
             NEARBY_CACHE.clear()
         NEARBY_CACHE[cache_key] = res
 
-    return res
+    return _nearby_response(res, response)
 
 def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optional[str] = None, filter_key: Optional[str] = None):
     # Fetch the whole local inventory. A provider-side cap is by OSM ID, never by distance.
@@ -481,65 +523,61 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
         query_body = 'nwr["amenity"~"^(pub|bar|restaurant)$"]'
     
     overpass_query = f"""
-    [out:json][timeout:5];
+    [out:json][timeout:2];
     (
       {query_body}["name"](around:{radius},{lat},{lon});
     );
     out center;
     """
     
+    # At most one primary, one backup and one Photon call. No mirror fan-out/retry loop.
     servers = [
         "https://overpass.openstreetmap.fr/api/interpreter",
-        "https://lz4.overpass-api.de/api/interpreter",
         "https://overpass-api.de/api/interpreter",
-        "https://z.overpass-api.de/api/interpreter",
-        "https://overpass.kumi.systems/api/interpreter"
     ]
-    
     data_encoded = urllib.parse.urlencode({"data": overpass_query}).encode("utf-8")
-    
+    deadline = time.monotonic() + 9
     res_data = None
-
-    # Try primary mirror first
-    try:
-        data = _http_get_json(
-            servers[0],
-            data_encoded=data_encoded,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            timeout=3,
-        )
-        if data and "elements" in data:
-            res_data = data
-    except Exception:
-        res_data = None
-
-    # If primary mirror is down/slow, query remaining backup mirrors concurrently
-    if not res_data and len(servers) > 1:
-        def _fetch_mirror(url: str):
-            return _http_get_json(
-                url,
-                data_encoded=data_encoded,
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-                timeout=4,
-            )
-
-        with ThreadPoolExecutor(max_workers=min(len(servers) - 1, 4)) as executor:
-            futures = {executor.submit(_fetch_mirror, url): url for url in servers[1:]}
-            for future in as_completed(futures):
-                try:
-                    backup_data = future.result()
-                    if backup_data and "elements" in backup_data:
-                        res_data = backup_data
-                        break
-                except Exception:
-                    continue
-            
-    if not res_data:
+    failure = "overpass_unavailable"
+    for server in servers:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
         try:
-            return search_photon(filter_key or "bar", lat, lon, filter_key or 'bar')[:10]
+            data = _http_get_json(server, data_encoded=data_encoded,
+                                  headers={"Content-Type": "application/x-www-form-urlencoded"},
+                                  timeout=min(3, remaining))
+            # Even an empty or warning-only partial response must not masquerade as complete.
+            if isinstance(data, dict) and data.get("remark"):
+                failure = "overpass_partial"
+                logging.getLogger("uvicorn.error").info(
+                    "places.provider provider=overpass raw=%d accepted=0 reason=partial",
+                    len(data.get("elements", [])) if isinstance(data.get("elements"), list) else 0,
+                )
+                continue
+            if isinstance(data, dict) and isinstance(data.get("elements"), list):
+                res_data = data
+                break
         except Exception:
-            return []
-            
+            # Do not log provider URLs, queries or exception strings.
+            continue
+
+    def photon_fallback(reason):
+        remaining = deadline - time.monotonic()
+        if remaining > 0:
+            try:
+                fallback = search_photon(filter_key or "bar", lat, lon, filter_key or "bar",
+                                         timeout=min(3, remaining))
+                return NearbyResults(fallback, provider="photon",
+                                     raw_count=getattr(fallback, "raw_count", len(fallback)),
+                                     limited=True, reason=reason)
+            except Exception:
+                pass
+        return NearbyResults(provider="none", limited=True, reason="providers_unavailable")
+
+    if res_data is None:
+        return photon_fallback(failure)
+
     try:
         results = []
         for element in res_data.get("elements", []):
@@ -604,12 +642,9 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
                     stop_type=stop_type
                 )
             )
-        return results
+        return NearbyResults(results, raw_count=len(res_data["elements"]))
     except Exception:
-        try:
-            return search_photon(filter_key or "bar", lat, lon, filter_key or 'bar')[:10]
-        except Exception:
-            return []
+        return photon_fallback("overpass_invalid")
 
 def search_google_nearby(lat: float, lon: float, radius: int, key: str, google_type: Optional[str] = None, filter_key: Optional[str] = None):
     query_params = {

@@ -1,0 +1,409 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 10721294087,
+        "osm_key": "amenity",
+        "osm_value": "pub",
+        "type": "house",
+        "name": "Bar",
+        "street": "Rue du Stade",
+        "city": "Mazères-de-Neste",
+        "county": "Hautes-Pyrénées",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "65150",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.5466855,
+          43.0720472
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 6163637576,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar des Amis",
+        "street": "Place Victor Hugo",
+        "locality": "Victor Hugo",
+        "district": "Capitole / Arnaud Bernard / Carmes",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31000",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4464325,
+          43.6067812
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 6163637579,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar des Halles",
+        "street": "Place Victor Hugo",
+        "locality": "Victor Hugo",
+        "district": "Capitole / Arnaud Bernard / Carmes",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31000",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4467906,
+          43.6067774
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 2457312852,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar De Zés",
+        "street": "Rue Pargaminières",
+        "locality": "Daurade",
+        "district": "Capitole / Arnaud Bernard / Carmes",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31000",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4385832,
+          43.6043768
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 11212895687,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar L'arrosoir",
+        "street": "Rue de Metz",
+        "locality": "Saint-Étienne",
+        "district": "Capitole / Arnaud Bernard / Carmes",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31000",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4513767,
+          43.6006201
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 472409959,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar du Matin",
+        "street": "Place des Carmes",
+        "locality": "Salin",
+        "district": "Capitole / Arnaud Bernard / Carmes",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31000",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4443419,
+          43.5980253
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 1625420494,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "housenumber": "2",
+        "name": "Bar Tabac La Salade",
+        "street": "Avenue de Fronton",
+        "locality": "Cité Bourbaki",
+        "district": "Minimes / Barrière de Paris / Ponts-Jumeaux / La Vache / Raisin / Fondeyre",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31200",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.434083,
+          43.6272373
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 13526653941,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar Rooftop Sangha Toulouse",
+        "street": "Rue Thomas Dupuy",
+        "locality": "Cartoucherie",
+        "district": "Casselardit / Fontaine-Bayonne / Cartoucherie",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31300",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4069497,
+          43.6016908
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 10040422640,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar des Glières",
+        "street": "Rue Louis Célestin",
+        "locality": "Lafourguette",
+        "district": "Saint-Simon / Lafourguette / Oncopole - Campus Santé du Futur",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31100",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4104705,
+          43.5651474
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 1367582915,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar de l'Avenue",
+        "street": "Route de Fronton",
+        "city": "Aucamville",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31140",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4298925,
+          43.6665393
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 638798012,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar de la Ramée",
+        "street": "Chemin Claude Onesta",
+        "district": "Belbèze",
+        "city": "Tournefeuille",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31170",
+        "countrycode": "FR",
+        "extent": [
+          1.3411216,
+          43.5664635,
+          1.341214,
+          43.5664006
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3411678,
+          43.5664321
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 12106526960,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Bar L'Eclipse",
+        "street": "Rue du Stade",
+        "district": "Cité des Fleurs",
+        "city": "Cugnaux",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31270",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.3459797,
+          43.5389896
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 2462248733,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Baraka Jeux",
+        "street": "Rue de la Bourse",
+        "locality": "Daurade",
+        "district": "Capitole / Arnaud Bernard / Carmes",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31000",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4424258,
+          43.6008883
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 2361876914,
+        "osm_key": "amenity",
+        "osm_value": "bar",
+        "type": "house",
+        "name": "Baraka Jeux",
+        "street": "Boulevard de la Gare",
+        "locality": "Guilheméry",
+        "district": "Bonhoure / Guilheméry / Château de l'Hers / Limayrac / Côte Pavée",
+        "city": "Toulouse",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31500",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.4570522,
+          43.6014038
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 10073768240,
+        "osm_key": "amenity",
+        "osm_value": "pub",
+        "type": "house",
+        "name": "Bar-Tabac de la Tour",
+        "street": "Place du Souvenir",
+        "city": "Villemur-sur-Tarn",
+        "county": "Haute-Garonne",
+        "state": "Occitanie",
+        "country": "France",
+        "postcode": "31340",
+        "countrycode": "FR"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.5055212,
+          43.8635426
+        ]
+      }
+    }
+  ]
+}

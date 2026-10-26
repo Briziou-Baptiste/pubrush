@@ -1,0 +1,1065 @@
+{
+  "normal": {
+    "provider": "overpass",
+    "raw": 673,
+    "filtered": 116,
+    "returned": 50,
+    "limited": false,
+    "reason": "complete",
+    "supplier_calls_mocked": 1,
+    "items": [
+      {
+        "name": "Tito Mojito",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6100825,
+        "longitude": 1.4429057,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Txus",
+        "street": "9 Rue Saint-Charles",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6101732,
+        "longitude": 1.4408342,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L'Escabel",
+        "street": "36 Rue Gatien Arnoult",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6100861,
+        "longitude": 1.4405544,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Café de la Concorde",
+        "street": "17 Rue de la Concorde",
+        "city": null,
+        "country": null,
+        "latitude": 43.611622,
+        "longitude": 1.4445136,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Breughel l'Ancien",
+        "street": "30 Rue de la Chaîne",
+        "city": null,
+        "country": null,
+        "latitude": 43.6094263,
+        "longitude": 1.439217,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Station",
+        "street": "14 Place Arnaud Bernard",
+        "city": null,
+        "country": null,
+        "latitude": 43.6109605,
+        "longitude": 1.4392442,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Wanted Jack Saloon",
+        "street": "2 Rue Raymond IV",
+        "city": null,
+        "country": null,
+        "latitude": 43.6094182,
+        "longitude": 1.4468315,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Cave Poésie",
+        "street": "71 Rue du Taur",
+        "city": null,
+        "country": null,
+        "latitude": 43.6071756,
+        "longitude": 1.442103,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Club Capsule",
+        "street": "9 Place Arnaud Bernard",
+        "city": null,
+        "country": null,
+        "latitude": 43.6112499,
+        "longitude": 1.4385738,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L’Autan",
+        "street": "58 Boulevard d'Arcole",
+        "city": null,
+        "country": null,
+        "latitude": 43.6118012,
+        "longitude": 1.4388742,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Senso",
+        "street": "6 Rue de Bayard",
+        "city": null,
+        "country": null,
+        "latitude": 43.6082917,
+        "longitude": 1.4469716,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Fabrique",
+        "street": "6 Place du Peyrou",
+        "city": null,
+        "country": null,
+        "latitude": 43.607378,
+        "longitude": 1.4399286,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L'Ecrin",
+        "street": "1 Rue Léonce Castelbou",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6099458,
+        "longitude": 1.4381326,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The George and Dragon",
+        "street": "1 Place du Peyrou",
+        "city": null,
+        "country": null,
+        "latitude": 43.6074241,
+        "longitude": 1.4395702,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Black Owl",
+        "street": "27 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6074908,
+        "longitude": 1.4464854,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Bogota",
+        "street": "17 Rue de Bayard",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6090115,
+        "longitude": 1.4478536,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L'Eden",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6068445,
+        "longitude": 1.440301,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Kalimera",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.611677,
+        "longitude": 1.4380523,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Seven Sisters",
+        "street": "26 Rue Raymond IV",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6103214,
+        "longitude": 1.448299,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "DAda",
+        "street": "27 Avenue Honoré Serres",
+        "city": null,
+        "country": null,
+        "latitude": 43.6123312,
+        "longitude": 1.4383082,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Melting Pot",
+        "street": "26 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6074641,
+        "longitude": 1.4471943,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Bar des Amis",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6067812,
+        "longitude": 1.4464325,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Buvette",
+        "street": "19 Rue des Lois",
+        "city": null,
+        "country": null,
+        "latitude": 43.606148,
+        "longitude": 1.4409458,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Rotonde",
+        "street": "23 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6070324,
+        "longitude": 1.4469429,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Casa Xurry",
+        "street": "2 Rue Rivals",
+        "city": null,
+        "country": null,
+        "latitude": 43.6060031,
+        "longitude": 1.4446372,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Bar des Halles",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6067774,
+        "longitude": 1.4467906,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Pub O'Clock",
+        "street": "21 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6069239,
+        "longitude": 1.447017,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L'Électro Bar",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.606551,
+        "longitude": 1.4464794,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Rosa Negra",
+        "street": "34 Rue de Bayard",
+        "city": null,
+        "country": null,
+        "latitude": 43.6093564,
+        "longitude": 1.4489268,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Soulan",
+        "street": "2 Place Robert Schuman",
+        "city": null,
+        "country": null,
+        "latitude": 43.6094123,
+        "longitude": 1.4493709,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Chez Catherine",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6062169,
+        "longitude": 1.4469083,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Magma",
+        "street": "20 Rue Denfert-Rochereau",
+        "city": null,
+        "country": null,
+        "latitude": 43.607889,
+        "longitude": 1.448978,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Caribe Café",
+        "street": "12 Place Victor Hugo",
+        "city": null,
+        "country": null,
+        "latitude": 43.6061927,
+        "longitude": 1.4471041,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Fat Cat",
+        "street": "4 Rue Charles de Rémusat",
+        "city": null,
+        "country": null,
+        "latitude": 43.6051723,
+        "longitude": 1.4439248,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Satch",
+        "street": "3 Rue Lafayette",
+        "city": null,
+        "country": null,
+        "latitude": 43.6051187,
+        "longitude": 1.4441016,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Full House",
+        "street": "19 Rue Caffarelli",
+        "city": null,
+        "country": null,
+        "latitude": 43.6090575,
+        "longitude": 1.4497485,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Les Halles de la Transition",
+        "street": "7 Rue Du Canon D'arcole",
+        "city": null,
+        "country": null,
+        "latitude": 43.6099825,
+        "longitude": 1.4500342,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Rosa Negra",
+        "street": "6 Rue du Rempart Villeneuve",
+        "city": null,
+        "country": null,
+        "latitude": 43.605632,
+        "longitude": 1.4465482,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Old Dockers",
+        "street": "5 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6061579,
+        "longitude": 1.4478869,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Silver Palace",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6093278,
+        "longitude": 1.4503184,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Dauphin",
+        "street": "3 bis Boulevard de Strasbourg",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6060147,
+        "longitude": 1.4480334,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "V and B",
+        "street": "3 Esplanade Compans-Caffarelli",
+        "city": null,
+        "country": null,
+        "latitude": 43.6114276,
+        "longitude": 1.4354243,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Bar",
+        "street": "2 bis Place de Belfort",
+        "city": null,
+        "country": null,
+        "latitude": 43.6084809,
+        "longitude": 1.4502939,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Buvette",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.612084,
+        "longitude": 1.4355887,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Bar de Gaspard à Maison Soclo",
+        "street": "34 bis Rue Valade",
+        "city": null,
+        "country": null,
+        "latitude": 43.6054665,
+        "longitude": 1.4380449,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Thirsty Monk Pub",
+        "street": "33 Allées Jean Jaurès",
+        "city": null,
+        "country": null,
+        "latitude": 43.6070831,
+        "longitude": 1.4501195,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Sawa",
+        "street": "61 Rue Pargaminières",
+        "city": null,
+        "country": null,
+        "latitude": 43.6044213,
+        "longitude": 1.4394153,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Cale Sèche",
+        "street": "41 Rue Léon Gambetta",
+        "city": null,
+        "country": null,
+        "latitude": 43.6038654,
+        "longitude": 1.4425779,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Blastodice",
+        "street": "52 Avenue Honoré Serres",
+        "city": null,
+        "country": null,
+        "latitude": 43.6151452,
+        "longitude": 1.4377227,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "O'Briens",
+        "street": "39 Rue Léon Gambetta",
+        "city": null,
+        "country": null,
+        "latitude": 43.6037887,
+        "longitude": 1.4424371,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      }
+    ]
+  },
+  "partial_recovered": {
+    "provider": "overpass",
+    "raw": 673,
+    "filtered": 116,
+    "returned": 50,
+    "limited": false,
+    "reason": "complete",
+    "supplier_calls_mocked": 2,
+    "items": [
+      {
+        "name": "Tito Mojito",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6100825,
+        "longitude": 1.4429057,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Txus",
+        "street": "9 Rue Saint-Charles",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6101732,
+        "longitude": 1.4408342,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L'Escabel",
+        "street": "36 Rue Gatien Arnoult",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6100861,
+        "longitude": 1.4405544,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Café de la Concorde",
+        "street": "17 Rue de la Concorde",
+        "city": null,
+        "country": null,
+        "latitude": 43.611622,
+        "longitude": 1.4445136,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Breughel l'Ancien",
+        "street": "30 Rue de la Chaîne",
+        "city": null,
+        "country": null,
+        "latitude": 43.6094263,
+        "longitude": 1.439217,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Station",
+        "street": "14 Place Arnaud Bernard",
+        "city": null,
+        "country": null,
+        "latitude": 43.6109605,
+        "longitude": 1.4392442,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Wanted Jack Saloon",
+        "street": "2 Rue Raymond IV",
+        "city": null,
+        "country": null,
+        "latitude": 43.6094182,
+        "longitude": 1.4468315,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Cave Poésie",
+        "street": "71 Rue du Taur",
+        "city": null,
+        "country": null,
+        "latitude": 43.6071756,
+        "longitude": 1.442103,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Club Capsule",
+        "street": "9 Place Arnaud Bernard",
+        "city": null,
+        "country": null,
+        "latitude": 43.6112499,
+        "longitude": 1.4385738,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L’Autan",
+        "street": "58 Boulevard d'Arcole",
+        "city": null,
+        "country": null,
+        "latitude": 43.6118012,
+        "longitude": 1.4388742,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Senso",
+        "street": "6 Rue de Bayard",
+        "city": null,
+        "country": null,
+        "latitude": 43.6082917,
+        "longitude": 1.4469716,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Fabrique",
+        "street": "6 Place du Peyrou",
+        "city": null,
+        "country": null,
+        "latitude": 43.607378,
+        "longitude": 1.4399286,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L'Ecrin",
+        "street": "1 Rue Léonce Castelbou",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6099458,
+        "longitude": 1.4381326,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The George and Dragon",
+        "street": "1 Place du Peyrou",
+        "city": null,
+        "country": null,
+        "latitude": 43.6074241,
+        "longitude": 1.4395702,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Black Owl",
+        "street": "27 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6074908,
+        "longitude": 1.4464854,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Bogota",
+        "street": "17 Rue de Bayard",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6090115,
+        "longitude": 1.4478536,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L'Eden",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6068445,
+        "longitude": 1.440301,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Kalimera",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.611677,
+        "longitude": 1.4380523,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Seven Sisters",
+        "street": "26 Rue Raymond IV",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6103214,
+        "longitude": 1.448299,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "DAda",
+        "street": "27 Avenue Honoré Serres",
+        "city": null,
+        "country": null,
+        "latitude": 43.6123312,
+        "longitude": 1.4383082,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Melting Pot",
+        "street": "26 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6074641,
+        "longitude": 1.4471943,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Bar des Amis",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6067812,
+        "longitude": 1.4464325,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Buvette",
+        "street": "19 Rue des Lois",
+        "city": null,
+        "country": null,
+        "latitude": 43.606148,
+        "longitude": 1.4409458,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Rotonde",
+        "street": "23 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6070324,
+        "longitude": 1.4469429,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Casa Xurry",
+        "street": "2 Rue Rivals",
+        "city": null,
+        "country": null,
+        "latitude": 43.6060031,
+        "longitude": 1.4446372,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Bar des Halles",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6067774,
+        "longitude": 1.4467906,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Pub O'Clock",
+        "street": "21 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6069239,
+        "longitude": 1.447017,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "L'Électro Bar",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.606551,
+        "longitude": 1.4464794,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Rosa Negra",
+        "street": "34 Rue de Bayard",
+        "city": null,
+        "country": null,
+        "latitude": 43.6093564,
+        "longitude": 1.4489268,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Soulan",
+        "street": "2 Place Robert Schuman",
+        "city": null,
+        "country": null,
+        "latitude": 43.6094123,
+        "longitude": 1.4493709,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Chez Catherine",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6062169,
+        "longitude": 1.4469083,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Magma",
+        "street": "20 Rue Denfert-Rochereau",
+        "city": null,
+        "country": null,
+        "latitude": 43.607889,
+        "longitude": 1.448978,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Caribe Café",
+        "street": "12 Place Victor Hugo",
+        "city": null,
+        "country": null,
+        "latitude": 43.6061927,
+        "longitude": 1.4471041,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Fat Cat",
+        "street": "4 Rue Charles de Rémusat",
+        "city": null,
+        "country": null,
+        "latitude": 43.6051723,
+        "longitude": 1.4439248,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Satch",
+        "street": "3 Rue Lafayette",
+        "city": null,
+        "country": null,
+        "latitude": 43.6051187,
+        "longitude": 1.4441016,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Full House",
+        "street": "19 Rue Caffarelli",
+        "city": null,
+        "country": null,
+        "latitude": 43.6090575,
+        "longitude": 1.4497485,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Les Halles de la Transition",
+        "street": "7 Rue Du Canon D'arcole",
+        "city": null,
+        "country": null,
+        "latitude": 43.6099825,
+        "longitude": 1.4500342,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Rosa Negra",
+        "street": "6 Rue du Rempart Villeneuve",
+        "city": null,
+        "country": null,
+        "latitude": 43.605632,
+        "longitude": 1.4465482,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Old Dockers",
+        "street": "5 Boulevard de Strasbourg",
+        "city": null,
+        "country": null,
+        "latitude": 43.6061579,
+        "longitude": 1.4478869,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Silver Palace",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.6093278,
+        "longitude": 1.4503184,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Dauphin",
+        "street": "3 bis Boulevard de Strasbourg",
+        "city": "Toulouse",
+        "country": null,
+        "latitude": 43.6060147,
+        "longitude": 1.4480334,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "V and B",
+        "street": "3 Esplanade Compans-Caffarelli",
+        "city": null,
+        "country": null,
+        "latitude": 43.6114276,
+        "longitude": 1.4354243,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Bar",
+        "street": "2 bis Place de Belfort",
+        "city": null,
+        "country": null,
+        "latitude": 43.6084809,
+        "longitude": 1.4502939,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Buvette",
+        "street": null,
+        "city": null,
+        "country": null,
+        "latitude": 43.612084,
+        "longitude": 1.4355887,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Bar de Gaspard à Maison Soclo",
+        "street": "34 bis Rue Valade",
+        "city": null,
+        "country": null,
+        "latitude": 43.6054665,
+        "longitude": 1.4380449,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "The Thirsty Monk Pub",
+        "street": "33 Allées Jean Jaurès",
+        "city": null,
+        "country": null,
+        "latitude": 43.6070831,
+        "longitude": 1.4501195,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Le Sawa",
+        "street": "61 Rue Pargaminières",
+        "city": null,
+        "country": null,
+        "latitude": 43.6044213,
+        "longitude": 1.4394153,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "La Cale Sèche",
+        "street": "41 Rue Léon Gambetta",
+        "city": null,
+        "country": null,
+        "latitude": 43.6038654,
+        "longitude": 1.4425779,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Blastodice",
+        "street": "52 Avenue Honoré Serres",
+        "city": null,
+        "country": null,
+        "latitude": 43.6151452,
+        "longitude": 1.4377227,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "O'Briens",
+        "street": "39 Rue Léon Gambetta",
+        "city": null,
+        "country": null,
+        "latitude": 43.6037887,
+        "longitude": 1.4424371,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      }
+    ]
+  },
+  "photon_limited": {
+    "provider": "photon",
+    "raw": 15,
+    "filtered": 3,
+    "returned": 3,
+    "limited": true,
+    "reason": "overpass_partial",
+    "supplier_calls_mocked": 3,
+    "items": [
+      {
+        "name": "Bar des Amis",
+        "street": "Place Victor Hugo",
+        "city": "Toulouse",
+        "country": "France",
+        "latitude": 43.6067812,
+        "longitude": 1.4464325,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Bar des Halles",
+        "street": "Place Victor Hugo",
+        "city": "Toulouse",
+        "country": "France",
+        "latitude": 43.6067774,
+        "longitude": 1.4467906,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      },
+      {
+        "name": "Bar De Zés",
+        "street": "Rue Pargaminières",
+        "city": "Toulouse",
+        "country": "France",
+        "latitude": 43.6043768,
+        "longitude": 1.4385832,
+        "stop_type": "bar",
+        "estimated_minutes": null
+      }
+    ]
+  }
+}

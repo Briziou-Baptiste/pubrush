@@ -1,0 +1,8113 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.7 375dc00a",
+  "osm3s": {
+    "timestamp_osm_base": "2026-08-10T00:10:23Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+    {
+      "type": "node",
+      "id": 247081246,
+      "lat": 43.6030293,
+      "lon": 1.441804,
+      "tags": {
+        "addr:housenumber": "13",
+        "addr:street": "Rue Léon Gambetta",
+        "amenity": "cafe",
+        "name": "Peanut"
+      }
+    },
+    {
+      "type": "node",
+      "id": 247081412,
+      "lat": 43.6038807,
+      "lon": 1.4428364,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "9",
+        "contact:street": "Place du Capitole",
+        "name": "Bellini"
+      }
+    },
+    {
+      "type": "node",
+      "id": 304974924,
+      "lat": 43.6101732,
+      "lon": 1.4408342,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "9",
+        "addr:street": "Rue Saint-Charles",
+        "amenity": "bar",
+        "name": "Txus"
+      }
+    },
+    {
+      "type": "node",
+      "id": 306128866,
+      "lat": 43.6043958,
+      "lon": 1.4514718,
+      "tags": {
+        "addr:housenumber": "9",
+        "addr:street": "Rue de la Colombette",
+        "amenity": "bar",
+        "brewery": "stella artois;leffe",
+        "name": "Le Café Populaire"
+      }
+    },
+    {
+      "type": "node",
+      "id": 306128879,
+      "lat": 43.6048605,
+      "lon": 1.451104,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "14",
+        "contact:street": "Rue de l'Industrie",
+        "name": "The Frog and Rosbif"
+      }
+    },
+    {
+      "type": "node",
+      "id": 313982682,
+      "lat": 43.6023692,
+      "lon": 1.4473684,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "15",
+        "contact:street": "Place Saint-Georges",
+        "name": "Le Wallace"
+      }
+    },
+    {
+      "type": "node",
+      "id": 313983528,
+      "lat": 43.6037148,
+      "lon": 1.436058,
+      "tags": {
+        "amenity": "pub",
+        "brewery": "yes",
+        "contact:housenumber": "7",
+        "contact:street": "Place Saint-Pierre",
+        "name": "Le Bar Basque"
+      }
+    },
+    {
+      "type": "node",
+      "id": 313983529,
+      "lat": 43.6038382,
+      "lon": 1.435186,
+      "tags": {
+        "amenity": "bar",
+        "brewery": "Guinness;yes",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "16",
+        "contact:street": "Place Saint-Pierre",
+        "name": "Chez Tonton, Pastis Ô Maître"
+      }
+    },
+    {
+      "type": "node",
+      "id": 313986222,
+      "lat": 43.6039496,
+      "lon": 1.4352801,
+      "tags": {
+        "amenity": "bar",
+        "brewery": "yes",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "14",
+        "contact:street": "Place Saint-Pierre",
+        "name": "La Couleur de la Culotte"
+      }
+    },
+    {
+      "type": "node",
+      "id": 313986223,
+      "lat": 43.6039482,
+      "lon": 1.4356073,
+      "tags": {
+        "amenity": "bar",
+        "brewery": "yes",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "11",
+        "contact:street": "Place Saint-Pierre",
+        "name": "Pub Saint-Pierre"
+      }
+    },
+    {
+      "type": "node",
+      "id": 313986531,
+      "lat": 43.6018873,
+      "lon": 1.4393523,
+      "tags": {
+        "amenity": "bar",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "13",
+        "contact:street": "Place de la Daurade",
+        "name": "Café des Artistes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 423230927,
+      "lat": 43.6052543,
+      "lon": 1.4483886,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "McDonald's Toulouse Roosevelt"
+      }
+    },
+    {
+      "type": "node",
+      "id": 423271372,
+      "lat": 43.6086583,
+      "lon": 1.4430278,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "2",
+        "contact:street": "Rue Saint-Bernard",
+        "name": "Comptoir Saint-Sernin"
+      }
+    },
+    {
+      "type": "node",
+      "id": 429262363,
+      "lat": 43.6094263,
+      "lon": 1.439217,
+      "tags": {
+        "amenity": "pub",
+        "brewery": "chouffe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "30",
+        "contact:street": "Rue de la Chaîne",
+        "name": "Breughel l'Ancien"
+      }
+    },
+    {
+      "type": "node",
+      "id": 429270455,
+      "lat": 43.6118012,
+      "lon": 1.4388742,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "58",
+        "contact:street": "Boulevard d'Arcole",
+        "name": "L’Autan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 435610058,
+      "lat": 43.6114157,
+      "lon": 1.4520933,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "75",
+        "contact:street": "Rue de Bayard",
+        "name": "Le Bristol"
+      }
+    },
+    {
+      "type": "node",
+      "id": 450161376,
+      "lat": 43.6020399,
+      "lon": 1.4410547,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "54",
+        "contact:street": "Rue Peyrolières",
+        "name": "Bocados"
+      }
+    },
+    {
+      "type": "node",
+      "id": 450161381,
+      "lat": 43.6028436,
+      "lon": 1.441675,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "30",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "Otoya sushi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 450171441,
+      "lat": 43.6022479,
+      "lon": 1.4472215,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "13",
+        "addr:street": "Place Saint-Georges",
+        "amenity": "restaurant",
+        "name": "Restaurant Émile"
+      }
+    },
+    {
+      "type": "node",
+      "id": 460364205,
+      "lat": 43.6099745,
+      "lon": 1.4343971,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "19",
+        "contact:street": "Boulevard Lascrosses",
+        "name": "Complices"
+      }
+    },
+    {
+      "type": "node",
+      "id": 460364208,
+      "lat": 43.6108789,
+      "lon": 1.4354149,
+      "tags": {
+        "addr:housenumber": "16",
+        "addr:street": "Boulevard Lascrosses",
+        "amenity": "fast_food",
+        "name": "McDonald's"
+      }
+    },
+    {
+      "type": "node",
+      "id": 467781044,
+      "lat": 43.6116743,
+      "lon": 1.4382652,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "17",
+        "addr:street": "Rue de Toul",
+        "amenity": "fast_food",
+        "name": "KFC"
+      }
+    },
+    {
+      "type": "node",
+      "id": 467781054,
+      "lat": 43.6108086,
+      "lon": 1.4370162,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "13",
+        "contact:street": "Boulevard Lascrosses",
+        "name": "Madame Baudruche"
+      }
+    },
+    {
+      "type": "node",
+      "id": 520124614,
+      "lat": 43.6045073,
+      "lon": 1.4487564,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "5",
+        "addr:street": "Rue Labéda",
+        "amenity": "bar",
+        "name": "Oulala"
+      }
+    },
+    {
+      "type": "node",
+      "id": 520124626,
+      "lat": 43.6053082,
+      "lon": 1.4471994,
+      "tags": {
+        "addr:housenumber": "15",
+        "addr:street": "Place du Président Wilson",
+        "amenity": "restaurant",
+        "name": "Chez Huguette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 520124628,
+      "lat": 43.6049228,
+      "lon": 1.4480727,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "20",
+        "addr:street": "Place du Président Wilson",
+        "amenity": "bar",
+        "name": "Le Cardinal"
+      }
+    },
+    {
+      "type": "node",
+      "id": 631754991,
+      "lat": 43.605836,
+      "lon": 1.452612,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "20 bis",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "Cyprien"
+      }
+    },
+    {
+      "type": "node",
+      "id": 631754993,
+      "lat": 43.6058039,
+      "lon": 1.4523944,
+      "tags": {
+        "amenity": "pub",
+        "brewery": "yes",
+        "contact:housenumber": "20",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "Au Fût et à Mesure"
+      }
+    },
+    {
+      "type": "node",
+      "id": 631754994,
+      "lat": 43.6056261,
+      "lon": 1.4511023,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "12",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "YokoSushi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 631754998,
+      "lat": 43.6058881,
+      "lon": 1.4530932,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "22",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "Le Pery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 631790714,
+      "lat": 43.6055356,
+      "lon": 1.4504485,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "8",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "Node Club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 631816182,
+      "lat": 43.6020076,
+      "lon": 1.4406582,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "6",
+        "contact:street": "Rue Jean Suau",
+        "name": "Chez nous les Libanais"
+      }
+    },
+    {
+      "type": "node",
+      "id": 632704752,
+      "lat": 43.6021082,
+      "lon": 1.4408518,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "8",
+        "contact:street": "Rue Jean Suau",
+        "name": "La Réserve"
+      }
+    },
+    {
+      "type": "node",
+      "id": 637743429,
+      "lat": 43.6068885,
+      "lon": 1.4519391,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:housenumber": "24",
+        "contact:street": "Rue Nicolas Bachelier",
+        "name": "Nocta Club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 644841655,
+      "lat": 43.6022949,
+      "lon": 1.4382991,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "8",
+        "contact:street": "Rue des Blanchers",
+        "name": "Molette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 665841664,
+      "lat": 43.6042562,
+      "lon": 1.4364096,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "17",
+        "contact:street": "Rue Valade",
+        "name": "Karisma Beyrouth"
+      }
+    },
+    {
+      "type": "node",
+      "id": 674058208,
+      "lat": 43.6108171,
+      "lon": 1.4523984,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "12",
+        "addr:street": "Boulevard de Bonrepos",
+        "amenity": "cafe",
+        "contact:housenumber": "12",
+        "contact:street": "Boulevard de Bonrepos",
+        "name": "Le Vélo Sentimental"
+      }
+    },
+    {
+      "type": "node",
+      "id": 717981979,
+      "lat": 43.60722,
+      "lon": 1.4537334,
+      "tags": {
+        "amenity": "bar",
+        "name": "La Mécanique des Fluides"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772598420,
+      "lat": 43.6027157,
+      "lon": 1.4373228,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "34",
+        "contact:street": "Rue des Blanchers",
+        "name": "Les Tricheurs"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772598903,
+      "lat": 43.6025661,
+      "lon": 1.4376758,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "22",
+        "contact:street": "Rue des Blanchers",
+        "name": "Mado"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772598995,
+      "lat": 43.6023971,
+      "lon": 1.4380809,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "16",
+        "contact:street": "Rue des Blanchers",
+        "name": "Le Petit Marais"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772599201,
+      "lat": 43.602341,
+      "lon": 1.4381728,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "10",
+        "contact:street": "Rue des Blanchers",
+        "name": "Le Dahu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772599729,
+      "lat": 43.6020745,
+      "lon": 1.4385665,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "3",
+        "contact:street": "Rue des Blanchers",
+        "name": "TurboMachine Café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772601828,
+      "lat": 43.6017919,
+      "lon": 1.4399286,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "1",
+        "contact:street": "Rue Jean Suau",
+        "name": "Le Bistrot Libanais"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772602036,
+      "lat": 43.6018241,
+      "lon": 1.4400097,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "1",
+        "contact:street": "Rue Jean Suau",
+        "name": "La Santine"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772602076,
+      "lat": 43.6018533,
+      "lon": 1.4400714,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "1",
+        "contact:street": "Rue Jean Suau",
+        "name": "Les Fondues de la Daurade"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772607974,
+      "lat": 43.6021628,
+      "lon": 1.4411057,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "54",
+        "contact:street": "Rue Peyrolières",
+        "name": "La Fiancée"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772666635,
+      "lat": 43.6024958,
+      "lon": 1.4412894,
+      "tags": {
+        "addr:housenumber": "16",
+        "addr:street": "Rue Léon Gambetta",
+        "amenity": "restaurant",
+        "name": "Aishi Ramen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772671407,
+      "lat": 43.6029457,
+      "lon": 1.4416356,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "7",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "L'Impro"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772673561,
+      "lat": 43.6029777,
+      "lon": 1.4416879,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "9",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "Chiant Mai"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772674693,
+      "lat": 43.6029079,
+      "lon": 1.4417926,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "34",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "La Maison des Nems"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772675883,
+      "lat": 43.6030074,
+      "lon": 1.4417546,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "11",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "Chez Victor - Mac Ankara Kebab"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772707193,
+      "lat": 43.6018041,
+      "lon": 1.4421762,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "9",
+        "contact:street": "Rue Sainte-Ursule",
+        "name": "SushiYaki"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772710370,
+      "lat": 43.6014641,
+      "lon": 1.4421328,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "1",
+        "contact:street": "Place de la Bourse",
+        "name": "Prima Lova"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772723345,
+      "lat": 43.6017352,
+      "lon": 1.440893,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "48",
+        "contact:street": "Rue Peyrolières",
+        "name": "Valentina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772724827,
+      "lat": 43.6016063,
+      "lon": 1.4408263,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "44",
+        "contact:street": "Rue Peyrolières",
+        "name": "La P'tite Gouaille"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772898715,
+      "lat": 43.6099445,
+      "lon": 1.4392299,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "18",
+        "contact:street": "Rue Arnaud Bernard",
+        "name": "Le Shaman"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772899311,
+      "lat": 43.6097407,
+      "lon": 1.4392253,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "10",
+        "addr:street": "Rue Arnaud Bernard",
+        "amenity": "cafe",
+        "name": "Maison Blanche"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772899474,
+      "lat": 43.609304,
+      "lon": 1.4387168,
+      "tags": {
+        "addr:housenumber": "31",
+        "addr:street": "Rue d'Embarthe",
+        "amenity": "restaurant",
+        "name": "La Gaîté!"
+      }
+    },
+    {
+      "type": "node",
+      "id": 772900237,
+      "lat": 43.6091938,
+      "lon": 1.4389973,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "31",
+        "contact:street": "Rue de la Chaîne",
+        "name": "Mojo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 773935821,
+      "lat": 43.6115539,
+      "lon": 1.4378907,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "2",
+        "addr:street": "Boulevard Lascrosses",
+        "amenity": "restaurant",
+        "name": "Momone"
+      }
+    },
+    {
+      "type": "node",
+      "id": 773935839,
+      "lat": 43.6111657,
+      "lon": 1.4382014,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "3",
+        "contact:street": "Boulevard Lascrosses",
+        "name": "Domino's"
+      }
+    },
+    {
+      "type": "node",
+      "id": 775985022,
+      "lat": 43.6061579,
+      "lon": 1.4478869,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "5",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "The Old Dockers"
+      }
+    },
+    {
+      "type": "node",
+      "id": 775985595,
+      "lat": 43.6060147,
+      "lon": 1.4480334,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "3 bis",
+        "addr:street": "Boulevard de Strasbourg",
+        "amenity": "bar",
+        "contact:housenumber": "3 bis",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Le Dauphin"
+      }
+    },
+    {
+      "type": "node",
+      "id": 775985755,
+      "lat": 43.6058692,
+      "lon": 1.448176,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "1 bis",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Hippopotamus"
+      }
+    },
+    {
+      "type": "node",
+      "id": 776623621,
+      "lat": 43.6043936,
+      "lon": 1.4513523,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "7B",
+        "contact:street": "Rue de la Colombette",
+        "name": "L'Aubrac"
+      }
+    },
+    {
+      "type": "node",
+      "id": 776623655,
+      "lat": 43.6046077,
+      "lon": 1.4501639,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "46",
+        "contact:street": "Boulevard Lazare Carnot",
+        "name": "Istanbul"
+      }
+    },
+    {
+      "type": "node",
+      "id": 890452774,
+      "lat": 43.6021067,
+      "lon": 1.4428968,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Le Bol Bu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 915694559,
+      "lat": 43.6044193,
+      "lon": 1.4392158,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "59",
+        "contact:street": "Rue Pargaminières",
+        "name": "Chez Lilly"
+      }
+    },
+    {
+      "type": "node",
+      "id": 917431781,
+      "lat": 43.6067627,
+      "lon": 1.4464849,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Le Louchebem"
+      }
+    },
+    {
+      "type": "node",
+      "id": 917433312,
+      "lat": 43.6065881,
+      "lon": 1.4465191,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Le Magret"
+      }
+    },
+    {
+      "type": "node",
+      "id": 917437364,
+      "lat": 43.6064019,
+      "lon": 1.4465589,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Chez Attila"
+      }
+    },
+    {
+      "type": "node",
+      "id": 917438390,
+      "lat": 43.6061847,
+      "lon": 1.4466151,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "L'Impériale"
+      }
+    },
+    {
+      "type": "node",
+      "id": 917441829,
+      "lat": 43.6059151,
+      "lon": 1.4463028,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "17",
+        "contact:street": "Place Victor Hugo",
+        "name": "La Gourmandine"
+      }
+    },
+    {
+      "type": "node",
+      "id": 918228481,
+      "lat": 43.605201,
+      "lon": 1.4469531,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Place du Président Wilson",
+        "name": "Volfoni"
+      }
+    },
+    {
+      "type": "node",
+      "id": 918233735,
+      "lat": 43.6050916,
+      "lon": 1.4468081,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "13",
+        "addr:street": "Place du Président Wilson",
+        "amenity": "restaurant",
+        "name": "Brasserie Le Capoul"
+      }
+    },
+    {
+      "type": "node",
+      "id": 922869212,
+      "lat": 43.6037706,
+      "lon": 1.4493474,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "22",
+        "contact:street": "Rue Maurice Fonvieille",
+        "name": "Matsuya"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1031337044,
+      "lat": 43.6133334,
+      "lon": 1.4379729,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "41",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Don Pancho"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1077268740,
+      "lat": 43.6073518,
+      "lon": 1.442012,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "75",
+        "contact:street": "Rue du Taur",
+        "name": "Pastel et Sarrasin"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1215767134,
+      "lat": 43.6063919,
+      "lon": 1.4470694,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "16",
+        "contact:street": "Place Victor Hugo",
+        "name": "Le J'Go"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1215767137,
+      "lat": 43.6069239,
+      "lon": 1.447017,
+      "tags": {
+        "amenity": "pub",
+        "brewery": "Guinness;yes;Paulaner;brewdog;punk_ipa;chouffe;various;smithwick's",
+        "contact:housenumber": "21",
+        "contact:street": "Boulevard de Strasbourg",
+        "drink:beer": "yes",
+        "name": "Pub O'Clock"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1215767144,
+      "lat": 43.6074641,
+      "lon": 1.4471943,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "26",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "The Melting Pot"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1215767150,
+      "lat": 43.6082381,
+      "lon": 1.4464005,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "36",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Boulevard 36"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1215767152,
+      "lat": 43.6070324,
+      "lon": 1.4469429,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "23",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "La Rotonde"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1241251804,
+      "lat": 43.6066824,
+      "lon": 1.4424675,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "46",
+        "contact:street": "Rue du Taur",
+        "name": "Le Sherpa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1241635369,
+      "lat": 43.6014969,
+      "lon": 1.4425825,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "1",
+        "contact:street": "Rue Temponières",
+        "name": "Le Plateau"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1284060339,
+      "lat": 43.6058004,
+      "lon": 1.4494074,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "22",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Quick"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1284521955,
+      "lat": 43.6090756,
+      "lon": 1.4446239,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "22",
+        "contact:street": "Rue Saint-Bernard",
+        "name": "Istanbul Grillades"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1286381417,
+      "lat": 43.611622,
+      "lon": 1.4445136,
+      "tags": {
+        "amenity": "bar",
+        "brewery": "yes",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "17",
+        "contact:street": "Rue de la Concorde",
+        "name": "Café de la Concorde"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1371907506,
+      "lat": 43.6063396,
+      "lon": 1.4447265,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "36",
+        "contact:street": "Rue Charles de Rémusat",
+        "name": "Chez Marcel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1376674273,
+      "lat": 43.6029255,
+      "lon": 1.4451123,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "6",
+        "contact:street": "Place Roger Salengro",
+        "name": "The Flower's Café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1377508821,
+      "lat": 43.6055989,
+      "lon": 1.4424263,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "1",
+        "contact:street": "Rue des Pénitents Gris",
+        "name": "BanBan 카페"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1393547461,
+      "lat": 43.6028939,
+      "lon": 1.4415211,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "3",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "Crush"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1394661676,
+      "lat": 43.607378,
+      "lon": 1.4399286,
+      "tags": {
+        "addr:housenumber": "6",
+        "addr:street": "Place du Peyrou",
+        "amenity": "pub",
+        "name": "La Fabrique"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1401908715,
+      "lat": 43.6051086,
+      "lon": 1.4510052,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "13/15",
+        "contact:street": "Rue de l'Industrie",
+        "name": "Pépère"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1429268112,
+      "lat": 43.6056612,
+      "lon": 1.4481465,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "11",
+        "contact:street": "Allées du Président Franklin Roosevelt",
+        "name": "Big Fernand"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1457631032,
+      "lat": 43.6115341,
+      "lon": 1.4520815,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Boulevard de Bonrepos",
+        "name": "Le Manel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1458196914,
+      "lat": 43.6056964,
+      "lon": 1.4502654,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "3",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "I-bar"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1458197099,
+      "lat": 43.6058046,
+      "lon": 1.4510802,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "9",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "La maison"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1480282071,
+      "lat": 43.6067064,
+      "lon": 1.447284,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "L'Entrecôte"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1544892716,
+      "lat": 43.61679,
+      "lon": 1.4372323,
+      "tags": {
+        "amenity": "restaurant",
+        "bar": "yes",
+        "contact:housenumber": "14",
+        "contact:street": "Avenue des Minimes",
+        "name": "Les Tontons Flingueuses"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1544903744,
+      "lat": 43.6165568,
+      "lon": 1.4368969,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "5",
+        "contact:street": "Avenue des Minimes",
+        "name": "Miami Food"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1544903745,
+      "lat": 43.6170448,
+      "lon": 1.4367459,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "15",
+        "contact:street": "Avenue des Minimes",
+        "name": "kEATchen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1544903747,
+      "lat": 43.6169888,
+      "lon": 1.4367632,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "13",
+        "contact:street": "Avenue des Minimes",
+        "name": "Le Bistro XIII"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1585734411,
+      "lat": 43.6017706,
+      "lon": 1.4439027,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "2 bis",
+        "contact:street": "Rue du Puits-Vert",
+        "name": "La Faim des Haricots"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1631108689,
+      "lat": 43.6021202,
+      "lon": 1.4427356,
+      "tags": {
+        "addr:housenumber": "1 bis",
+        "addr:street": "Rue du May",
+        "amenity": "restaurant",
+        "name": "Bossa Nova"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1666191502,
+      "lat": 43.6043078,
+      "lon": 1.4427387,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "12",
+        "contact:street": "Place du Capitole",
+        "name": "Le Florida"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1667118773,
+      "lat": 43.6044918,
+      "lon": 1.4387122,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "42",
+        "contact:street": "Rue Pargaminières",
+        "name": "Toroya"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1667118791,
+      "lat": 43.6039901,
+      "lon": 1.4363736,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "2",
+        "contact:street": "Rue Pargaminières",
+        "name": "Marcello"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1667118809,
+      "lat": 43.6030054,
+      "lon": 1.4363556,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "56",
+        "contact:street": "Rue des Blanchers",
+        "name": "Valentino"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1667118812,
+      "lat": 43.6028256,
+      "lon": 1.4372807,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "36",
+        "addr:street": "Rue des Blanchers",
+        "amenity": "fast_food",
+        "name": "Spotes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1667118853,
+      "lat": 43.6043242,
+      "lon": 1.4382533,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "41",
+        "contact:street": "Rue Pargaminières",
+        "name": "L'Oasis"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1667118865,
+      "lat": 43.6034883,
+      "lon": 1.4364659,
+      "tags": {
+        "amenity": "pub",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "5",
+        "contact:street": "Place Saint-Pierre",
+        "name": "Le Saint des Seins"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1667118870,
+      "lat": 43.6043872,
+      "lon": 1.4386486,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "49",
+        "contact:street": "Rue Pargaminières",
+        "name": "Magnum"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1668955924,
+      "lat": 43.6047727,
+      "lon": 1.4509507,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "7",
+        "contact:street": "Rue de l'Industrie",
+        "name": "Agapes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1722273690,
+      "lat": 43.6018457,
+      "lon": 1.4438038,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "1 bis",
+        "contact:street": "Rue du Puits-Vert",
+        "name": "Le Club Saint-Germain"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1775087915,
+      "lat": 43.6113364,
+      "lon": 1.437201,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "12",
+        "addr:street": "Boulevard Lascrosses",
+        "amenity": "fast_food",
+        "name": "O'Tacos"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1790708761,
+      "lat": 43.6076401,
+      "lon": 1.4412755,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Le café des Antiques"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1832787196,
+      "lat": 43.6090115,
+      "lon": 1.4478536,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "17",
+        "addr:street": "Rue de Bayard",
+        "amenity": "nightclub",
+        "name": "Bogota"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1871304604,
+      "lat": 43.6084809,
+      "lon": 1.4502939,
+      "tags": {
+        "addr:housenumber": "2 bis",
+        "addr:street": "Place de Belfort",
+        "amenity": "bar",
+        "contact:housenumber": "2 bis",
+        "name": "Le Bar"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1871304605,
+      "lat": 43.6088773,
+      "lon": 1.4505584,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "2",
+        "contact:street": "Rue Bertrand de Born",
+        "name": "Pizzéria Belfort"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1873095810,
+      "lat": 43.6021645,
+      "lon": 1.4383402,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "9",
+        "addr:street": "Rue des Blanchers",
+        "amenity": "restaurant",
+        "name": "Du Plaisir à la toque"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1950688739,
+      "lat": 43.609244,
+      "lon": 1.432809,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "60",
+        "contact:street": "Rue Lancefoc",
+        "name": "Naraï Thaï"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1972155352,
+      "lat": 43.6060266,
+      "lon": 1.4388987,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "31",
+        "contact:street": "Rue Antoine Deville",
+        "name": "Mamagayo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765780,
+      "lat": 43.6078149,
+      "lon": 1.4385685,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Rue des Salenques",
+        "name": "Au Buron"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765786,
+      "lat": 43.6075192,
+      "lon": 1.439384,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "2",
+        "contact:street": "Rue des Salenques",
+        "name": "Made by Me Toulouse"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765790,
+      "lat": 43.6061126,
+      "lon": 1.4415311,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "4",
+        "addr:street": "Rue de l'Esquile",
+        "amenity": "restaurant",
+        "name": "Rajasthan Villa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765796,
+      "lat": 43.6075061,
+      "lon": 1.4402932,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "16",
+        "contact:street": "Rue Émile Cartailhac",
+        "name": "PL Pizza Léo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765799,
+      "lat": 43.607065,
+      "lon": 1.439823,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "39",
+        "contact:street": "Rue des Lois",
+        "name": "EatCoffee & Play"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765814,
+      "lat": 43.6069865,
+      "lon": 1.4401314,
+      "tags": {
+        "addr:housenumber": "40",
+        "addr:street": "Rue des Lois",
+        "amenity": "restaurant",
+        "contact:housenumber": "40",
+        "contact:street": "Rue des Lois",
+        "name": "Le Galuchat"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765817,
+      "lat": 43.6075185,
+      "lon": 1.4397499,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "3",
+        "contact:street": "Place du Peyrou",
+        "name": "Midi Minuit"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765821,
+      "lat": 43.6079153,
+      "lon": 1.4387215,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "20",
+        "contact:street": "Rue des Salenques",
+        "name": "Le Saint-Sauvage"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765825,
+      "lat": 43.6035104,
+      "lon": 1.4409249,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "12",
+        "contact:street": "Rue Joseph Lakanal",
+        "name": "Le Shambhala"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765829,
+      "lat": 43.606148,
+      "lon": 1.4409458,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "19",
+        "contact:street": "Rue des Lois",
+        "name": "Buvette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765832,
+      "lat": 43.6075159,
+      "lon": 1.4403565,
+      "tags": {
+        "addr:housenumber": "18",
+        "addr:street": "Rue Émile Cartailhac",
+        "amenity": "fast_food",
+        "contact:housenumber": "18",
+        "contact:street": "Rue Émile Cartailhac",
+        "name": "Petit Voyage"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1976765834,
+      "lat": 43.6074241,
+      "lon": 1.4395702,
+      "tags": {
+        "amenity": "pub",
+        "brewery": "yes;guinness",
+        "contact:housenumber": "1",
+        "contact:street": "Place du Peyrou",
+        "name": "The George and Dragon"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1992125177,
+      "lat": 43.6090136,
+      "lon": 1.4448745,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "47 bis",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Palm d'Orient"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1995293946,
+      "lat": 43.6056709,
+      "lon": 1.4461106,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "5B",
+        "contact:street": "Rue Caussette",
+        "name": "Le Goût en Train"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2010420223,
+      "lat": 43.6046618,
+      "lon": 1.4506221,
+      "tags": {
+        "amenity": "cafe",
+        "brewery": "no",
+        "contact:housenumber": "5",
+        "contact:street": "Impasse de la Colombette",
+        "name": "Eurékafé"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2010420241,
+      "lat": 43.6056272,
+      "lon": 1.4496086,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "1",
+        "addr:street": "Rue Gabriel Péri",
+        "amenity": "restaurant",
+        "name": "Café Oz"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2020652328,
+      "lat": 43.6088428,
+      "lon": 1.4415621,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "7",
+        "addr:street": "Place Saint-Sernin",
+        "amenity": "restaurant",
+        "name": "Café Triplette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2051884503,
+      "lat": 43.6053005,
+      "lon": 1.4484704,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "14",
+        "contact:street": "Allées du Président Franklin Roosevelt",
+        "name": "Le Pyrénéen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2054262988,
+      "lat": 43.6067665,
+      "lon": 1.4518374,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "31",
+        "contact:street": "Rue Nicolas Bachelier",
+        "name": "La Taqueria Toulouse"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2081650657,
+      "lat": 43.6055021,
+      "lon": 1.4463199,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "5",
+        "contact:street": "Rue du Rempart Villeneuve",
+        "drink:beer": "served",
+        "name": "Le Petit Victor"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2081650658,
+      "lat": 43.605631,
+      "lon": 1.446319,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Barbaque"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2081650661,
+      "lat": 43.6050323,
+      "lon": 1.4462934,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "1",
+        "contact:street": "Rue du Rempart Villeneuve",
+        "name": "100% Croissants"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2165657801,
+      "lat": 43.6042804,
+      "lon": 1.4375916,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "24",
+        "contact:street": "Rue Pargaminières",
+        "name": "La Tireuse"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2170803967,
+      "lat": 43.6019219,
+      "lon": 1.4444596,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "6",
+        "contact:street": "Rue des Puits-Clos",
+        "name": "Fogo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2246315729,
+      "lat": 43.6036397,
+      "lon": 1.4349952,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "17",
+        "contact:street": "Place Saint-Pierre",
+        "name": "Poketeria"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2258131946,
+      "lat": 43.6113677,
+      "lon": 1.437325,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Eat Sushi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2299551011,
+      "lat": 43.6037887,
+      "lon": 1.4424371,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "39",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "O'Briens"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2316954259,
+      "lat": 43.6066406,
+      "lon": 1.4470214,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "20",
+        "contact:street": "Place Victor Hugo",
+        "name": "Green sur mesure"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2341706945,
+      "lat": 43.6024279,
+      "lon": 1.4377391,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Binks kitchen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2371653332,
+      "lat": 43.6093298,
+      "lon": 1.4467291,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "10",
+        "contact:street": "Place Jeanne d'Arc",
+        "name": "La familia"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2375992921,
+      "lat": 43.6027935,
+      "lon": 1.445024,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "4",
+        "contact:street": "Place Roger Salengro",
+        "name": "Tom Pouce"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2411875257,
+      "lat": 43.6060308,
+      "lon": 1.441318,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:street": "Rue des Lois",
+        "name": "Campagne"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2443447118,
+      "lat": 43.6053137,
+      "lon": 1.4419834,
+      "tags": {
+        "addr:housenumber": "9",
+        "addr:street": "Rue des Lois",
+        "amenity": "fast_food",
+        "contact:street": "Rue des Lois",
+        "name": "Délices de Chine（味之家）"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2443447119,
+      "lat": 43.6057181,
+      "lon": 1.4414811,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "11",
+        "contact:street": "Rue des Lois",
+        "name": "La Bistrothèque"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2443447121,
+      "lat": 43.6070157,
+      "lon": 1.4400907,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "40",
+        "contact:street": "Rue des Lois",
+        "name": "Kumo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2443447122,
+      "lat": 43.6070798,
+      "lon": 1.4400517,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "42",
+        "contact:street": "Rue des Lois",
+        "name": "Silex & Fourchette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345516,
+      "lat": 43.6059807,
+      "lon": 1.4424921,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "35",
+        "contact:street": "Rue du Taur",
+        "name": "Tasty Crousty"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345525,
+      "lat": 43.606325,
+      "lon": 1.4424051,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "49",
+        "contact:street": "Rue du Taur",
+        "name": "Café Fika"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345530,
+      "lat": 43.6068477,
+      "lon": 1.4424005,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "50",
+        "contact:street": "Rue du Taur",
+        "name": "O'Tacos"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345539,
+      "lat": 43.6054533,
+      "lon": 1.4427627,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "10",
+        "contact:street": "Rue du Taur",
+        "name": "Antidot Burger"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345546,
+      "lat": 43.6051974,
+      "lon": 1.4426798,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "11",
+        "contact:street": "Rue du Taur",
+        "name": "Tokyo Bento"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345559,
+      "lat": 43.6064361,
+      "lon": 1.4423845,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "51",
+        "contact:street": "Rue du Taur",
+        "name": "Maison du Curry"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345567,
+      "lat": 43.6059643,
+      "lon": 1.4426555,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "24",
+        "contact:street": "Rue du Taur",
+        "name": "Clubbbbb"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345581,
+      "lat": 43.6066788,
+      "lon": 1.4422931,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "61",
+        "contact:street": "Rue du Taur",
+        "name": "YAMcha"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345598,
+      "lat": 43.6060623,
+      "lon": 1.4424687,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "39",
+        "contact:street": "Rue du Taur",
+        "name": "La Sen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345603,
+      "lat": 43.6058005,
+      "lon": 1.4425441,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "25",
+        "contact:street": "Rue du Taur",
+        "name": "Sarang House"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345638,
+      "lat": 43.6067847,
+      "lon": 1.442426,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:street": "Rue du Taur",
+        "name": "Saj & Co"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345649,
+      "lat": 43.6056898,
+      "lon": 1.4425762,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "23",
+        "contact:street": "Rue du Taur",
+        "name": "El Almacén"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345656,
+      "lat": 43.6076429,
+      "lon": 1.4420947,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "62",
+        "contact:street": "Rue du Taur",
+        "name": "Sixty Two"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345690,
+      "lat": 43.6058367,
+      "lon": 1.4425344,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "29",
+        "contact:street": "Rue du Taur",
+        "name": "Bhaiya Kitchen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345697,
+      "lat": 43.6069846,
+      "lon": 1.442345,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "54",
+        "contact:street": "Rue du Taur",
+        "name": "La Cabane à Poké"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345706,
+      "lat": 43.6057627,
+      "lon": 1.4425635,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "25",
+        "contact:street": "Rue du Taur",
+        "name": "Barapom"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345725,
+      "lat": 43.605308,
+      "lon": 1.4427856,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "6",
+        "contact:street": "Rue du Taur",
+        "name": "Bagel Corner"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345734,
+      "lat": 43.6062767,
+      "lon": 1.4424173,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "47",
+        "contact:street": "Rue du Taur",
+        "name": "Van Lôc"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345736,
+      "lat": 43.6069101,
+      "lon": 1.4423752,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "52",
+        "contact:street": "Rue du Taur",
+        "name": "Chez Bobonne"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345756,
+      "lat": 43.605341,
+      "lon": 1.4426474,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "15",
+        "contact:street": "Rue du Taur",
+        "name": "Ô Délices d'Émilie"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345758,
+      "lat": 43.6053884,
+      "lon": 1.4426367,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "17",
+        "contact:street": "Rue du Taur",
+        "name": "Crousty Game"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2444345760,
+      "lat": 43.6063741,
+      "lon": 1.4423927,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "49",
+        "contact:street": "Rue du Taur",
+        "name": "Chill’n Cheese"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153688,
+      "lat": 43.6087206,
+      "lon": 1.4451929,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "G la dalle"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153709,
+      "lat": 43.6058788,
+      "lon": 1.4444016,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "20",
+        "contact:street": "Rue Charles de Rémusat",
+        "name": "Mily Tea"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153710,
+      "lat": 43.6091799,
+      "lon": 1.4444106,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Hope"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153711,
+      "lat": 43.605281,
+      "lon": 1.4438241,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "4",
+        "addr:street": "Rue Charles de Rémusat",
+        "amenity": "restaurant",
+        "contact:housenumber": "7",
+        "contact:street": "Rue Charles de Rémusat",
+        "name": "Susanoo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153714,
+      "lat": 43.6088238,
+      "lon": 1.4429741,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "1",
+        "contact:street": "Rue Saint-Bernard",
+        "name": "Les Délices de Saturnin"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153715,
+      "lat": 43.6071241,
+      "lon": 1.4450382,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "35",
+        "contact:street": "Rue Charles de Rémusat",
+        "name": "Jiao Zi Guan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153723,
+      "lat": 43.6052275,
+      "lon": 1.4437811,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "5",
+        "contact:street": "Rue Charles de Rémusat",
+        "name": "Kompo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153724,
+      "lat": 43.607359,
+      "lon": 1.4450797,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "39",
+        "contact:street": "Rue Charles de Rémusat",
+        "name": "Chez Marco"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153727,
+      "lat": 43.6073076,
+      "lon": 1.445076,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "39",
+        "contact:street": "Rue Charles de Rémusat",
+        "name": "Pizzeria Bambino"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445153773,
+      "lat": 43.60835,
+      "lon": 1.4455816,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "35",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Columbus Café & Co"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445201703,
+      "lat": 43.6051187,
+      "lon": 1.4441016,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "3",
+        "contact:street": "Rue Lafayette",
+        "name": "Satch"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445201708,
+      "lat": 43.604941,
+      "lon": 1.4465735,
+      "tags": {
+        "addr:housenumber": "37",
+        "addr:street": "Rue Lafayette",
+        "amenity": "fast_food",
+        "name": "Midi 37"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445201710,
+      "lat": 43.604991,
+      "lon": 1.445196,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "New School Tacos"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445585717,
+      "lat": 43.6051517,
+      "lon": 1.4424042,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "8",
+        "contact:street": "Rue des Lois",
+        "name": "Virgule"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445585723,
+      "lat": 43.6050169,
+      "lon": 1.4425454,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "4",
+        "contact:street": "Rue des Lois",
+        "name": "Novo Burger"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445585725,
+      "lat": 43.6052613,
+      "lon": 1.4422525,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "12",
+        "contact:street": "Rue des Lois",
+        "name": "An Nam"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445585728,
+      "lat": 43.605303,
+      "lon": 1.4422016,
+      "tags": {
+        "addr:housenumber": "14",
+        "addr:street": "Rue des Lois",
+        "amenity": "fast_food",
+        "contact:street": "Rue des Lois",
+        "name": "Les Burgers de Papa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445585730,
+      "lat": 43.6053577,
+      "lon": 1.4421347,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "16",
+        "contact:street": "Rue des Lois",
+        "name": "Le Salon d'Eugénie"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2445585732,
+      "lat": 43.6071989,
+      "lon": 1.4396625,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "43",
+        "contact:street": "Rue des Lois",
+        "name": "La Petite Fabrique"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2446506180,
+      "lat": 43.6053438,
+      "lon": 1.441946,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "9 bis",
+        "contact:street": "Rue des Lois",
+        "name": "Boka"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2446506184,
+      "lat": 43.6056996,
+      "lon": 1.4454909,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "8",
+        "contact:street": "Rue John Fitzgerald Kennedy",
+        "name": "Bambou"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2446506278,
+      "lat": 43.6076455,
+      "lon": 1.4458297,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "54",
+        "addr:street": "Rue d'Alsace-Lorraine",
+        "amenity": "fast_food",
+        "contact:housenumber": "54B",
+        "contact:street": "Rue d'Alsace-Lorraine",
+        "name": "Pokawa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2446506282,
+      "lat": 43.6078,
+      "lon": 1.4460982,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "29",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Le Parisien"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2446506381,
+      "lat": 43.6054001,
+      "lon": 1.4418762,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:street": "Rue des Lois",
+        "name": "Aiko"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2446506453,
+      "lat": 43.6076955,
+      "lon": 1.4458821,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "54 bis",
+        "contact:street": "Rue d'Alsace-Lorraine",
+        "name": "Fresh Burritos"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447064482,
+      "lat": 43.6060031,
+      "lon": 1.4446372,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "2",
+        "contact:street": "Rue Rivals",
+        "name": "Casa Xurry"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719379,
+      "lat": 43.6072168,
+      "lon": 1.4453863,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "1",
+        "contact:street": "Rue du Salé",
+        "name": "Sakuraame"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719382,
+      "lat": 43.6051604,
+      "lon": 1.4464609,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "4",
+        "contact:street": "Rue du Rempart Villeneuve",
+        "name": "Chez Nòu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719383,
+      "lat": 43.6056745,
+      "lon": 1.4475155,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "2",
+        "contact:street": "Rue d'Austerlitz",
+        "name": "Oh la vache !"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719385,
+      "lat": 43.6067738,
+      "lon": 1.4469956,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "22",
+        "contact:street": "Place Victor Hugo",
+        "name": "Bellocq"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719391,
+      "lat": 43.6061927,
+      "lon": 1.4471041,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "12",
+        "contact:street": "Place Victor Hugo",
+        "name": "Caribe Café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719397,
+      "lat": 43.6075659,
+      "lon": 1.4463166,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "12",
+        "contact:street": "Rue du Rempart Matabiau",
+        "name": "Sashimi Food"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719410,
+      "lat": 43.6064872,
+      "lon": 1.4473507,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "17",
+        "contact:street": "Rue d'Austerlitz",
+        "name": "Hinodé"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719415,
+      "lat": 43.6062039,
+      "lon": 1.4475445,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Rue d'Austerlitz",
+        "name": "Japoyaki"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719421,
+      "lat": 43.6071846,
+      "lon": 1.4461549,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "25 bis",
+        "contact:street": "Rue du Rempart Matabiau",
+        "name": "Brûlerie Victor Hugo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719424,
+      "lat": 43.6063221,
+      "lon": 1.4475438,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "16",
+        "contact:street": "Rue d'Austerlitz",
+        "name": "The Green Tiger"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719425,
+      "lat": 43.6060979,
+      "lon": 1.4471308,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Prima bonheur"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719430,
+      "lat": 43.6068553,
+      "lon": 1.4471458,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "19",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Les Burgers de Colette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719432,
+      "lat": 43.6058117,
+      "lon": 1.4463101,
+      "tags": {
+        "addr:housenumber": "13",
+        "addr:street": "Rue du Rempart Villeneuve",
+        "amenity": "restaurant",
+        "name": "Jiao Zi Guan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719438,
+      "lat": 43.6065489,
+      "lon": 1.4470368,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "18",
+        "contact:street": "Place Victor Hugo",
+        "name": "Maison Samaran"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719448,
+      "lat": 43.6063722,
+      "lon": 1.447325,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Rue d'Austerlitz",
+        "name": "J'Go"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719454,
+      "lat": 43.6068847,
+      "lon": 1.4459751,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "5",
+        "addr:street": "Rue du Salé",
+        "amenity": "cafe",
+        "name": "Le Comptoir de Teddy"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719461,
+      "lat": 43.6052827,
+      "lon": 1.4464836,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "4",
+        "contact:street": "Rue du Rempart Villeneuve",
+        "name": "L'Aperozza"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719465,
+      "lat": 43.6068887,
+      "lon": 1.4471078,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "19",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Nice Time"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2447719478,
+      "lat": 43.6069047,
+      "lon": 1.4459403,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "5",
+        "addr:street": "Rue du Salé",
+        "amenity": "fast_food",
+        "name": "Yuki Onigiri"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406561,
+      "lat": 43.6084603,
+      "lon": 1.4472794,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:street": "Rue de Bayard",
+        "name": "Le Palmier"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406567,
+      "lat": 43.6089191,
+      "lon": 1.4476982,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "13",
+        "contact:street": "Rue de Bayard",
+        "name": "Lucie"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406571,
+      "lat": 43.6100723,
+      "lon": 1.4497833,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "41",
+        "contact:street": "Rue de Bayard",
+        "name": "Grabuge"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406573,
+      "lat": 43.6081559,
+      "lon": 1.4467237,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "2B",
+        "contact:street": "Rue de Bayard",
+        "name": "Ô Casse Croûte"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406575,
+      "lat": 43.6082932,
+      "lon": 1.446519,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "1",
+        "addr:street": "Rue de Bayard",
+        "amenity": "restaurant",
+        "contact:housenumber": "1",
+        "contact:street": "Rue de Bayard",
+        "name": "Chez Jeannot"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406599,
+      "lat": 43.6090228,
+      "lon": 1.4482879,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "26",
+        "contact:street": "Rue de Bayard",
+        "name": "L'amazigh"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406601,
+      "lat": 43.6108855,
+      "lon": 1.4517056,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "70",
+        "contact:street": "Rue de Bayard",
+        "name": "La Chope Matabiau"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406602,
+      "lat": 43.6111842,
+      "lon": 1.4518064,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "69",
+        "contact:street": "Rue de Bayard",
+        "name": "La Meunière"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406605,
+      "lat": 43.6086274,
+      "lon": 1.4475844,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Rue de Bayard",
+        "name": "Le Colombier"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406606,
+      "lat": 43.6103316,
+      "lon": 1.4506821,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "56",
+        "contact:street": "Rue de Bayard",
+        "name": "Manara"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406608,
+      "lat": 43.6108308,
+      "lon": 1.4515864,
+      "tags": {
+        "addr:housenumber": "68",
+        "addr:street": "Rue de Bayard",
+        "amenity": "bar",
+        "name": "Le Winger"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406613,
+      "lat": 43.6072944,
+      "lon": 1.4473771,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "18",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Meet The Meat"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406617,
+      "lat": 43.6093564,
+      "lon": 1.4489268,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:housenumber": "34",
+        "contact:street": "Rue de Bayard",
+        "name": "La Rosa Negra"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406624,
+      "lat": 43.6070002,
+      "lon": 1.4399115,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "37",
+        "contact:street": "Rue des Lois",
+        "name": "Art Tea Shop"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406626,
+      "lat": 43.61124,
+      "lon": 1.4518995,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "71",
+        "contact:street": "Rue de Bayard",
+        "name": "Délices Matabiau"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406628,
+      "lat": 43.6110791,
+      "lon": 1.4520718,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:street": "Rue de Bayard",
+        "name": "Le Victoria"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406636,
+      "lat": 43.6069811,
+      "lon": 1.447693,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Bistro Régent"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406645,
+      "lat": 43.6103054,
+      "lon": 1.4506317,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "54 bis",
+        "contact:street": "Rue de Bayard",
+        "name": "Zoom Burger"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406648,
+      "lat": 43.6072325,
+      "lon": 1.4474439,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "16",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Sushi Shop"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406655,
+      "lat": 43.607056,
+      "lon": 1.4476319,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "The Kanteen Restaurant"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406659,
+      "lat": 43.6116955,
+      "lon": 1.4519989,
+      "tags": {
+        "addr:housenumber": "15",
+        "addr:street": "Boulevard de Bonrepos",
+        "amenity": "cafe",
+        "name": "Papillon"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406671,
+      "lat": 43.6082917,
+      "lon": 1.4469716,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:housenumber": "6",
+        "contact:street": "Rue de Bayard",
+        "name": "Le Senso"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406701,
+      "lat": 43.6094113,
+      "lon": 1.4494532,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "3",
+        "contact:street": "Place Robert Schuman",
+        "name": "Sushi N Wok"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2450406763,
+      "lat": 43.6113212,
+      "lon": 1.4520535,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Ô Chiken Grill"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312482,
+      "lat": 43.6042663,
+      "lon": 1.4379753,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "35",
+        "contact:street": "Rue Pargaminières",
+        "name": "Adana Kebab"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312491,
+      "lat": 43.6044481,
+      "lon": 1.4384489,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "40",
+        "contact:street": "Rue Pargaminières",
+        "name": "Sara Pizza"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312541,
+      "lat": 43.6046052,
+      "lon": 1.4408938,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "83",
+        "contact:street": "Rue Pargaminières",
+        "name": "Pizza Les 2 Potes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312595,
+      "lat": 43.6043005,
+      "lon": 1.4376829,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "26",
+        "contact:street": "Rue Pargaminières",
+        "name": "Chez Tran"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312617,
+      "lat": 43.6046156,
+      "lon": 1.4409631,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "85",
+        "contact:street": "Rue Pargaminières",
+        "name": "Deniz Kebab"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312636,
+      "lat": 43.6041935,
+      "lon": 1.4376583,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Délice Food"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312671,
+      "lat": 43.6046473,
+      "lon": 1.4413825,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "3",
+        "contact:street": "Rue Jean-Antoine Romiguières",
+        "name": "Hello Tea"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312680,
+      "lat": 43.6046603,
+      "lon": 1.4405608,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "68",
+        "contact:street": "Rue Pargaminières",
+        "name": "Tzatziki"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312699,
+      "lat": 43.6040296,
+      "lon": 1.4365277,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "4",
+        "contact:street": "Rue Pargaminières",
+        "name": "Sunset Food"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312718,
+      "lat": 43.6047012,
+      "lon": 1.4419224,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "11",
+        "contact:street": "Rue Jean-Antoine Romiguières",
+        "name": "Pizza Capri"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312738,
+      "lat": 43.6044213,
+      "lon": 1.4394153,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "61",
+        "contact:street": "Rue Pargaminières",
+        "name": "Le Sawa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312751,
+      "lat": 43.6040903,
+      "lon": 1.4367872,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "8",
+        "contact:street": "Rue Pargaminières",
+        "name": "La Rose des Sables"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312758,
+      "lat": 43.6044399,
+      "lon": 1.4395998,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "65",
+        "contact:street": "Rue Pargaminières",
+        "name": "Bien Taypa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312765,
+      "lat": 43.6045807,
+      "lon": 1.4407315,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "81",
+        "contact:street": "Rue Pargaminières",
+        "name": "BBQ Wok"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312852,
+      "lat": 43.6043768,
+      "lon": 1.4385832,
+      "tags": {
+        "amenity": "bar",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "49",
+        "contact:street": "Rue Pargaminières",
+        "name": "Bar De Zés"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312872,
+      "lat": 43.6043962,
+      "lon": 1.4387149,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "49",
+        "contact:street": "Rue Pargaminières",
+        "name": "Chez Nicô"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312876,
+      "lat": 43.6046307,
+      "lon": 1.4410933,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "87",
+        "contact:street": "Rue Pargaminières",
+        "name": "S com Saj"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312885,
+      "lat": 43.6044801,
+      "lon": 1.4386121,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "42",
+        "contact:street": "Rue Pargaminières",
+        "name": "The Classroom"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312912,
+      "lat": 43.6037945,
+      "lon": 1.435862,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "8",
+        "name": "Tacos Avenue"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457312982,
+      "lat": 43.6042199,
+      "lon": 1.437782,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "31",
+        "contact:street": "Rue Pargaminières",
+        "name": "31"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457772016,
+      "lat": 43.6046556,
+      "lon": 1.4426625,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "15",
+        "contact:street": "Place du Capitole",
+        "name": "Café Albert"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457772044,
+      "lat": 43.603124,
+      "lon": 1.4433938,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "37",
+        "contact:street": "Rue Saint-Rome",
+        "name": "Tacos Corner"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457772055,
+      "lat": 43.6041788,
+      "lon": 1.4427683,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "10",
+        "contact:street": "Place du Capitole",
+        "name": "Le Chalet"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457772064,
+      "lat": 43.6045477,
+      "lon": 1.4426837,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Place du Capitole",
+        "name": "Les Arcades"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457772065,
+      "lat": 43.6040831,
+      "lon": 1.4427886,
+      "tags": {
+        "addr:housenumber": "9",
+        "amenity": "restaurant",
+        "contact:housenumber": "9",
+        "contact:street": "Place du Capitole",
+        "name": "Les Illustres"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2457772098,
+      "lat": 43.6022381,
+      "lon": 1.4434672,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:street": "Rue Saint-Rome",
+        "name": "B-Routh Lounge"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2458144307,
+      "lat": 43.6035698,
+      "lon": 1.4458176,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "24",
+        "contact:street": "Rue d'Alsace-Lorraine",
+        "name": "Five Guys"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2458144342,
+      "lat": 43.6037406,
+      "lon": 1.4445016,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "69",
+        "contact:street": "Rue de la Pomme",
+        "name": "Krousty Sabaïdi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2458144440,
+      "lat": 43.6029057,
+      "lon": 1.444211,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "8",
+        "contact:street": "Rue Baour-Lormian",
+        "name": "Betsy"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2458144446,
+      "lat": 43.6039871,
+      "lon": 1.4472311,
+      "tags": {
+        "amenity": "bar",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "25",
+        "contact:street": "Rue Saint-Antoine du T",
+        "name": "Le Cyrano"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2458144508,
+      "lat": 43.6037728,
+      "lon": 1.4444721,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "71",
+        "addr:street": "Rue de la Pomme",
+        "amenity": "restaurant",
+        "contact:housenumber": "71",
+        "contact:street": "Rue de la Pomme",
+        "name": "Viko House"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2458144579,
+      "lat": 43.603827,
+      "lon": 1.4472387,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "23",
+        "contact:street": "Rue Saint-Antoine du T",
+        "name": "arum.café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2458144589,
+      "lat": 43.6030415,
+      "lon": 1.4449967,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "M la glace"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2458144829,
+      "lat": 43.6029185,
+      "lon": 1.4440725,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Ô Thé Divin"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459884617,
+      "lat": 43.6038308,
+      "lon": 1.4441688,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "1",
+        "contact:street": "Place du Capitole",
+        "name": "Le Bouillon Capitole"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459884649,
+      "lat": 43.6023233,
+      "lon": 1.4411574,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "8",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "Café Perle"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459884681,
+      "lat": 43.6018947,
+      "lon": 1.4436356,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "8",
+        "contact:street": "Rue Saint-Rome",
+        "name": "Mangez et barrez-vous !"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459884791,
+      "lat": 43.6039292,
+      "lon": 1.444704,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "2",
+        "contact:street": "Rue du Poids de l'Huile",
+        "name": "Tôt ou tard"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459884916,
+      "lat": 43.6073275,
+      "lon": 1.4398202,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "2",
+        "name": "Coffee Pot"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459884968,
+      "lat": 43.6030792,
+      "lon": 1.4435306,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "36",
+        "addr:street": "Rue Saint-Rome",
+        "amenity": "restaurant",
+        "name": "Le Refuge Saint Rome"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459885060,
+      "lat": 43.602466,
+      "lon": 1.4436201,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "22",
+        "addr:street": "Rue Saint-Rome",
+        "amenity": "restaurant",
+        "contact:housenumber": "1B",
+        "contact:street": "Rue Jules Chalande",
+        "name": "Curry Café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459885077,
+      "lat": 43.6036763,
+      "lon": 1.4426685,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "7",
+        "contact:street": "Place du Capitole",
+        "name": "L'Atrium Restaurant"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459885084,
+      "lat": 43.6016474,
+      "lon": 1.4408393,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "46",
+        "contact:street": "Rue Peyrolières",
+        "name": "Le Maharaja"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459885335,
+      "lat": 43.601825,
+      "lon": 1.4436511,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "6",
+        "contact:street": "Rue Saint-Rome",
+        "name": "Cotti Coffee"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459885353,
+      "lat": 43.6039553,
+      "lon": 1.4448006,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Konishi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459885356,
+      "lat": 43.6033802,
+      "lon": 1.4434716,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "46",
+        "contact:street": "Rue Saint-Rome",
+        "name": "SoCrousty"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459885366,
+      "lat": 43.6035602,
+      "lon": 1.4434423,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "50",
+        "contact:street": "Rue Saint-Rome",
+        "name": "Baguet'up"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2459885495,
+      "lat": 43.6022241,
+      "lon": 1.4411311,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "54",
+        "contact:street": "Rue Peyrolières",
+        "name": "Mizuki Ramen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460246685,
+      "lat": 43.6108944,
+      "lon": 1.4387987,
+      "tags": {
+        "addr:city": "Toulouse",
+        "amenity": "fast_food",
+        "contact:housenumber": "5",
+        "contact:street": "Place Arnaud Bernard",
+        "name": "Les Délices"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460246687,
+      "lat": 43.6100979,
+      "lon": 1.4390798,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "17",
+        "contact:street": "Rue Arnaud Bernard",
+        "name": "La Cuisine de Kiné"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460246696,
+      "lat": 43.6109052,
+      "lon": 1.4373572,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "So'Salad"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460246697,
+      "lat": 43.6107557,
+      "lon": 1.4388536,
+      "tags": {
+        "addr:housenumber": "4",
+        "addr:street": "Place Arnaud Bernard",
+        "amenity": "restaurant",
+        "contact:housenumber": "4",
+        "contact:street": "Place Arnaud Bernard",
+        "name": "La Perse Restaurant"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460246700,
+      "lat": 43.6107095,
+      "lon": 1.4388913,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "3",
+        "contact:street": "Place Arnaud Bernard",
+        "name": "O'Feno Gusto"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460246704,
+      "lat": 43.6105585,
+      "lon": 1.4389671,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "2",
+        "contact:street": "Place Arnaud Bernard",
+        "name": "Mordant"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460954109,
+      "lat": 43.6016841,
+      "lon": 1.4407097,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "39",
+        "contact:street": "Rue Peyrolières",
+        "name": "Mia Cha"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460954112,
+      "lat": 43.6034838,
+      "lon": 1.4421463,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "31",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "Boli Cafe"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460954125,
+      "lat": 43.6038654,
+      "lon": 1.4425779,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "41",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "La Cale Sèche"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460954133,
+      "lat": 43.6034627,
+      "lon": 1.4418778,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "1 bis",
+        "contact:street": "Rue Mirepoix",
+        "name": "Mille et une Pâtes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460954145,
+      "lat": 43.6037554,
+      "lon": 1.4423885,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "37",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "Chicken Tacos 31"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2460954162,
+      "lat": 43.6037058,
+      "lon": 1.4423289,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "35",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "Yūjō Ramen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2462248749,
+      "lat": 43.6028238,
+      "lon": 1.442122,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "28",
+        "contact:street": "Rue Sainte-Ursule",
+        "name": "Bunny Tea"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2462248758,
+      "lat": 43.6015169,
+      "lon": 1.4423974,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "2",
+        "name": "Perlette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2463356511,
+      "lat": 43.6043798,
+      "lon": 1.4470986,
+      "tags": {
+        "addr:housenumber": "6",
+        "addr:street": "Place du Président Wilson",
+        "amenity": "restaurant",
+        "name": "Byblos"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2463356605,
+      "lat": 43.6051361,
+      "lon": 1.44821,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "6",
+        "contact:street": "Allées du Président Franklin Roosevelt",
+        "name": "Poké Lab"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788537,
+      "lat": 43.6074988,
+      "lon": 1.4396846,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "3",
+        "contact:street": "Place du Peyrou",
+        "name": "Le Coyote-Burgers"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788541,
+      "lat": 43.6022894,
+      "lon": 1.4440263,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "4",
+        "addr:street": "Rue Jules Chalande",
+        "amenity": "cafe",
+        "name": "Chapristea"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788560,
+      "lat": 43.6020669,
+      "lon": 1.4404483,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "9",
+        "contact:street": "Rue Jean Suau",
+        "name": "Lumi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788561,
+      "lat": 43.6018667,
+      "lon": 1.4440967,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "5",
+        "contact:street": "Rue du Puits-Vert",
+        "name": "La Belle Saison"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788563,
+      "lat": 43.6020597,
+      "lon": 1.4444087,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "11",
+        "contact:street": "Place des Puits-Clos",
+        "name": "Le Bazar Club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788564,
+      "lat": 43.6018381,
+      "lon": 1.4394453,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "12",
+        "contact:street": "Place de la Daurade",
+        "name": "Riviera Tolosa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788568,
+      "lat": 43.6024255,
+      "lon": 1.4439014,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Le Rohtang Pass"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788569,
+      "lat": 43.6022017,
+      "lon": 1.444706,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Rue Baronie",
+        "name": "Café Baronie"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788570,
+      "lat": 43.6021368,
+      "lon": 1.4405752,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "11",
+        "contact:street": "Rue Jean Suau",
+        "name": "Miam Mian"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788571,
+      "lat": 43.6022329,
+      "lon": 1.4442298,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "6",
+        "addr:street": "Rue Jules Chalande",
+        "amenity": "restaurant",
+        "name": "L'Air de Famille"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2464788593,
+      "lat": 43.6017724,
+      "lon": 1.4402361,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "2",
+        "contact:street": "Rue Jean Suau",
+        "name": "Zen-Saï"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465993954,
+      "lat": 43.6041874,
+      "lon": 1.4415887,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "9",
+        "contact:street": "Rue des Jacobins",
+        "name": "Au Gascon"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465993956,
+      "lat": 43.603014,
+      "lon": 1.4427448,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Ministry of Crabs"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465993964,
+      "lat": 43.6031237,
+      "lon": 1.4431133,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "11",
+        "contact:street": "Rue des Gestes",
+        "name": "Le Bombay"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465993971,
+      "lat": 43.6031014,
+      "lon": 1.44233,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "3",
+        "addr:street": "Rue des Gestes",
+        "amenity": "restaurant",
+        "name": "Caminito"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994034,
+      "lat": 43.6029371,
+      "lon": 1.4427576,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "12",
+        "contact:street": "Rue des Gestes",
+        "name": "La Côte de Boeuf"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994038,
+      "lat": 43.6029466,
+      "lon": 1.4429008,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Rue des Gestes",
+        "name": "La Mare Aux Canards"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994043,
+      "lat": 43.6040984,
+      "lon": 1.4364001,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "6",
+        "contact:street": "Rue Valade",
+        "name": "Le Zinc"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994048,
+      "lat": 43.6029525,
+      "lon": 1.4426,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "8",
+        "contact:street": "Rue des Gestes",
+        "name": "La Rajasthani"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994066,
+      "lat": 43.6016198,
+      "lon": 1.445061,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "4",
+        "contact:street": "Rue Baronie",
+        "name": "Amore Mia"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994087,
+      "lat": 43.6027519,
+      "lon": 1.4441086,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "6 bis",
+        "addr:street": "Impasse Baour-Lormian",
+        "amenity": "restaurant",
+        "name": "Juguem"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994093,
+      "lat": 43.6019515,
+      "lon": 1.4447133,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "11",
+        "contact:street": "Rue Baronie",
+        "name": "Gogo Flamingo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994103,
+      "lat": 43.6029647,
+      "lon": 1.4414373,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "2",
+        "addr:street": "Rue Joseph Lakanal",
+        "amenity": "fast_food",
+        "contact:housenumber": "2",
+        "contact:street": "Rue Joseph Lakanal",
+        "name": "Ni'Shimai"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994174,
+      "lat": 43.6015203,
+      "lon": 1.4442693,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "11",
+        "contact:street": "Rue Peyras",
+        "name": "Les Infiltrés"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994189,
+      "lat": 43.604385,
+      "lon": 1.4406563,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "28",
+        "contact:street": "Rue Joesph Lakanal",
+        "name": "Graine - Coffee and Flowers"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2465994198,
+      "lat": 43.6030031,
+      "lon": 1.4423584,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "2",
+        "contact:street": "Rue des Gestes",
+        "name": "Liquides-resto à boire"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2474616530,
+      "lat": 43.6015418,
+      "lon": 1.4439039,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Le Snack Toulousain"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2475403537,
+      "lat": 43.6093703,
+      "lon": 1.4388356,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "33",
+        "contact:street": "Rue d'Embarthe",
+        "name": "Mugen Café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2478393276,
+      "lat": 43.6023856,
+      "lon": 1.4476083,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "16",
+        "contact:street": "Place Saint-Georges",
+        "name": "Au Jardin des Thés"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2478393337,
+      "lat": 43.6021902,
+      "lon": 1.4472082,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "12",
+        "contact:street": "Place Saint-Georges",
+        "name": "Coup de Bambou"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2478393383,
+      "lat": 43.60238,
+      "lon": 1.4475031,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Place Saint-Georges",
+        "name": "Prima Fabbrica"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2478393527,
+      "lat": 43.602162,
+      "lon": 1.4468831,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "10",
+        "contact:street": "Rue de la Pomme",
+        "name": "Bánh Mì 2"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2478393553,
+      "lat": 43.602323,
+      "lon": 1.4479686,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "19",
+        "contact:street": "Place Saint-Georges",
+        "name": "The New Me"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2510509605,
+      "lat": 43.6021229,
+      "lon": 1.4471802,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "11",
+        "contact:street": "Place Saint-Georges",
+        "name": "Crêperie Saint-Georges"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2510509608,
+      "lat": 43.6020744,
+      "lon": 1.4471798,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "10",
+        "contact:street": "Place Saint-Georges",
+        "name": "Buzzati's"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2510509615,
+      "lat": 43.6037669,
+      "lon": 1.4472361,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "21",
+        "contact:street": "Rue Saint-Antoine du T",
+        "name": "Chez Gigi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2515629027,
+      "lat": 43.6079494,
+      "lon": 1.4458548,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "56",
+        "contact:street": "Rue d'Alsace-Lorraine",
+        "name": "La Compagnie Française"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414016,
+      "lat": 43.6096207,
+      "lon": 1.4392415,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "4",
+        "contact:street": "Rue Arnaud Bernard",
+        "name": "Aux Pieds Sous La Table"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414021,
+      "lat": 43.6104011,
+      "lon": 1.4397021,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "4",
+        "contact:street": "Rue des Trois Piliers",
+        "name": "La Violette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414025,
+      "lat": 43.6098869,
+      "lon": 1.43923,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "16",
+        "contact:street": "Rue Arnaud Bernard",
+        "name": "Chez Hong"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414054,
+      "lat": 43.6106862,
+      "lon": 1.4395101,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "19",
+        "contact:street": "Place Arnaud Bernard",
+        "name": "Grand Père"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414074,
+      "lat": 43.6094211,
+      "lon": 1.4394585,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "30",
+        "contact:street": "Rue de la Chaîne",
+        "name": "La Kasbah"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414090,
+      "lat": 43.6109605,
+      "lon": 1.4392442,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "14",
+        "contact:street": "Place Arnaud Bernard",
+        "name": "La Station"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414092,
+      "lat": 43.6109149,
+      "lon": 1.4392905,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Place Arnaud Bernard",
+        "name": "Le Shahrazade"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414093,
+      "lat": 43.6112815,
+      "lon": 1.4370427,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "14",
+        "addr:street": "Boulevard Lascrosses",
+        "amenity": "restaurant",
+        "name": "Native Canteen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414095,
+      "lat": 43.610721,
+      "lon": 1.4394717,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "18",
+        "contact:street": "Place Arnaud Bernard",
+        "name": "Mom's Pizza"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414101,
+      "lat": 43.6108021,
+      "lon": 1.4351198,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "7",
+        "contact:street": "Esplanade Compans Caffarelli",
+        "name": "Pokawa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414102,
+      "lat": 43.6109368,
+      "lon": 1.4356094,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "3",
+        "contact:street": "Esplanade Compans Caffarelli",
+        "name": "Subway"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414103,
+      "lat": 43.610621,
+      "lon": 1.4346774,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "8",
+        "contact:street": "Esplanade Compans Caffarelli",
+        "name": "Yoko Sushi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2525414178,
+      "lat": 43.611847,
+      "lon": 1.4387493,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "58",
+        "contact:street": "Boulevard d'Arcole",
+        "name": "Café Le Commerce"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2557711690,
+      "lat": 43.6081115,
+      "lon": 1.4490689,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "23",
+        "contact:street": "Rue Denfert-Rochereau",
+        "name": "Pachinee Thaï Street Food"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2742267394,
+      "lat": 43.6062814,
+      "lon": 1.4509309,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "22",
+        "contact:street": "Rue des Sept Troubadours",
+        "name": "La Taqueria"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2810775014,
+      "lat": 43.6049421,
+      "lon": 1.4523746,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "10",
+        "addr:street": "Rue Jean Palaprat",
+        "amenity": "restaurant",
+        "name": "Kiyoshi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2813140206,
+      "lat": 43.6050035,
+      "lon": 1.4444993,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "7",
+        "contact:street": "Rue Lafayette",
+        "name": "Délice du Capitole"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2966633017,
+      "lat": 43.608867,
+      "lon": 1.4416748,
+      "tags": {
+        "addr:housenumber": "9",
+        "addr:street": "Place Saint Sernin",
+        "amenity": "cafe",
+        "name": "La fiancée"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2981843341,
+      "lat": 43.6034994,
+      "lon": 1.4484045,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Café Den"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590449,
+      "lat": 43.6052878,
+      "lon": 1.4471279,
+      "tags": {
+        "addr:housenumber": "15",
+        "addr:street": "Place du Président Wilson",
+        "amenity": "cafe",
+        "name": "Sunset Coffee"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590454,
+      "lat": 43.6041165,
+      "lon": 1.449992,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "63",
+        "contact:street": "Boulevard Lazare Carnot",
+        "name": "Côté Sushi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590456,
+      "lat": 43.6048681,
+      "lon": 1.4485271,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Boum Burger"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590458,
+      "lat": 43.6035018,
+      "lon": 1.4488714,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "9",
+        "name": "Buena Vista"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590460,
+      "lat": 43.6032467,
+      "lon": 1.4482727,
+      "tags": {
+        "addr:housenumber": "18",
+        "addr:street": "Rue Paul Vidal",
+        "amenity": "fast_food",
+        "name": "Faiparla"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590465,
+      "lat": 43.603497,
+      "lon": 1.4492129,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Little New-York"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590468,
+      "lat": 43.6047419,
+      "lon": 1.4489242,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "El Pescador"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590476,
+      "lat": 43.6047136,
+      "lon": 1.4493859,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "69",
+        "contact:street": "Boulevard Lazare Carnot",
+        "name": "Barbecue Carnot"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590482,
+      "lat": 43.6047685,
+      "lon": 1.4482466,
+      "tags": {
+        "amenity": "nightclub",
+        "name": "Le Frigo Club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590486,
+      "lat": 43.6034986,
+      "lon": 1.4489623,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "9",
+        "name": "Les Jardins d'Occitane"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590507,
+      "lat": 43.6034979,
+      "lon": 1.4491427,
+      "tags": {
+        "addr:housenumber": "10",
+        "addr:street": "Place Occitane",
+        "amenity": "restaurant",
+        "name": "Bûn Viêt"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590519,
+      "lat": 43.6047373,
+      "lon": 1.449028,
+      "tags": {
+        "addr:housenumber": "2",
+        "addr:street": "Rue des Trois Journées",
+        "amenity": "restaurant",
+        "name": "Las Tapas Locas"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590527,
+      "lat": 43.6043249,
+      "lon": 1.4491653,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "3",
+        "contact:street": "Rue Labéda",
+        "name": "Chéri Chéri"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590754,
+      "lat": 43.6035023,
+      "lon": 1.4486545,
+      "tags": {
+        "addr:housenumber": "51 bis",
+        "addr:street": "Rue du Rempart Saint-Étienne",
+        "amenity": "fast_food",
+        "name": "Fin del Mundo - Empanadas"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2993590792,
+      "lat": 43.6047281,
+      "lon": 1.4492899,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "6",
+        "contact:street": "Rue des Trois Journées",
+        "name": "O’Briens"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2994919626,
+      "lat": 43.6054802,
+      "lon": 1.4479078,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "5",
+        "contact:street": "Allées du Président Franklin Roosevelt",
+        "name": "Starbucks"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3044160133,
+      "lat": 43.6048237,
+      "lon": 1.4509603,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "9",
+        "contact:street": "Rue de l'Industrie",
+        "name": "New Dehli"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3074761056,
+      "lat": 43.6100861,
+      "lon": 1.4405544,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "36",
+        "addr:street": "Rue Gatien Arnoult",
+        "amenity": "bar",
+        "brewery": "local",
+        "name": "L'Escabel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3110964785,
+      "lat": 43.6046123,
+      "lon": 1.4489167,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "10",
+        "addr:street": "Rue Labéda",
+        "amenity": "restaurant",
+        "name": "Le Bistroquet à la Une"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3196969240,
+      "lat": 43.6058834,
+      "lon": 1.4495268,
+      "tags": {
+        "amenity": "pub",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "24",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Dream O'Clock"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3340723473,
+      "lat": 43.6089895,
+      "lon": 1.4501171,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Restaurant Loubnane"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3340723477,
+      "lat": 43.6100645,
+      "lon": 1.4525056,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Escale des Saveurs"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3340723483,
+      "lat": 43.607392,
+      "lon": 1.4478955,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "1",
+        "contact:street": "Rue Denfert-Rochereau",
+        "name": "Le Grenier de Pépé"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3340723486,
+      "lat": 43.607889,
+      "lon": 1.448978,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:housenumber": "20",
+        "contact:street": "Rue Denfert-Rochereau",
+        "name": "Magma"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3340723487,
+      "lat": 43.6079971,
+      "lon": 1.449125,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "24",
+        "contact:street": "Rue Denfert-Rochereau",
+        "name": "Des Sens"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3340723488,
+      "lat": 43.609154,
+      "lon": 1.4510096,
+      "tags": {
+        "addr:housenumber": "10",
+        "addr:street": "Bertrand de Born",
+        "amenity": "restaurant",
+        "name": "Supernova"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3340723489,
+      "lat": 43.610927,
+      "lon": 1.4524314,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Subway"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3340724142,
+      "lat": 43.6084625,
+      "lon": 1.4496309,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "31",
+        "contact:street": "Rue Denfert-Rochereau",
+        "name": "Malayu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3389502088,
+      "lat": 43.6025551,
+      "lon": 1.4441834,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "3",
+        "contact:street": "Rue Jules Chalande",
+        "name": "Les Caves de la Maréchale"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3439110565,
+      "lat": 43.6092092,
+      "lon": 1.446643,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "12",
+        "contact:street": "Place Jeanne d'Arc",
+        "name": "Café Alba"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440754912,
+      "lat": 43.6112762,
+      "lon": 1.4393615,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "29",
+        "contact:street": "Boulevard d'Arcole",
+        "name": "Hamburgeria"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440754917,
+      "lat": 43.6094732,
+      "lon": 1.4444189,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "55",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Cool Pizza"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440754919,
+      "lat": 43.609527,
+      "lon": 1.4347245,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "57",
+        "addr:street": "Boulevard Armand Duportal",
+        "amenity": "cafe",
+        "name": "L'Oiseau Vert"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440754920,
+      "lat": 43.6094337,
+      "lon": 1.4444613,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "55",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Kebab Café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440754923,
+      "lat": 43.6096115,
+      "lon": 1.4442759,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "59",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Chicken Street"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440754925,
+      "lat": 43.6093831,
+      "lon": 1.4445125,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "53",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Mom's Pizza"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440754929,
+      "lat": 43.6095394,
+      "lon": 1.4443504,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "57",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "O Chicken Cheese"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440754930,
+      "lat": 43.609969,
+      "lon": 1.4347602,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "63",
+        "contact:street": "Boulevard Armand Duportal",
+        "name": "Must Tacos"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440754978,
+      "lat": 43.6092909,
+      "lon": 1.4446059,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "51",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "La Rose de Tunis"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3440812539,
+      "lat": 43.6076371,
+      "lon": 1.4391243,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "6",
+        "contact:street": "Rue des Salenques",
+        "name": "Chou Doux"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3493129044,
+      "lat": 43.6047619,
+      "lon": 1.4500155,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "50",
+        "contact:street": "Boulevard Lazare Carnot",
+        "name": "Antep Grillades"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3493129050,
+      "lat": 43.6044032,
+      "lon": 1.4518722,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "11",
+        "contact:street": "Rue de la Colombette",
+        "name": "Namaste"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3493129051,
+      "lat": 43.6048274,
+      "lon": 1.449953,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "52",
+        "contact:street": "Boulevard Lazare Carnot",
+        "name": "Tommy's City Diner"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3493476284,
+      "lat": 43.602269,
+      "lon": 1.4383702,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "6",
+        "contact:street": "Rue des Blanchers",
+        "name": "Le Bateau Lavoir"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3493476287,
+      "lat": 43.6022863,
+      "lon": 1.4380639,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Rue des Blanchers",
+        "name": "El Chivito"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3493476290,
+      "lat": 43.6026463,
+      "lon": 1.4374619,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "28",
+        "contact:street": "Rue des Blanchers",
+        "name": "Shé Orlane"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3542862499,
+      "lat": 43.6062827,
+      "lon": 1.4525302,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "18",
+        "addr:street": "Rue Nicolas Bachelier",
+        "amenity": "bar",
+        "name": "Le Loup Blanc"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3542862501,
+      "lat": 43.6067645,
+      "lon": 1.4523717,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "48",
+        "contact:street": "Place Nicolas Bachelier",
+        "name": "La Bièrothèque Corner"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3553704056,
+      "lat": 43.6073887,
+      "lon": 1.4465939,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "25",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Gruppomino"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3594991727,
+      "lat": 43.603921,
+      "lon": 1.4428256,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "9",
+        "addr:street": "Place du Capitole",
+        "amenity": "restaurant",
+        "contact:housenumber": "9",
+        "contact:street": "Place du Capitole",
+        "name": "La Fabric"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3662238290,
+      "lat": 43.6157122,
+      "lon": 1.4459487,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Pizza Francis"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3669185800,
+      "lat": 43.6091855,
+      "lon": 1.4328138,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Jeez"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3669185802,
+      "lat": 43.609804,
+      "lon": 1.433753,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Le café du midi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3669185803,
+      "lat": 43.6093349,
+      "lon": 1.4328014,
+      "tags": {
+        "addr:housenumber": "68",
+        "addr:street": "Rue Lancefoc",
+        "amenity": "restaurant",
+        "contact:housenumber": "62",
+        "contact:street": "Rue Lancefoc",
+        "name": "Shin-Ya Ramen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3669185804,
+      "lat": 43.6099195,
+      "lon": 1.4341512,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "23",
+        "contact:street": "Boulevard Lascrosses",
+        "name": "El Dayaa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3669185806,
+      "lat": 43.6095379,
+      "lon": 1.432874,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "43",
+        "contact:street": "Boulevard Lascrosses",
+        "name": "Spritzza"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3669185810,
+      "lat": 43.6092977,
+      "lon": 1.4328045,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "62",
+        "contact:street": "Rue Lancefoc",
+        "name": "shin ya ramen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3751077573,
+      "lat": 43.6044911,
+      "lon": 1.451106,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Rue de la Colombette",
+        "name": "Mazzolina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3751077579,
+      "lat": 43.6044948,
+      "lon": 1.4513342,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "16",
+        "contact:street": "Rue de la Colombette",
+        "name": "Les Jardins d'Elyssa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3753343388,
+      "lat": 43.6047982,
+      "lon": 1.4417512,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "2",
+        "contact:street": "Rue Jean-Antoine Romiguières",
+        "name": "Pikonik"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3771223716,
+      "lat": 43.613007,
+      "lon": 1.4494079,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "74",
+        "contact:street": "Rue Matabiau",
+        "name": "Casa Pepi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3782719586,
+      "lat": 43.6030996,
+      "lon": 1.44305,
+      "tags": {
+        "amenity": "nightclub",
+        "name": "Ice Club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3854705835,
+      "lat": 43.6044003,
+      "lon": 1.4517148,
+      "tags": {
+        "addr:housenumber": "11",
+        "addr:street": "Rue de la Colombette",
+        "amenity": "fast_food",
+        "name": "Tacos Express"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3883526457,
+      "lat": 43.611677,
+      "lon": 1.4380523,
+      "tags": {
+        "amenity": "bar",
+        "name": "Le Kalimera"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3946829981,
+      "lat": 43.6100877,
+      "lon": 1.4407841,
+      "tags": {
+        "addr:housenumber": "6",
+        "addr:street": "Rue Saint-Charles",
+        "amenity": "restaurant",
+        "name": "Mexcal"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4060276389,
+      "lat": 43.6087953,
+      "lon": 1.4455035,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "La Minute Gourmande"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4185374044,
+      "lat": 43.6091137,
+      "lon": 1.4392572,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "22",
+        "contact:street": "Rue de la Chaîne",
+        "name": "La Muraille d'Or"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4200305810,
+      "lat": 43.611319,
+      "lon": 1.4475699,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "31",
+        "contact:street": "Rue Matabiau",
+        "name": "La Mariposa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4241777239,
+      "lat": 43.6105355,
+      "lon": 1.4472465,
+      "tags": {
+        "amenity": "cafe",
+        "name": "La thé'rapie du bonheur"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4250506436,
+      "lat": 43.6119239,
+      "lon": 1.4383727,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Le Comptoir du Rex"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4285279179,
+      "lat": 43.6122921,
+      "lon": 1.4386086,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "12",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Le Refuge des Copains"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4285279180,
+      "lat": 43.6151452,
+      "lon": 1.4377227,
+      "tags": {
+        "amenity": "bar",
+        "brewery": "various",
+        "contact:housenumber": "52",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Blastodice"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4285279591,
+      "lat": 43.6148959,
+      "lon": 1.4377944,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "46",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Chez Jean & Gabi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4285279592,
+      "lat": 43.6119463,
+      "lon": 1.4387054,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "4",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Noodles Spot"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4285279605,
+      "lat": 43.6167441,
+      "lon": 1.4372477,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Avenue des Minimes",
+        "name": "Au cœur de Tunis"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4329279135,
+      "lat": 43.6087772,
+      "lon": 1.4451336,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "43",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Mak Food"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4329279206,
+      "lat": 43.6086437,
+      "lon": 1.446246,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "16",
+        "contact:street": "Place Jeanne d'Arc",
+        "name": "Crystal"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4342398499,
+      "lat": 43.6027707,
+      "lon": 1.4419743,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "19",
+        "contact:street": "Rue Sainte-Ursule",
+        "name": "La Nonna Lina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4389688931,
+      "lat": 43.6061864,
+      "lon": 1.4504363,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "19",
+        "contact:street": "Rue des Sept Troubadours",
+        "name": "Partage"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4561796393,
+      "lat": 43.6048273,
+      "lon": 1.442045,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "6",
+        "contact:street": "Rue Jean-Antoine Romiguières",
+        "name": "Wok to Walk"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4612661190,
+      "lat": 43.6027044,
+      "lon": 1.4414724,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "24",
+        "contact:street": "Rue Léon Gambetta",
+        "name": "Brunch Club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4639781395,
+      "lat": 43.604191,
+      "lon": 1.4363167,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Casa di Tursi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4644365690,
+      "lat": 43.6170968,
+      "lon": 1.4361936,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "19",
+        "contact:street": "Avenue Emmanuel Maignan",
+        "name": "Tête en l’air"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4683602912,
+      "lat": 43.6080847,
+      "lon": 1.4499211,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "25",
+        "addr:street": "Rue Héliot",
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "25",
+        "contact:street": "Rue Héliot",
+        "name": "Mami-Wata"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4729336373,
+      "lat": 43.6051723,
+      "lon": 1.4439248,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "4",
+        "contact:street": "Rue Charles de Rémusat",
+        "name": "Fat Cat"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4730448041,
+      "lat": 43.61006,
+      "lon": 1.4424182,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "45",
+        "addr:street": "Rue Saint-Charles",
+        "amenity": "restaurant",
+        "name": "Chez riz"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4828717671,
+      "lat": 43.6133577,
+      "lon": 1.4496141,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "65",
+        "contact:street": "Rue Matabiau",
+        "name": "Le Dakar"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4874379487,
+      "lat": 43.6131143,
+      "lon": 1.4357395,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "36 bis",
+        "contact:street": "Rue du Canon d'Arcole",
+        "name": "Naturons!"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4955048658,
+      "lat": 43.6117585,
+      "lon": 1.4449883,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "22",
+        "contact:street": "Rue de la Concorde",
+        "name": "Ramones"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4955492828,
+      "lat": 43.6073927,
+      "lon": 1.4434423,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Café de la Chapelle des Carmélites"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4980033129,
+      "lat": 43.6019302,
+      "lon": 1.4408451,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "45",
+        "contact:street": "Rue Peyrolières",
+        "name": "boca"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5064181106,
+      "lat": 43.6146963,
+      "lon": 1.4421051,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "24",
+        "contact:street": "Rue Saint-Honest",
+        "name": "Le Saint Honest"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5109943822,
+      "lat": 43.6030255,
+      "lon": 1.436299,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "56",
+        "contact:street": "Rue des Blanchers",
+        "name": "Seven"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5109980026,
+      "lat": 43.6048778,
+      "lon": 1.433659,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "17",
+        "addr:street": "Allée de Brienne",
+        "amenity": "nightclub",
+        "name": "Le Coup d'État"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5109989214,
+      "lat": 43.6044767,
+      "lon": 1.4340863,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "7",
+        "addr:street": "Allée de Brienne",
+        "amenity": "restaurant",
+        "name": "Crêperie de l'Écluse"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5191825353,
+      "lat": 43.6068224,
+      "lon": 1.4469862,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "24",
+        "contact:street": "Place Victor Hugo",
+        "name": "L'Alouette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5191827222,
+      "lat": 43.6064451,
+      "lon": 1.452129,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:housenumber": "23",
+        "name": "Hiboo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5191863323,
+      "lat": 43.6061034,
+      "lon": 1.4506278,
+      "tags": {
+        "amenity": "nightclub",
+        "name": "Pampa Club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5271938526,
+      "lat": 43.6037043,
+      "lon": 1.4481693,
+      "tags": {
+        "addr:housenumber": "2",
+        "addr:street": "Rue Paul Mériel",
+        "amenity": "restaurant",
+        "name": "Eat salad"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5289461810,
+      "lat": 43.6070791,
+      "lon": 1.4512943,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "54",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Delirium Café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5297299659,
+      "lat": 43.6064985,
+      "lon": 1.4492546,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "23",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Sista Place"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5411872140,
+      "lat": 43.6028813,
+      "lon": 1.4421102,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "32",
+        "addr:street": "Rue Sainte-Ursule",
+        "amenity": "restaurant",
+        "contact:street": "Rue Sainte-Ursule",
+        "name": "Fufu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5443375117,
+      "lat": 43.6114276,
+      "lon": 1.4354243,
+      "tags": {
+        "amenity": "bar",
+        "brewery": "yes",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "3",
+        "contact:street": "Esplanade Compans-Caffarelli",
+        "name": "V and B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5453941454,
+      "lat": 43.6059819,
+      "lon": 1.4471471,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "6",
+        "contact:street": "Rue Victor Hugo",
+        "name": "Le Cabanon"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5548802519,
+      "lat": 43.610666,
+      "lon": 1.4473468,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Okini"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5548802520,
+      "lat": 43.6124736,
+      "lon": 1.4480487,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:street": "Place Roquelaine",
+        "amenity": "restaurant",
+        "name": "Pizza Hut"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5550674368,
+      "lat": 43.6091023,
+      "lon": 1.4318109,
+      "tags": {
+        "amenity": "pub",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "33",
+        "contact:street": "Boulevard du Maréchal Leclerc",
+        "name": "Bota Pub"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5552404394,
+      "lat": 43.6059157,
+      "lon": 1.4511673,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "37",
+        "addr:street": "Rue de l'Industrie",
+        "amenity": "nightclub",
+        "name": "Azùl Club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5553165392,
+      "lat": 43.6047831,
+      "lon": 1.4501623,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "2",
+        "addr:street": "Rue Castellane",
+        "amenity": "nightclub",
+        "name": "Purple"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5561904290,
+      "lat": 43.6057427,
+      "lon": 1.4482542,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "1",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Burger King"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5582651972,
+      "lat": 43.6099458,
+      "lon": 1.4381326,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "1",
+        "addr:street": "Rue Léonce Castelbou",
+        "amenity": "bar",
+        "name": "L'Ecrin"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5582949972,
+      "lat": 43.6062241,
+      "lon": 1.4507906,
+      "tags": {
+        "addr:housenumber": "20",
+        "addr:street": "Rue des Sept Troubadours",
+        "amenity": "bar",
+        "name": "La Chula"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5592180378,
+      "lat": 43.603007,
+      "lon": 1.4439617,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "3",
+        "addr:street": "Rue Baour-Lormian",
+        "amenity": "pub",
+        "brewery": "various",
+        "contact:housenumber": "3",
+        "contact:street": "Rue Baour-Lormian",
+        "drink:beer": "yes",
+        "name": "The Hopscotch"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5615079694,
+      "lat": 43.6085093,
+      "lon": 1.45397,
+      "tags": {
+        "amenity": "bar",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "100",
+        "contact:street": "Rue Pierre-Paul Riquet",
+        "name": "Rooster & Beer"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5639320721,
+      "lat": 43.6037747,
+      "lon": 1.4463458,
+      "tags": {
+        "addr:housenumber": "4",
+        "addr:street": "Rue du Lieutenant-Colonel Pélissier",
+        "amenity": "restaurant",
+        "name": "Ma Biche Sur Le Toit"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5669967900,
+      "lat": 43.6031436,
+      "lon": 1.4452379,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "9",
+        "contact:street": "Rue de la Barutte",
+        "name": "Le Chouette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5727590721,
+      "lat": 43.6024096,
+      "lon": 1.4421878,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "20",
+        "contact:street": "Rue Sainte-Ursule",
+        "name": "The Coffee"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5937056242,
+      "lat": 43.6030662,
+      "lon": 1.4425768,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Côté cour"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5961399959,
+      "lat": 43.6015332,
+      "lon": 1.4439725,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "5",
+        "contact:street": "Rue Peyras",
+        "name": "Yomi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5961749946,
+      "lat": 43.6033215,
+      "lon": 1.4483009,
+      "tags": {
+        "amenity": "bar",
+        "name": "Mahogany Club"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5966375060,
+      "lat": 43.611734,
+      "lon": 1.4377462,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "9",
+        "contact:street": "Rue de Toul",
+        "name": "Hello Ravioli"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5981059340,
+      "lat": 43.6067603,
+      "lon": 1.4422557,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:street": "Rue du Taur",
+        "name": "Black & White"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5981076038,
+      "lat": 43.606862,
+      "lon": 1.4521433,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "41",
+        "contact:street": "Rue des Sept Troubadours",
+        "name": "Chez Teta"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5981079077,
+      "lat": 43.6063573,
+      "lon": 1.4418429,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "8",
+        "contact:street": "Rue de l'Esquile",
+        "name": "L'Écorce"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5981188951,
+      "lat": 43.6037802,
+      "lon": 1.4434455,
+      "tags": {
+        "addr:housenumber": "5",
+        "addr:street": "Place du Capitole",
+        "amenity": "cafe",
+        "name": "Le Bibent"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5983315539,
+      "lat": 43.6014581,
+      "lon": 1.4433697,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "14",
+        "contact:street": "Rue Temponières",
+        "name": "Bonopandas"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6030055603,
+      "lat": 43.6053505,
+      "lon": 1.4427788,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "6",
+        "contact:street": "Rue du Taur",
+        "name": "L'Houstalet"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6032265548,
+      "lat": 43.6057408,
+      "lon": 1.4465683,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "6",
+        "contact:street": "Rue du Rempart Villeneuve",
+        "name": "Le Petit San Seb"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6032272329,
+      "lat": 43.605632,
+      "lon": 1.4465482,
+      "tags": {
+        "amenity": "restaurant",
+        "bar": "yes",
+        "brewery": "Caporal",
+        "contact:housenumber": "6",
+        "contact:street": "Rue du Rempart Villeneuve",
+        "name": "La Rosa Negra"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6032290655,
+      "lat": 43.6049951,
+      "lon": 1.4449655,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "17",
+        "contact:street": "Rue Lafayette",
+        "name": "Pitaya"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6131130628,
+      "lat": 43.6094215,
+      "lon": 1.4311151,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "20 bis",
+        "contact:street": "Boulevard Lascrosses",
+        "name": "Garden Café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6131130629,
+      "lat": 43.6096469,
+      "lon": 1.4310871,
+      "tags": {
+        "addr:housenumber": "20B",
+        "addr:street": "Boulevard Lascrosses",
+        "amenity": "pub",
+        "name": "Pelican's Pub"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6138196806,
+      "lat": 43.6123312,
+      "lon": 1.4383082,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "27",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "DAda"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6138818524,
+      "lat": 43.6025251,
+      "lon": 1.4461499,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "23",
+        "contact:street": "Rue du Fourbastard",
+        "name": "Figlia"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6163637576,
+      "lat": 43.6067812,
+      "lon": 1.4464325,
+      "tags": {
+        "amenity": "bar",
+        "name": "Bar des Amis"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6163637577,
+      "lat": 43.606551,
+      "lon": 1.4464794,
+      "tags": {
+        "amenity": "bar",
+        "name": "L'Électro Bar"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6163637578,
+      "lat": 43.6062169,
+      "lon": 1.4469083,
+      "tags": {
+        "amenity": "bar",
+        "name": "Chez Catherine"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6163637579,
+      "lat": 43.6067774,
+      "lon": 1.4467906,
+      "tags": {
+        "amenity": "bar",
+        "name": "Bar des Halles"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6165750375,
+      "lat": 43.606678,
+      "lon": 1.4467426,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Pizza Chez Sylvain"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6186763198,
+      "lat": 43.6075046,
+      "lon": 1.4498925,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Kashmir et Safran"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6186858182,
+      "lat": 43.6045091,
+      "lon": 1.4502706,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "44",
+        "contact:street": "Boulevard Lazare Carnot",
+        "name": "Les Thermes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6252089559,
+      "lat": 43.6070831,
+      "lon": 1.4501195,
+      "tags": {
+        "amenity": "pub",
+        "brewery": "yes",
+        "contact:housenumber": "33",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "The Thirsty Monk Pub"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6267692539,
+      "lat": 43.6115059,
+      "lon": 1.4354086,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:street": "Esplanade Compans Caffarelli",
+        "name": "Eat Salad"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6291460742,
+      "lat": 43.603478,
+      "lon": 1.4475639,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "4",
+        "contact:street": "Rue Saint-Jérôme",
+        "name": "Mille et une Miettes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6295888394,
+      "lat": 43.6021325,
+      "lon": 1.4384348,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "L'Arbre à Sushi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6295898285,
+      "lat": 43.6021946,
+      "lon": 1.4385744,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "2",
+        "contact:street": "Rue des Blanchers",
+        "name": "Dae Bak"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6338287521,
+      "lat": 43.6111492,
+      "lon": 1.43601,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Starbucks"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6462478792,
+      "lat": 43.6115834,
+      "lon": 1.4354569,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "3",
+        "contact:street": "Esplanade Compans-Caffarelli",
+        "name": "Burger' N'co"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6579962302,
+      "lat": 43.6107539,
+      "lon": 1.434551,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "8",
+        "contact:street": "Esplanade Compans Caffarelli",
+        "name": "Barricot"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6606272688,
+      "lat": 43.6037454,
+      "lon": 1.4481834,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "El Zocalo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6696868021,
+      "lat": 43.6121399,
+      "lon": 1.4382032,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "17",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Quai de Tunis"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6696868022,
+      "lat": 43.6141729,
+      "lon": 1.4372269,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "4",
+        "contact:street": "Rue de Grèce",
+        "name": "Guo Guo Ji"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6820504534,
+      "lat": 43.6089043,
+      "lon": 1.4428842,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "21",
+        "addr:street": "Place Saint-Sernin",
+        "amenity": "cafe",
+        "name": "The Magic Pumpkin"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6855499232,
+      "lat": 43.6059557,
+      "lon": 1.4502553,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "16",
+        "addr:street": "Rue des Sept Troubadours",
+        "amenity": "cafe",
+        "name": "Noma Café Coworking"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6855499233,
+      "lat": 43.6056475,
+      "lon": 1.4531034,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "4",
+        "contact:street": "Place de Damloup",
+        "name": "Le Rocher de la Vierge"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6855499234,
+      "lat": 43.6056072,
+      "lon": 1.4531034,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "4",
+        "contact:street": "Place de Damloup",
+        "name": "Jour de marché"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6928688590,
+      "lat": 43.6090025,
+      "lon": 1.4455896,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "42",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Le Mastroquet du Marché"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6928688591,
+      "lat": 43.6048829,
+      "lon": 1.4482903,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "1",
+        "addr:street": "Rue des Trois Journées",
+        "amenity": "bar",
+        "name": "Cosmopolitain"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6983362229,
+      "lat": 43.6090543,
+      "lon": 1.4483474,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "28",
+        "contact:street": "Rue de Bayard",
+        "name": "Sixta"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6985432424,
+      "lat": 43.6076544,
+      "lon": 1.4521385,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "66",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Tempaurel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6985673286,
+      "lat": 43.6075288,
+      "lon": 1.4540722,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "3",
+        "contact:street": "Place Riquet",
+        "name": "Zorkot"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7020605612,
+      "lat": 43.6051703,
+      "lon": 1.4482529,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "8",
+        "contact:street": "Allées du Président Franklin Roosevelt",
+        "name": "KFC"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7117379085,
+      "lat": 43.6015228,
+      "lon": 1.4429093,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "7",
+        "contact:street": "Rue Tempnières",
+        "name": "Foca Foca"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7147293808,
+      "lat": 43.6099825,
+      "lon": 1.4500342,
+      "tags": {
+        "amenity": "restaurant",
+        "bar": "yes",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "7",
+        "contact:street": "Rue Du Canon D'arcole",
+        "name": "Les Halles de la Transition"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7319238113,
+      "lat": 43.605806,
+      "lon": 1.4413964,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "11",
+        "contact:street": "Rue des Lois",
+        "name": "Le Palais De Thémis"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7319238114,
+      "lat": 43.6068445,
+      "lon": 1.440301,
+      "tags": {
+        "amenity": "bar",
+        "name": "L'Eden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7359816830,
+      "lat": 43.6022909,
+      "lon": 1.4411482,
+      "tags": {
+        "addr:housenumber": "6",
+        "addr:street": "Rue Léon Gambetta",
+        "amenity": "restaurant",
+        "name": "N88dles Capitole"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7364810643,
+      "lat": 43.6022599,
+      "lon": 1.4436668,
+      "tags": {
+        "amenity": "nightclub",
+        "contact:housenumber": "16",
+        "contact:street": "Rue Saint-Rome",
+        "name": "Ubu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7365349211,
+      "lat": 43.6074285,
+      "lon": 1.4415177,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "1",
+        "contact:street": "Rue des Trois Renards",
+        "name": "Le Canithé"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7392341384,
+      "lat": 43.607283,
+      "lon": 1.4345554,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "21",
+        "contact:street": "Boulevard Armand Duportal",
+        "name": "Michel Sarran"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7392342887,
+      "lat": 43.6067926,
+      "lon": 1.4345352,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "17",
+        "contact:street": "Boulevard Armand Duportal",
+        "name": "Fresh Nan & Burger"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7393469414,
+      "lat": 43.6094123,
+      "lon": 1.4493709,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "2",
+        "contact:street": "Place Robert Schuman",
+        "name": "Soulan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7393720715,
+      "lat": 43.6076918,
+      "lon": 1.4376057,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "10",
+        "contact:street": "Rue des Puits Creusés",
+        "name": "Ô Délices d'Éma"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7393720742,
+      "lat": 43.6095499,
+      "lon": 1.4366877,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "6",
+        "contact:street": "Rue Lascrosses",
+        "name": "Minnaya"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7394637662,
+      "lat": 43.6078828,
+      "lon": 1.4384745,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "19",
+        "contact:street": "Rue des Salenques",
+        "name": "Les Eaux Vives"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7434970649,
+      "lat": 43.6111906,
+      "lon": 1.444838,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "Rue Job",
+        "contact:street": "1",
+        "name": "Campillo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7460784291,
+      "lat": 43.6059945,
+      "lon": 1.4511817,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Le Gandhi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7464957579,
+      "lat": 43.6068858,
+      "lon": 1.452219,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "43",
+        "contact:street": "Rue des Sept Troubadours",
+        "name": "Le Comptoir Gourmand"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7468452174,
+      "lat": 43.6062857,
+      "lon": 1.4506372,
+      "tags": {
+        "addr:housenumber": "23",
+        "addr:street": "Rue des Sept Troubadours",
+        "amenity": "fast_food",
+        "name": "Al Roland"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7468452180,
+      "lat": 43.6069205,
+      "lon": 1.4527277,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "44",
+        "contact:street": "Rue des Sept Troubadours",
+        "name": "Abyssinia"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7468652041,
+      "lat": 43.6059424,
+      "lon": 1.4481159,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "3",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Maison du Cassoulet"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7554855333,
+      "lat": 43.6102002,
+      "lon": 1.4430255,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "So Chicken"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7578799841,
+      "lat": 43.6098815,
+      "lon": 1.440542,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "El Gosto"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7578799845,
+      "lat": 43.6103816,
+      "lon": 1.4397816,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Mesopotamia"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7618171721,
+      "lat": 43.6047273,
+      "lon": 1.448711,
+      "tags": {
+        "amenity": "bar",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "12",
+        "contact:street": "Rue Labéda",
+        "name": "Comptoir"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7639723765,
+      "lat": 43.6094182,
+      "lon": 1.4468315,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "2",
+        "contact:street": "Rue Raymond IV",
+        "drink:beer": "draught",
+        "name": "The Wanted Jack Saloon"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7639743081,
+      "lat": 43.6112209,
+      "lon": 1.4443726,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "6",
+        "contact:street": "Rue de la Concorde",
+        "name": "Submariner"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7639743090,
+      "lat": 43.6105902,
+      "lon": 1.4454214,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Rue Roquelaine",
+        "name": "L'Os à Moëlle"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7685021873,
+      "lat": 43.6042065,
+      "lon": 1.4494725,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "3",
+        "contact:street": "Rue Labéda",
+        "name": "Les Halles du Théâtre"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7700436658,
+      "lat": 43.6102849,
+      "lon": 1.4400411,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Snack Coffee"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7700436681,
+      "lat": 43.6097698,
+      "lon": 1.4426503,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "32",
+        "contact:street": "Rue Jean-Baptiste-Merly",
+        "name": "Les délices d'Ozenne"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7700436682,
+      "lat": 43.6097237,
+      "lon": 1.4426784,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "32",
+        "contact:street": "Rue Jean-Baptiste-Merly",
+        "name": "KALM"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7700436683,
+      "lat": 43.6098169,
+      "lon": 1.4426322,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "34",
+        "contact:street": "Rue Jean-Baptiste-Merly",
+        "name": "O'Zen Food"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7700449711,
+      "lat": 43.6097829,
+      "lon": 1.4434516,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Chez Rudy"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7700449713,
+      "lat": 43.6100825,
+      "lon": 1.4429057,
+      "tags": {
+        "amenity": "bar",
+        "name": "Tito Mojito"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7722307087,
+      "lat": 43.6084603,
+      "lon": 1.4521623,
+      "tags": {
+        "amenity": "bar",
+        "brewery": "Hop house 13;Krombacher;Trappe Issu d'or;Carolus Tripel;Weihen Stephaner;Levrette cherry;First flight",
+        "contact:housenumber": "65",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Levrette Café"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7724315039,
+      "lat": 43.6092571,
+      "lon": 1.4533643,
+      "tags": {
+        "amenity": "bar",
+        "name": "Le Blah Blah"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7724315051,
+      "lat": 43.6076254,
+      "lon": 1.4485432,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "10",
+        "contact:street": "Rue Denfert-Rochereau",
+        "name": "Haozaï"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7727105290,
+      "lat": 43.6060421,
+      "lon": 1.452896,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "19",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "Lucie"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7779400349,
+      "lat": 43.6082997,
+      "lon": 1.4463034,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "36",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Bohébon"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7779400398,
+      "lat": 43.6099553,
+      "lon": 1.4446046,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "64",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "Toqué Tacos"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7779400847,
+      "lat": 43.6031082,
+      "lon": 1.436217,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "1",
+        "contact:street": "Place Saint-Pierre",
+        "name": "Le Kiosque"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7787123019,
+      "lat": 43.6063937,
+      "lon": 1.4521805,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "L'étoile d'Oran"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7787123020,
+      "lat": 43.6063619,
+      "lon": 1.4522138,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "21",
+        "contact:street": "Place Nicolas Bachelier",
+        "name": "Chez Micheline"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7787123021,
+      "lat": 43.6066987,
+      "lon": 1.4523665,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Atelier O Bali"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7816877143,
+      "lat": 43.6057634,
+      "lon": 1.450771,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "5 bis",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "Beirut mon amour"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7884256071,
+      "lat": 43.6043527,
+      "lon": 1.4504624,
+      "tags": {
+        "amenity": "restaurant",
+        "bar": "yes",
+        "contact:housenumber": "42",
+        "contact:street": "Boulevard Lazare Carnot",
+        "name": "New Delhi Palace"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8151492086,
+      "lat": 43.6071938,
+      "lon": 1.4537901,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Hwaban"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8496871681,
+      "lat": 43.6057752,
+      "lon": 1.4508598,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "7",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "My Little Wok"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8523385021,
+      "lat": 43.6057475,
+      "lon": 1.4506516,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "5",
+        "contact:street": "Rue Gabriel Péri",
+        "name": "Chez Naan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8523398283,
+      "lat": 43.6061021,
+      "lon": 1.4512013,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Le New Goa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8879295782,
+      "lat": 43.6018504,
+      "lon": 1.4439262,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "3",
+        "contact:street": "Rue du Puits-Vert",
+        "name": "Ras la tasse"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8902919672,
+      "lat": 43.6093902,
+      "lon": 1.4513891,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Ô p'tit LOL"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8928398861,
+      "lat": 43.6112499,
+      "lon": 1.4385738,
+      "tags": {
+        "amenity": "bar",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "9",
+        "contact:street": "Place Arnaud Bernard",
+        "name": "Club Capsule"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9135085342,
+      "lat": 43.6044331,
+      "lon": 1.4394777,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "63",
+        "contact:street": "Rue Pargaminières",
+        "name": "Label'Poutine"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9330517617,
+      "lat": 43.6052855,
+      "lon": 1.4420183,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "9",
+        "contact:street": "Rue des Lois",
+        "name": "Buffet Himalaya"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9370658015,
+      "lat": 43.6034998,
+      "lon": 1.4493571,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "11",
+        "addr:street": "Place Occitane",
+        "amenity": "cafe",
+        "name": "Pause Biscuit"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9383480317,
+      "lat": 43.6072254,
+      "lon": 1.4503455,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "37",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Star Kebab"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9456901455,
+      "lat": 43.6045025,
+      "lon": 1.4506652,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "6",
+        "contact:street": "Rue de la Colombette",
+        "name": "Seven pizza"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9628665717,
+      "lat": 43.6063048,
+      "lon": 1.4509882,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Kong-bap"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9633060917,
+      "lat": 43.6050118,
+      "lon": 1.4435221,
+      "tags": {
+        "addr:housenumber": "23",
+        "addr:street": "Place du Capitole",
+        "amenity": "fast_food",
+        "name": "McDonald's"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9838593141,
+      "lat": 43.6026939,
+      "lon": 1.4447554,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "23",
+        "contact:street": "Rue des Puits-Clos",
+        "name": "Le Café Visionnaire"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9959849652,
+      "lat": 43.6094253,
+      "lon": 1.44911,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "1",
+        "contact:street": "Place Robert Schuman",
+        "name": "Assoiffés"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9959849654,
+      "lat": 43.6093953,
+      "lon": 1.4495294,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "3",
+        "contact:street": "Place Robert Schuman",
+        "name": "Mazzolina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9987000280,
+      "lat": 43.6033575,
+      "lon": 1.4485887,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Poketeria"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9988440195,
+      "lat": 43.6066402,
+      "lon": 1.4523674,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "46",
+        "contact:street": "Place Nicolas Bachelier",
+        "name": "Ô Bali"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9988836117,
+      "lat": 43.6113473,
+      "lon": 1.4315443,
+      "tags": {
+        "amenity": "bar",
+        "name": "Gourmet Bar By Novotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9992581667,
+      "lat": 43.6055309,
+      "lon": 1.4523682,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Lotus"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10028250761,
+      "lat": 43.6093278,
+      "lon": 1.4503184,
+      "tags": {
+        "amenity": "nightclub",
+        "name": "Silver Palace"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10035890582,
+      "lat": 43.6019201,
+      "lon": 1.4427732,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "3",
+        "contact:street": "Rue Tripière",
+        "name": "La Sauterelle"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10036074994,
+      "lat": 43.6111299,
+      "lon": 1.4517267,
+      "tags": {
+        "addr:housenumber": "67",
+        "addr:street": "Rue de Bayard",
+        "amenity": "fast_food",
+        "name": "Pizzicotto chicken"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10036074997,
+      "lat": 43.6107332,
+      "lon": 1.451568,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "16",
+        "contact:street": "Rue Lafon",
+        "name": "Big Smash"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10036075001,
+      "lat": 43.6109715,
+      "lon": 1.4518683,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "72",
+        "contact:street": "Rue de Bayard",
+        "name": "Le Ripaille"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10067405184,
+      "lat": 43.6113481,
+      "lon": 1.43726,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Poke&Co"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10068236192,
+      "lat": 43.611802,
+      "lon": 1.4411529,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "12",
+        "contact:street": "Rue Saint-Germier",
+        "name": "Le Jardin"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10072904623,
+      "lat": 43.6023893,
+      "lon": 1.4476792,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "16",
+        "contact:street": "Place Saint-Georges",
+        "name": "Au Jardin des Thés"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10089619900,
+      "lat": 43.6054665,
+      "lon": 1.4380449,
+      "tags": {
+        "amenity": "bar",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "34 bis",
+        "contact:street": "Rue Valade",
+        "name": "Le Bar de Gaspard à Maison Soclo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10221056361,
+      "lat": 43.6115298,
+      "lon": 1.4477247,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "37",
+        "contact:street": "Rue Matabiau",
+        "name": "Le Sukhothaï"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10315814444,
+      "lat": 43.6103214,
+      "lon": 1.448299,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "26",
+        "addr:street": "Rue Raymond IV",
+        "amenity": "pub",
+        "brewery": "fuller's;guinness;meantime;grolsch;peroni",
+        "name": "Seven Sisters"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10575101048,
+      "lat": 43.610134,
+      "lon": 1.4446559,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "2",
+        "contact:street": "Rue Roquelaine",
+        "name": "Le Chef du Burger"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10608535032,
+      "lat": 43.6101669,
+      "lon": 1.4528132,
+      "tags": {
+        "addr:housenumber": "6",
+        "addr:street": "Boulevard de Bonrepos",
+        "amenity": "nightclub",
+        "name": "Pink palace"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10830534023,
+      "lat": 43.6114856,
+      "lon": 1.435849,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Youco"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10834281569,
+      "lat": 43.6074908,
+      "lon": 1.4464854,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "27",
+        "contact:street": "Boulevard de Strasbourg",
+        "name": "The Black Owl"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10834281577,
+      "lat": 43.6121067,
+      "lon": 1.438664,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "6",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Novo Burger"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10834281589,
+      "lat": 43.6140599,
+      "lon": 1.4380602,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "32B",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Popafood"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10899119755,
+      "lat": 43.6124461,
+      "lon": 1.4361264,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "22",
+        "addr:street": "Rue du Canon d'Arcole",
+        "amenity": "cafe",
+        "name": "Le K-afé"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11039681405,
+      "lat": 43.6138925,
+      "lon": 1.4510938,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "88",
+        "addr:street": "Boulevard Pierre Semard",
+        "amenity": "restaurant",
+        "name": "Museau Musette"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11069771533,
+      "lat": 43.6034936,
+      "lon": 1.4483148,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Yuma"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11174923021,
+      "lat": 43.6076733,
+      "lon": 1.4408037,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "28",
+        "contact:street": "Rue Émile Cartailhac",
+        "name": "Blossom"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11257084601,
+      "lat": 43.6031841,
+      "lon": 1.436279,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "2",
+        "contact:street": "Place Saint-Pierre",
+        "name": "McDonald's"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11392595242,
+      "lat": 43.6079321,
+      "lon": 1.4487635,
+      "tags": {
+        "addr:housenumber": "17",
+        "addr:street": "Rue Denfert Rochereau",
+        "amenity": "restaurant",
+        "contact:housenumber": "17",
+        "contact:street": "Rue Denfert-Rochereau",
+        "name": "Hop Seng"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11395668590,
+      "lat": 43.6081418,
+      "lon": 1.4491209,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "25",
+        "contact:street": "Rue Denfert-Rochereau",
+        "name": "Thai Kafé"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11578388727,
+      "lat": 43.6163605,
+      "lon": 1.4395972,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Les Planeurs"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11753442909,
+      "lat": 43.6077853,
+      "lon": 1.4420422,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "64",
+        "contact:street": "Rue du Taur",
+        "name": "Cozy Tea Loft"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11795259130,
+      "lat": 43.6047146,
+      "lon": 1.446709,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "9",
+        "contact:street": "Place du Président Wilson",
+        "name": "Orly"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11889546545,
+      "lat": 43.6023114,
+      "lon": 1.4471838,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "14",
+        "contact:street": "Place Saint-Georges",
+        "name": "Ligot"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12014593045,
+      "lat": 43.6123568,
+      "lon": 1.4380624,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "27",
+        "contact:street": "Avenue Honoré Serres",
+        "name": "Spicchizzi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12031027869,
+      "lat": 43.6071756,
+      "lon": 1.442103,
+      "tags": {
+        "addr:housenumber": "71",
+        "addr:street": "Rue du Taur",
+        "amenity": "nightclub",
+        "contact:street": "Rue du Taur",
+        "name": "La Cave Poésie"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12092207488,
+      "lat": 43.6072567,
+      "lon": 1.4503893,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "39",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Pick Bento"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12130829247,
+      "lat": 43.608423,
+      "lon": 1.4534099,
+      "tags": {
+        "amenity": "bar",
+        "contact:housenumber": "84",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Le Bada"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12130829248,
+      "lat": 43.6084405,
+      "lon": 1.4535011,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "84",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Dans le noir"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12245869055,
+      "lat": 43.6045301,
+      "lon": 1.4494502,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "4",
+        "addr:street": "Rue Labéda",
+        "amenity": "restaurant",
+        "contact:housenumber": "4",
+        "contact:street": "Rue Labéda",
+        "name": "Guapo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12321070497,
+      "lat": 43.6061772,
+      "lon": 1.447339,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "11",
+        "contact:street": "Rue d'Austerlitz",
+        "name": "Phở Lộc Phát"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12350824181,
+      "lat": 43.6097462,
+      "lon": 1.4426568,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "32",
+        "contact:street": "Rue Jean-Baptiste Merly",
+        "name": "Imo Kimbap"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12387200126,
+      "lat": 43.6076246,
+      "lon": 1.4471766,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Furahaa"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12388954395,
+      "lat": 43.6056941,
+      "lon": 1.4523704,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "30",
+        "contact:street": "Rue Jean Palaprat",
+        "name": "Saveurs de l'Everest"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12388954396,
+      "lat": 43.6056436,
+      "lon": 1.4523697,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "28",
+        "contact:street": "Rue Jean Palaprat",
+        "name": "Sarbacane"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12486131445,
+      "lat": 43.6091144,
+      "lon": 1.4531249,
+      "tags": {
+        "amenity": "pub",
+        "contact:housenumber": "75",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Little O'Clock"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12492359744,
+      "lat": 43.6021644,
+      "lon": 1.4406279,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "15",
+        "contact:street": "Rue Jean Suau",
+        "name": "Sushi Kinjo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12500927604,
+      "lat": 43.6047278,
+      "lon": 1.445736,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "28",
+        "addr:street": "Rue d'Alsace-Lorraine",
+        "amenity": "cafe",
+        "name": "Florian's Coffee"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12509177883,
+      "lat": 43.608728,
+      "lon": 1.451319,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "12",
+        "contact:street": "Rue de Belfort",
+        "name": "Yaz cantine"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12617843058,
+      "lat": 43.6049674,
+      "lon": 1.4498714,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "54-56",
+        "contact:street": "Boulevard Lazare Carnot",
+        "name": "Mama Shelter"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12638029827,
+      "lat": 43.6108684,
+      "lon": 1.4376105,
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "7",
+        "addr:street": "Boulevard Lascrosses",
+        "amenity": "restaurant",
+        "name": "La Cuistoloc"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12666559995,
+      "lat": 43.6068818,
+      "lon": 1.4517378,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "35",
+        "contact:street": "Rue Nicolas Bachelier",
+        "name": "Okaeri"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12811579492,
+      "lat": 43.6152763,
+      "lon": 1.451232,
+      "tags": {
+        "amenity": "biergarten",
+        "name": "Place Commune"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12959674968,
+      "lat": 43.6046896,
+      "lon": 1.4501408,
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Les Thermes Kongfu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13013809798,
+      "lat": 43.6062991,
+      "lon": 1.4501222,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "34",
+        "contact:street": "Allées Jean Jaurès",
+        "name": "Top Tacos"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13128797507,
+      "lat": 43.6120413,
+      "lon": 1.4363706,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "14",
+        "contact:street": "Rue du Canon d'Arcole",
+        "name": "L'Esquina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13198405230,
+      "lat": 43.6078306,
+      "lon": 1.4512561,
+      "tags": {
+        "addr:housenumber": "51",
+        "addr:street": "Allées Jean Jaurès",
+        "amenity": "bar",
+        "name": "El Tío Mojito"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13204487648,
+      "lat": 43.6068026,
+      "lon": 1.4502517,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "La Chiva"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13227664001,
+      "lat": 43.6063232,
+      "lon": 1.4425791,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "36",
+        "contact:street": "Rue du Taur",
+        "name": "Amonē"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13279254065,
+      "lat": 43.6050946,
+      "lon": 1.4372444,
+      "tags": {
+        "amenity": "cafe",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "31",
+        "contact:street": "Rue Valade",
+        "name": "KM Dehors"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13326023260,
+      "lat": 43.6078176,
+      "lon": 1.4524009,
+      "tags": {
+        "addr:housenumber": "74",
+        "addr:street": "Allées Jean Jaurès",
+        "amenity": "restaurant",
+        "name": "Armenian Bakery"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13587001521,
+      "lat": 43.6114681,
+      "lon": 1.4532847,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Crêpes Jus T'aime"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13610519601,
+      "lat": 43.6094066,
+      "lon": 1.4389244,
+      "tags": {
+        "amenity": "cafe",
+        "contact:housenumber": "35",
+        "contact:street": "Place des Tiercerettes",
+        "name": "Du grain à la Tasse"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13619802846,
+      "lat": 43.6058599,
+      "lon": 1.4503991,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "19",
+        "contact:street": "Rue Castellane",
+        "name": "Marrakech"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13857430574,
+      "lat": 43.605325,
+      "lon": 1.4345901,
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Ga On"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14019386610,
+      "lat": 43.6074769,
+      "lon": 1.4396217,
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "3",
+        "name": "Mammouth"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14144245409,
+      "lat": 43.6038939,
+      "lon": 1.4356638,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:housenumber": "10",
+        "contact:street": "Place Saint-Pierre",
+        "name": "La Cantoche"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14231495386,
+      "lat": 43.6094412,
+      "lon": 1.4311792,
+      "tags": {
+        "amenity": "fast_food",
+        "contact:city": "Toulouse",
+        "contact:housenumber": "20 bis",
+        "contact:street": "Boulevard Lascrosses",
+        "name": "Lucie"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14273167384,
+      "lat": 43.612084,
+      "lon": 1.4355887,
+      "tags": {
+        "amenity": "bar",
+        "name": "Buvette"
+      }
+    },
+    {
+      "type": "way",
+      "id": 46653399,
+      "center": {
+        "lat": 43.6020472,
+        "lon": 1.4427758
+      },
+      "tags": {
+        "amenity": "restaurant",
+        "contact:housenumber": "4",
+        "contact:street": "Rue du May",
+        "name": "Le May"
+      }
+    },
+    {
+      "type": "way",
+      "id": 46670983,
+      "center": {
+        "lat": 43.6056926,
+        "lon": 1.4360222
+      },
+      "tags": {
+        "amenity": "restaurant",
+        "bar": "no",
+        "name": "Restaurant Universitaire de l'Arsenal"
+      }
+    },
+    {
+      "type": "way",
+      "id": 194572039,
+      "center": {
+        "lat": 43.6090575,
+        "lon": 1.4497485
+      },
+      "tags": {
+        "addr:housenumber": "19",
+        "addr:street": "Rue Caffarelli",
+        "amenity": "nightclub",
+        "name": "Full House"
+      }
+    },
+    {
+      "type": "way",
+      "id": 780631225,
+      "center": {
+        "lat": 43.6035985,
+        "lon": 1.4442384
+      },
+      "tags": {
+        "addr:street": "Rue de la Pomme",
+        "amenity": "restaurant",
+        "name": "Les Jardins de l'Opéra"
+      }
+    },
+    {
+      "type": "way",
+      "id": 875499653,
+      "center": {
+        "lat": 43.6120878,
+        "lon": 1.4535821
+      },
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "64",
+        "addr:street": "Boulevard Pierre Semard",
+        "amenity": "cafe",
+        "name": "Starbucks"
+      }
+    },
+    {
+      "type": "way",
+      "id": 875499654,
+      "center": {
+        "lat": 43.6117691,
+        "lon": 1.4533926
+      },
+      "tags": {
+        "addr:city": "Toulouse",
+        "addr:housenumber": "64",
+        "addr:street": "Boulevard Pierre Semard",
+        "amenity": "fast_food",
+        "name": "McDonald's Toulouse Gare Matabiau"
+      }
+    },
+    {
+      "type": "way",
+      "id": 875759485,
+      "center": {
+        "lat": 43.6032937,
+        "lon": 1.4486792
+      },
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Pomme de Pain"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1007478963,
+      "center": {
+        "lat": 43.6043825,
+        "lon": 1.4339295
+      },
+      "tags": {
+        "amenity": "bar",
+        "name": "Flashback Café Toulouse"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1165136274,
+      "center": {
+        "lat": 43.6115262,
+        "lon": 1.4535219
+      },
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Rolls"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1165136278,
+      "center": {
+        "lat": 43.6117862,
+        "lon": 1.4536467
+      },
+      "tags": {
+        "amenity": "fast_food",
+        "name": "Picto Sandwicherie"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1203506887,
+      "center": {
+        "lat": 43.6113593,
+        "lon": 1.4535632
+      },
+      "tags": {
+        "amenity": "restaurant",
+        "name": "Ô Mana"
+      }
+    }
+  ]
+}
