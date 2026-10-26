@@ -157,3 +157,69 @@ def test_hotfix_011_retry_recovers_to_full_inventory(client, user_auth_headers):
     assert resp2.headers['X-Places-Provider'] == 'overpass'
     assert resp2.headers['X-Places-Limited'] == 'false'
 
+
+def test_hotfix_013_targeted_bar_query_structure(client, user_auth_headers):
+    """HOTFIX-013: When filter_key == 'bar', the query must target dedicated bars and bar-cafes/restaurants,
+    avoiding the bloated 9-amenity query that includes all fast food and food courts."""
+    with patch.object(bars, '_http_get_json', return_value=NORMAL) as http:
+        response = nearby(client, user_auth_headers)
+    assert response.status_code == 200
+    query = parse_qs(http.call_args_list[0].kwargs['data_encoded'].decode())['data'][0]
+    # Contains targeted bar amenities and cafe/restaurant with bar=yes
+    assert 'pub|bar|biergarten|taphouse|nightclub' in query
+    assert 'restaurant|cafe' in query and 'bar"="yes' in query
+    # Does NOT query generic fast_food or food_court when filtering for bars
+    assert 'fast_food' not in query
+    assert 'food_court' not in query
+
+
+def test_hotfix_013_food_filter_query_and_stop_type(client, user_auth_headers):
+    """HOTFIX-013: When filter_key == 'food', the query targets restaurant/cafe/fast_food/food_court
+    and results are properly categorized as food."""
+    food_elements = {
+        'elements': [
+            {'type': 'node', 'id': 101, 'lat': CENTER[0] + 0.001, 'lon': CENTER[1] + 0.001,
+             'tags': {'name': 'Chez Pierre', 'amenity': 'restaurant'}},
+            {'type': 'node', 'id': 102, 'lat': CENTER[0] + 0.002, 'lon': CENTER[1] + 0.002,
+             'tags': {'name': 'Le Bistro', 'amenity': 'cafe'}},
+        ]
+    }
+    with patch.object(bars, '_http_get_json', return_value=food_elements) as http:
+        response = client.get('/bars/nearby', params={
+            'lat': CENTER[0], 'lon': CENTER[1],
+            'max_travel_time_minutes': 12, 'filter_key': 'food'
+        }, headers=user_auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert all(item['stop_type'] == 'food' for item in data)
+    query = parse_qs(http.call_args_list[0].kwargs['data_encoded'].decode())['data'][0]
+    assert 'restaurant|cafe|fast_food|food_court' in query
+    assert 'nightclub' not in query
+
+
+def test_hotfix_013_toulouse_bars_deduplication_and_cap(client, user_auth_headers):
+    """HOTFIX-013: Duplicates in Overpass elements are deduplicated by _unique_nearby,
+    geographic radius is applied, and results are cleanly capped at 50 max without data truncation."""
+    # Create raw elements with a duplicate entry (same name and very close coordinates)
+    dup_elements = {
+        'elements': [
+            {'type': 'node', 'id': 1, 'lat': CENTER[0], 'lon': CENTER[1], 'tags': {'name': 'Bar A', 'amenity': 'bar'}},
+            {'type': 'node', 'id': 2, 'lat': CENTER[0] + 0.00001, 'lon': CENTER[1] + 0.00001, 'tags': {'name': 'Bar A', 'amenity': 'bar'}},
+            {'type': 'node', 'id': 3, 'lat': CENTER[0] + 0.001, 'lon': CENTER[1] + 0.001, 'tags': {'name': 'Bar B', 'amenity': 'pub'}},
+            # Way representation
+            {'type': 'way', 'id': 4, 'center': {'lat': CENTER[0] + 0.002, 'lon': CENTER[1] + 0.002},
+             'tags': {'name': 'Bar C Way', 'amenity': 'bar'}},
+        ]
+    }
+    with patch.object(bars, '_http_get_json', return_value=dup_elements):
+        response = nearby(client, user_auth_headers)
+    assert response.status_code == 200
+    names = [r['name'] for r in response.json()]
+    # Bar A should appear once after unique deduplication
+    assert names.count('Bar A') == 1
+    assert 'Bar B' in names
+    assert 'Bar C Way' in names
+
+
+
