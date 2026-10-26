@@ -159,18 +159,50 @@ def test_hotfix_011_retry_recovers_to_full_inventory(client, user_auth_headers):
 
 
 def test_hotfix_013_targeted_bar_query_structure(client, user_auth_headers):
-    """HOTFIX-013: When filter_key == 'bar', the query must target dedicated bars and bar-cafes/restaurants,
-    avoiding the bloated 9-amenity query that includes all fast food and food courts."""
+    """HOTFIX-013 / HOTFIX-013B: When filter_key == 'bar', the query must cover 100% of the
+    criteria accepted by the parser's is_bar logic:
+    - Dedicated bars/pubs/biergartens/taphouses/nightclubs
+    - Explicit bar=yes on any venue
+    - brewery=yes / brewery=microbrewery on restaurants/cafes/fast_foods
+    - drink:beer=yes on restaurants/cafes/fast_foods
+    - drink:alcohol=yes on restaurants/cafes/fast_foods
+    while avoiding the bloated query that queries all non-drinking food venues."""
     with patch.object(bars, '_http_get_json', return_value=NORMAL) as http:
         response = nearby(client, user_auth_headers)
     assert response.status_code == 200
     query = parse_qs(http.call_args_list[0].kwargs['data_encoded'].decode())['data'][0]
-    # Contains targeted bar amenities and cafe/restaurant with bar=yes
+    # Primary bar amenities
     assert 'pub|bar|biergarten|taphouse|nightclub' in query
-    assert 'restaurant|cafe' in query and 'bar"="yes' in query
-    # Does NOT query generic fast_food or food_court when filtering for bars
-    assert 'fast_food' not in query
+    # Explicit bar=yes
+    assert 'bar"="yes' in query
+    # Breweries on food venues
+    assert 'brewery"~"^(yes|microbrewery)$' in query
+    # Drink tags on food venues (including fast_food)
+    assert 'drink:beer"="yes' in query
+    assert 'drink:alcohol"="yes' in query
+    assert 'restaurant|cafe|fast_food' in query
+    # Generic food_court without alcohol tags is NOT queried
     assert 'food_court' not in query
+
+
+def test_hotfix_013_deterministic_overpass_query_builder():
+    """HOTFIX-013B: Deterministically verify the Overpass query string generated for each filter_key."""
+    with patch.object(bars, '_http_get_json', return_value={'elements': []}) as http:
+        bars.search_overpass_nearby(43.6, 1.44, 960, filter_key='bar')
+    query_bar = parse_qs(http.call_args.kwargs['data_encoded'].decode())['data'][0]
+    assert 'out center;' in query_bar
+    assert '[timeout:6];' in query_bar
+    assert 'amenity"~"^(pub|bar|biergarten|taphouse|nightclub)$' in query_bar
+    assert 'bar"="yes' in query_bar
+    assert 'brewery"~"^(yes|microbrewery)$' in query_bar
+    assert 'drink:beer"="yes' in query_bar
+    assert 'drink:alcohol"="yes' in query_bar
+
+    with patch.object(bars, '_http_get_json', return_value={'elements': []}) as http:
+        bars.search_overpass_nearby(43.6, 1.44, 960, filter_key='food')
+    query_food = parse_qs(http.call_args.kwargs['data_encoded'].decode())['data'][0]
+    assert 'restaurant|cafe|fast_food|food_court' in query_food
+    assert 'nightclub' not in query_food
 
 
 def test_hotfix_013_food_filter_query_and_stop_type(client, user_auth_headers):
@@ -198,28 +230,58 @@ def test_hotfix_013_food_filter_query_and_stop_type(client, user_auth_headers):
     assert 'nightclub' not in query
 
 
-def test_hotfix_013_toulouse_bars_deduplication_and_cap(client, user_auth_headers):
-    """HOTFIX-013: Duplicates in Overpass elements are deduplicated by _unique_nearby,
-    geographic radius is applied, and results are cleanly capped at 50 max without data truncation."""
-    # Create raw elements with a duplicate entry (same name and very close coordinates)
-    dup_elements = {
-        'elements': [
-            {'type': 'node', 'id': 1, 'lat': CENTER[0], 'lon': CENTER[1], 'tags': {'name': 'Bar A', 'amenity': 'bar'}},
-            {'type': 'node', 'id': 2, 'lat': CENTER[0] + 0.00001, 'lon': CENTER[1] + 0.00001, 'tags': {'name': 'Bar A', 'amenity': 'bar'}},
-            {'type': 'node', 'id': 3, 'lat': CENTER[0] + 0.001, 'lon': CENTER[1] + 0.001, 'tags': {'name': 'Bar B', 'amenity': 'pub'}},
-            # Way representation
-            {'type': 'way', 'id': 4, 'center': {'lat': CENTER[0] + 0.002, 'lon': CENTER[1] + 0.002},
-             'tags': {'name': 'Bar C Way', 'amenity': 'bar'}},
-        ]
-    }
-    with patch.object(bars, '_http_get_json', return_value=dup_elements):
+def test_hotfix_013_genuine_fifty_cap_and_deduplication(client, user_auth_headers):
+    """HOTFIX-013B: Genuine test of the 50-establishment cap with 65 distinct establishments
+    at increasing distances, plus coincident duplicates to verify both deduplication and capping."""
+    # 65 distinct bars placed at increasing latitudes (each ~11 meters apart, well within 960m radius)
+    # 0.0001 deg lat ~= 11.1 meters
+    elements = []
+    for i in range(65):
+        elements.append({
+            'type': 'node',
+            'id': 1000 + i,
+            'lat': CENTER[0] + (i * 0.0001),
+            'lon': CENTER[1],
+            'tags': {
+                'name': f'Bar Rank {i:02d}',
+                'amenity': 'bar' if i % 2 == 0 else 'pub',
+            }
+        })
+    # Add a duplicate for Rank 00 (coincident position and same name)
+    elements.append({
+        'type': 'node',
+        'id': 9999,
+        'lat': CENTER[0],
+        'lon': CENTER[1],
+        'tags': {
+            'name': 'Bar Rank 00',
+            'amenity': 'bar',
+        }
+    })
+
+    with patch.object(bars, '_http_get_json', return_value={'elements': elements}):
         response = nearby(client, user_auth_headers)
+
     assert response.status_code == 200
-    names = [r['name'] for r in response.json()]
-    # Bar A should appear once after unique deduplication
-    assert names.count('Bar A') == 1
-    assert 'Bar B' in names
-    assert 'Bar C Way' in names
+    data = response.json()
+    # 1. Returned array is strictly capped at 50
+    assert len(data) == 50
+    assert response.headers['X-Places-Returned-Count'] == '50'
+    # 2. Raw count reflects all 66 items received from Overpass
+    assert response.headers['X-Places-Raw-Count'] == '66'
+    # 3. Filtered count reflects the 65 distinct establishments after deduplication
+    assert response.headers['X-Places-Filtered-Count'] == '65'
+    assert response.headers['X-Places-Limited'] == 'false'
+    assert response.headers['X-Places-Provider'] == 'overpass'
+
+    # 4. Returned items are strictly the 50 closest in sorted order (Ranks 00 to 49)
+    returned_names = [item['name'] for item in data]
+    for i in range(50):
+        assert returned_names[i] == f'Bar Rank {i:02d}'
+    # Ranks 50 to 64 were cut off by the 50 cap
+    for i in range(50, 65):
+        assert f'Bar Rank {i:02d}' not in returned_names
+
 
 
 

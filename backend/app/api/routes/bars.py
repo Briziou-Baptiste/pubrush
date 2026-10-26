@@ -509,12 +509,15 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
     # out center: computes gravity center coordinates for polygonal elements automatically
     
     # Target queries per filter_key to minimize Overpass payload and execution latency.
-    # When filter_key == 'bar', targeting dedicated bars/pubs and cafes/restaurants with bar=yes
-    # drops the raw elements from 673 to 117 and latency from ~12s to ~1s without dropping a single bar.
+    # When filter_key == 'bar', targeting dedicated bars/pubs and food venues with explicit bar/brewery/alcohol tags
+    # matches 100% of the parser's is_bar criteria while keeping latency ~1.5s instead of ~13s.
     if filter_key == 'bar':
         overpass_statements = (
             f'nwr["amenity"~"^(pub|bar|biergarten|taphouse|nightclub)$"]["name"](around:{radius},{lat},{lon});\n'
-            f'      nwr["amenity"~"^(restaurant|cafe)$"]["bar"="yes"]["name"](around:{radius},{lat},{lon});'
+            f'      nwr["bar"="yes"]["name"](around:{radius},{lat},{lon});\n'
+            f'      nwr["amenity"~"^(restaurant|cafe|fast_food)$"]["brewery"~"^(yes|microbrewery)$"]["name"](around:{radius},{lat},{lon});\n'
+            f'      nwr["amenity"~"^(restaurant|cafe|fast_food)$"]["drink:beer"="yes"]["name"](around:{radius},{lat},{lon});\n'
+            f'      nwr["amenity"~"^(restaurant|cafe|fast_food)$"]["drink:alcohol"="yes"]["name"](around:{radius},{lat},{lon});'
         )
     elif filter_key == 'food':
         overpass_statements = (
