@@ -1,6 +1,6 @@
 import { useNavigation, useLocalSearchParams } from 'expo-router';
 import { navigationControlStyles } from '../../../lib/navigation.styles';
-import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { summaryHistory } from '../../../lib/navigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useMemo, useState } from 'react';

@@ -1,6 +1,6 @@
 import { useUnsavedNavigation } from '../../../hooks/useUnsavedNavigation';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useState } from 'react';

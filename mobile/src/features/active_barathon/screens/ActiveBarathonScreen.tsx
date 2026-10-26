@@ -1,4 +1,4 @@
-import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { navigationControlStyles } from '../../../lib/navigation.styles';
 import RoutingAttribution from '../../create_barathon/components/RoutingAttribution';
 import { useEffect, useMemo, useRef, useState } from 'react';

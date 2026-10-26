@@ -1,5 +1,5 @@
 import { useNavigation, Link } from 'expo-router';
-import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 //
 //  HomeScreen.tsx
 //  

@@ -1,7 +1,7 @@
 import { useUnsavedNavigation } from '../../../hooks/useUnsavedNavigation';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useNavigation, Link } from 'expo-router';
-import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';

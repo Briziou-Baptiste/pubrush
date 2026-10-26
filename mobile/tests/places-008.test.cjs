@@ -78,7 +78,7 @@ function screen(fetchNearby, platform = 'ios', initial = [center]) {
     'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView', useSafeAreaInsets: () => insets },
     '@react-navigation/native': { useRoute: () => route, CommonActions: { setParams: params => ({ params }) } },
     '@react-navigation/elements': { useHeaderHeight: () => 100 },
-    'expo-router': { useLocalSearchParams: () => ({ travelTime: '12', initialStopsJson: JSON.stringify(initial) }), useNavigation: () => navigation, router: {} },
+    'expo-router': { useLocalSearchParams: () => ({ travelTime: '12', initialStopsJson: JSON.stringify(initial) }), useNavigation: () => navigation, useRoute: () => route, router: {} },
     'react-native-maps': { __esModule: true, default: 'MapView', Marker: 'Marker', Circle: 'Circle', Polyline: 'Polyline' },
     '@expo/vector-icons': { Ionicons: 'Icon' }, '../components/RouteSummarySheet': { __esModule: true, default: 'RouteSummarySheet' },
     '../components/WalkingDirectionsButton': { __esModule: true, default: 'WalkingDirectionsButton' },

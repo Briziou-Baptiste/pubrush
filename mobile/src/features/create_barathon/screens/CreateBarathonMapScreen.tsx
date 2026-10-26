@@ -1,7 +1,8 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavigationProp, ParamListBase, CommonActions, useRoute } from '@react-navigation/native';
-import { useLocalSearchParams, router, useNavigation } from 'expo-router';
+import { CommonActions } from '@react-navigation/native';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
+import { useLocalSearchParams, router, useNavigation, useRoute } from 'expo-router';
 import { navigationControlStyles } from '../../../lib/navigation.styles';
 import { draftParentUpdate } from '../../../lib/navigation';
 import RouteSummarySheet from '../components/RouteSummarySheet';

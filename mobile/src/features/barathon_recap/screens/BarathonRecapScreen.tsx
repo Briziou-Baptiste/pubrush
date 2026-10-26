@@ -1,6 +1,6 @@
 import { useHeaderHeight } from '@react-navigation/elements';
-import { useNavigation, useLocalSearchParams } from 'expo-router';
-import { NavigationProp, ParamListBase, usePreventRemove } from '@react-navigation/native';
+import { useNavigation, useLocalSearchParams, usePreventRemove } from 'expo-router';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import RoutingAttribution from '../../create_barathon/components/RoutingAttribution';
 import WalkingDirectionsButton from '../../create_barathon/components/WalkingDirectionsButton';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -529,12 +529,15 @@ export default function BarathonRecapScreen() {
     }
   }, [params.barathonId, addedParticipantIds]);
 
-  usePreventRemove(!created && (submitting || addedParticipantIds.length > 0), ({ data }) => {
+  usePreventRemove(!created && (submitting || addedParticipantIds.length > 0), ({ data, repeat }) => {
     if (submitting) {
       Alert.alert('Enregistrement en cours', 'Patiente un instant avant de quitter cet écran.');
       return;
     }
-    const leave = () => navigation.dispatch(data.action);
+    const leave = () => {
+      if (typeof repeat === 'function') repeat();
+      else navigation.dispatch(data.action);
+    };
     Alert.alert('Ajouts non validés',
       'Les participants ajoutés ne sont pas encore enregistrés.', [
         { text: 'Rester', style: 'cancel' },

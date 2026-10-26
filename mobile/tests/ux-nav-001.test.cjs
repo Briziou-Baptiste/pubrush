@@ -166,8 +166,11 @@ test('unsaved guard: cancel retains data, discard replays the exact native actio
   let blocked, callback, focused = true;
   const dispatched = [], h = harness();
   const { useUnsavedNavigation } = load('hooks/useUnsavedNavigation.ts', {
-    'expo-router': { useNavigation: () => ({ dispatch: action => dispatched.push(action) }) },
-    '@react-navigation/native': { useIsFocused: () => focused, usePreventRemove: (value, cb) => { blocked = value; callback = cb; } },
+    'expo-router': {
+      useNavigation: () => ({ dispatch: action => dispatched.push(action) }),
+      useIsFocused: () => focused,
+      usePreventRemove: (value, cb) => { blocked = value; callback = cb; },
+    },
     'react-native': h.RN,
   });
   const action = StackActions.pop();
@@ -255,8 +258,11 @@ test('role setup accepts completion navigation from the server while blocking an
   let callback;
   const dispatched = [], h = harness();
   const { useUnsavedNavigation } = load('hooks/useUnsavedNavigation.ts', {
-    'expo-router': { useNavigation: () => ({ dispatch: action => dispatched.push(action) }) },
-    '@react-navigation/native': { useIsFocused: () => true, usePreventRemove: (_, cb) => { callback = cb; } },
+    'expo-router': {
+      useNavigation: () => ({ dispatch: action => dispatched.push(action) }),
+      useIsFocused: () => true,
+      usePreventRemove: (_, cb) => { callback = cb; },
+    },
     'react-native': h.RN,
   });
   useUnsavedNavigation(true, true, 'active-barathon');
