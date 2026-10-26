@@ -231,12 +231,16 @@ def test_hotfix_013_food_filter_query_and_stop_type(client, user_auth_headers):
 
 
 def test_hotfix_013_genuine_fifty_cap_and_deduplication(client, user_auth_headers):
-    """HOTFIX-013B: Genuine test of the 50-establishment cap with 65 distinct establishments
-    at increasing distances, plus coincident duplicates to verify both deduplication and capping."""
+    """HOTFIX-013B / HOTFIX-013C: Genuine test of the 50-establishment cap with 65 distinct establishments
+    provided in deliberately reversed/unsorted distance order, plus coincident duplicates.
+    Verifies that:
+    1. Deduplication merges coincident representations.
+    2. Geographic distance sorting is strictly applied (closest 50 selected in increasing order).
+    3. The 50 cap is enforced without data truncation."""
     # 65 distinct bars placed at increasing latitudes (each ~11 meters apart, well within 960m radius)
-    # 0.0001 deg lat ~= 11.1 meters
+    # Provided in deliberately REVERSED order (Rank 64 down to 00) so input is NOT pre-sorted.
     elements = []
-    for i in range(65):
+    for i in reversed(range(65)):
         elements.append({
             'type': 'node',
             'id': 1000 + i,
@@ -247,7 +251,7 @@ def test_hotfix_013_genuine_fifty_cap_and_deduplication(client, user_auth_header
                 'amenity': 'bar' if i % 2 == 0 else 'pub',
             }
         })
-    # Add a duplicate for Rank 00 (coincident position and same name)
+    # Add a coincident duplicate for Rank 00 (same name and position) placed at the end
     elements.append({
         'type': 'node',
         'id': 9999,
@@ -274,13 +278,14 @@ def test_hotfix_013_genuine_fifty_cap_and_deduplication(client, user_auth_header
     assert response.headers['X-Places-Limited'] == 'false'
     assert response.headers['X-Places-Provider'] == 'overpass'
 
-    # 4. Returned items are strictly the 50 closest in sorted order (Ranks 00 to 49)
+    # 4. Returned items are strictly the 50 closest in sorted order by increasing distance (Ranks 00 to 49)
     returned_names = [item['name'] for item in data]
     for i in range(50):
         assert returned_names[i] == f'Bar Rank {i:02d}'
     # Ranks 50 to 64 were cut off by the 50 cap
     for i in range(50, 65):
         assert f'Bar Rank {i:02d}' not in returned_names
+
 
 
 
