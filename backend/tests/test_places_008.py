@@ -89,7 +89,8 @@ def test_fallback_photon_is_flagged_and_geofiltered(primary, secondary, reason, 
     assert response.headers['X-Places-Limited'] == 'true'
     assert response.headers['X-Places-Reason'] == reason
     assert http.call_count == 3
-    assert all(0 < c.kwargs['timeout'] <= 3 for c in http.call_args_list)
+    assert all(0 < c.kwargs['timeout'] <= 6 for c in http.call_args_list)
+    assert http.call_args_list[0].kwargs['timeout'] > 3  # Primary mirror allows queries taking > 3s
     assert 'secret-provider-detail' not in caplog.text
     assert len(bars.NEARBY_CACHE) == 0
 
@@ -119,3 +120,40 @@ def test_invalid_elements_cannot_leak_partial_parser_results():
     assert http.call_count == 2
     assert result.provider == 'photon' and result.limited
     assert result.reason == 'overpass_invalid'
+
+
+def test_hotfix_011_primary_timeout_allows_queries_longer_than_three_seconds(client, user_auth_headers):
+    """HOTFIX-011: Overpass queries taking >3s must not be killed by a 3s socket timeout."""
+    with patch.object(bars, '_http_get_json', return_value=NORMAL) as http:
+        response = nearby(client, user_auth_headers)
+    assert response.status_code == 200
+    assert response.headers['X-Places-Provider'] == 'overpass'
+    assert response.headers['X-Places-Returned-Count'] == '50'
+    assert response.headers['X-Places-Limited'] == 'false'
+    primary_timeout = http.call_args_list[0].kwargs['timeout']
+    assert primary_timeout >= 5.0, f"Primary timeout {primary_timeout} should be >= 5.0s to allow realistic Overpass queries"
+    query = parse_qs(http.call_args_list[0].kwargs['data_encoded'].decode())['data'][0]
+    assert '[timeout:6];' in query, "Overpass QL timeout must be at least 6s"
+
+
+def test_hotfix_011_retry_recovers_to_full_inventory(client, user_auth_headers):
+    """HOTFIX-011: A failed request falls back to Photon (3 bars, limited=True, uncached),
+    and a subsequent retry when Overpass responds successfully recovers 50 bars (limited=false)."""
+    # Attempt 1: Overpass mirrors fail -> falls back to Photon (3 bars)
+    with patch.object(bars, '_http_get_json', side_effect=[TimeoutError(), TimeoutError(), PHOTON]):
+        resp1 = nearby(client, user_auth_headers)
+    assert resp1.status_code == 200
+    assert len(resp1.json()) == 3
+    assert resp1.headers['X-Places-Provider'] == 'photon'
+    assert resp1.headers['X-Places-Limited'] == 'true'
+    # Uncached: memory cache must not store limited result
+    assert len(bars.NEARBY_CACHE) == 0
+
+    # Attempt 2 (user presses 'Relancer'): Overpass succeeds -> full 50 bars returned
+    with patch.object(bars, '_http_get_json', return_value=NORMAL):
+        resp2 = nearby(client, user_auth_headers)
+    assert resp2.status_code == 200
+    assert len(resp2.json()) == 50
+    assert resp2.headers['X-Places-Provider'] == 'overpass'
+    assert resp2.headers['X-Places-Limited'] == 'false'
+

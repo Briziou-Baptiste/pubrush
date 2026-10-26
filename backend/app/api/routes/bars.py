@@ -523,7 +523,7 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
         query_body = 'nwr["amenity"~"^(pub|bar|restaurant)$"]'
     
     overpass_query = f"""
-    [out:json][timeout:2];
+    [out:json][timeout:6];
     (
       {query_body}["name"](around:{radius},{lat},{lon});
     );
@@ -539,14 +539,19 @@ def search_overpass_nearby(lat: float, lon: float, radius: int, osm_query: Optio
     deadline = time.monotonic() + 9
     res_data = None
     failure = "overpass_unavailable"
-    for server in servers:
+    for idx, server in enumerate(servers):
         remaining = deadline - time.monotonic()
-        if remaining <= 0:
+        if remaining <= 1.0:
             break
+        # Primary mirror gets adequate time to respond (up to 5.5s); backup mirror gets up to 2.5s.
+        # Reserves remaining time for the bounded Photon fallback.
+        max_mirror_timeout = 5.5 if idx == 0 else 2.5
+        reserved_for_later = 3.0 if idx == 0 else 1.0
+        server_timeout = min(max_mirror_timeout, max(1.0, remaining - reserved_for_later))
         try:
             data = _http_get_json(server, data_encoded=data_encoded,
                                   headers={"Content-Type": "application/x-www-form-urlencoded"},
-                                  timeout=min(3, remaining))
+                                  timeout=server_timeout)
             # Even an empty or warning-only partial response must not masquerade as complete.
             if isinstance(data, dict) and data.get("remark"):
                 failure = "overpass_partial"
