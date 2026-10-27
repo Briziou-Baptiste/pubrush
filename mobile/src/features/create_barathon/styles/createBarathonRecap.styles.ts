@@ -172,19 +172,21 @@ export const createBarathonRecapStyles = StyleSheet.create({
   },
 
   stopCard: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
 
   stopIndex: {
     fontSize: 12,
     fontWeight: '700',
     color: '#22C55E',
-    marginBottom: 4,
+    marginBottom: 0,
+    width: 28,
+    textAlign: 'center',
   },
 
   stopName: {

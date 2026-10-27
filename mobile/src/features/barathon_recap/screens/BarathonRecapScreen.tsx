@@ -1,8 +1,7 @@
 import { useHeaderHeight } from '@react-navigation/elements';
-import { useNavigation, useLocalSearchParams, usePreventRemove } from 'expo-router';
+import { router, useNavigation, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import RoutingAttribution from '../../create_barathon/components/RoutingAttribution';
-import WalkingDirectionsButton from '../../create_barathon/components/WalkingDirectionsButton';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,7 +19,7 @@ import MapView, { Marker, Polyline, Region } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 
 import { createBarathonRecapStyles as styles } from '../../create_barathon/styles/createBarathonRecap.styles';
-import { createBarathon } from '../../create_barathon/services/createBarathon.service';
+import { createBarathon, CreationOutcomeUnknownError } from '../../create_barathon/services/createBarathon.service';
 import {
   addParticipantsToBarathon,
   getBarathonDetails,
@@ -35,7 +34,7 @@ import {
 } from '../../create_barathon/types/createBarathon.types';
 import { getCurrentUser, getAccessToken } from '../../../lib/authStorage';
 import { fetchBarathonExpenses } from '../../../lib/api';
-import { fetchWalkingRoutesInParallel, getRouteLabel, getRouteSegmentKey, RouteSegment } from '../../create_barathon/services/routing.service';
+import { fetchWalkingRoutesInParallel, getRouteSegmentKey, RouteSegment } from '../../create_barathon/services/routing.service';
 import { calculateSimplifiedDebts, DebtSettlement } from '../utils/debt.utils';
 
 type ExistingParticipant = {
@@ -82,8 +81,14 @@ export default function BarathonRecapScreen() {
   const headerHeight = useHeaderHeight();
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const [created, setCreated] = useState(false);
+  const creationLock = useRef(false);
+  const [uncertainCreation, setUncertainCreation] = useState(false);
   useEffect(() => {
-    if (created) navigation.reset({ index: 1, routes: [{ name: 'home' }, { name: 'planned' }] });
+    if (created) {
+      const state = navigation.getState();
+      const home = state.routes.find(route => route.name === 'home');
+      navigation.reset({ ...state, stale: false, index: 1, routes: [home ?? { key: `${state.key}-home-${Date.now()}`, name: 'home' }, { key: `${state.key}-planned-${Date.now()}`, name: 'planned' }] });
+    }
   }, [created, navigation]);
   const params = useLocalSearchParams<{
     barathonId?: string;
@@ -428,7 +433,7 @@ export default function BarathonRecapScreen() {
     !!estimatedEndDate &&
     stops.length >= 2 &&
     participants.length >= 1 &&
-    !submitting;
+    !submitting && !created && !uncertainCreation;
 
   const canSubmitParticipants =
     isDetailsMode &&
@@ -445,6 +450,7 @@ export default function BarathonRecapScreen() {
   }
 
   async function handleCreateBarathon() {
+    if (creationLock.current) return;
     if (!startDate || !estimatedEndDate) {
       Alert.alert('Erreur', 'La date de début ou de fin est invalide.');
       return;
@@ -479,16 +485,19 @@ export default function BarathonRecapScreen() {
         })),
     };
 
+    creationLock.current = true;
     try {
       setSubmitting(true);
       await createBarathon(payload);
-      Alert.alert('Succès', 'Barathon créé avec succès.');
       setCreated(true);
     } catch (error) {
-      Alert.alert(
-        'Erreur',
-        error instanceof Error ? error.message : 'Impossible de créer le barathon.'
-      );
+      if (error instanceof CreationOutcomeUnknownError) {
+        setUncertainCreation(true);
+        Alert.alert('Confirmation incertaine', 'La réponse du serveur ne permet pas de confirmer le résultat. Le barathon a peut-être été créé : vérifie tes barathons prévus avant de réessayer.');
+      } else {
+        creationLock.current = false;
+        Alert.alert('Création impossible', error instanceof Error ? error.message : 'Impossible de créer le barathon.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -1076,56 +1085,39 @@ export default function BarathonRecapScreen() {
               .sort((a, b) => a.stopOrder - b.stopOrder)
               .map((stop, index) => {
                 const isBar = stop.stopType === 'bar';
-                const from = routePoints[index];
-                const to = routePoints[index + 1];
-                const segment = from && to ? routeSegments[getRouteSegmentKey(from, to)] : undefined;
                 return (
                   <View key={stop.id} style={styles.stopCard}>
-                    <Text style={styles.stopIndex}>Étape {index + 1}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, gap: 8 }}>
-                      <Text style={[styles.stopName, { flex: 1, marginTop: 0 }]}>{stop.name}</Text>
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 4,
-                          backgroundColor: isBar ? '#FEF3C7' : '#FEE2E2',
-                          borderColor: isBar ? '#FCD34D' : '#FCA5A5',
-                          borderWidth: 1,
-                          borderRadius: 8,
-                          paddingHorizontal: 8,
-                          paddingVertical: 3,
-                        }}
-                      >
-                        <Ionicons
-                          name={isBar ? 'beer' : 'restaurant'}
-                          size={12}
-                          color={isBar ? '#92400E' : '#991B1B'}
-                        />
-                        <Text
-                          style={{
-                            fontSize: 11,
-                            fontWeight: '700',
-                            color: isBar ? '#92400E' : '#991B1B',
-                          }}
-                        >
-                          {isBar ? 'Bar' : 'Restaurant'}
-                        </Text>
-                      </View>
+                    <Text style={styles.stopIndex}>{index + 1}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.stopName}>{stop.name}</Text>
+                      <Text style={styles.stopType}>{isBar ? 'Bar' : 'Restaurant'}</Text>
                     </View>
-                    <Text style={{ fontSize: 12, color: '#6B7280', marginTop: 3 }}>
-                      Arrêt n°{index + 1} • {isBar ? 'Bar' : 'Restaurant'}
-                    </Text>
-                    {from && to && <View style={{ marginTop: 8 }}>
-                      <Text style={{ fontSize: 12, color: '#6B7280' }}>{getRouteLabel(segment)}</Text>
-                      {segment?.status !== 'walking' && <WalkingDirectionsButton from={from} to={to} />}
-                    </View>}
                   </View>
                 );
               })}
           </View>
         </View>
 
+        {uncertainCreation && (
+          <View>
+            <TouchableOpacity style={styles.submitButton} onPress={() => router.push('/planned')}>
+              <Text style={styles.submitButtonText}>Voir mes barathons prévus</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.submitButton} onPress={() => {
+              Alert.alert('Réessayer la création ?',
+                'Vérifie d’abord tes barathons prévus. Si celui-ci existe déjà, réessayer créera un doublon.', [
+                  { text: 'Annuler', style: 'cancel' },
+                  { text: 'J’ai vérifié, réessayer', onPress: () => {
+                    creationLock.current = false;
+                    setUncertainCreation(false);
+                    void handleCreateBarathon();
+                  } },
+                ]);
+            }}>
+              <Text style={styles.submitButtonText}>J’ai vérifié : réessayer</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <TouchableOpacity
           onPress={handleSubmit}
           style={[
@@ -1143,7 +1135,7 @@ export default function BarathonRecapScreen() {
           </Text>
         </TouchableOpacity>
 
-        {!isDetailsMode && !canSubmitCreate ? (
+        {!isDetailsMode && !canSubmitCreate && !submitting && !created && !uncertainCreation ? (
           <Text style={styles.helperText}>
             Il faut au moins 2 étapes et 1 participant pour confirmer.
           </Text>

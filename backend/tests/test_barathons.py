@@ -32,6 +32,9 @@ def test_create_barathon_success(client, user_auth_headers, test_user_2):
     assert data["name"] == "Super Barathon"
     assert len(data["stops"]) == 2
     assert len(data["participants"]) == 2 # Creator + test_user_2
+    upcoming = client.get("/barathons/my/upcoming", headers=user_auth_headers)
+    assert upcoming.status_code == 200
+    assert any(item["id"] == data["id"] and item["name"] == data["name"] for item in upcoming.json())
 
 def test_create_barathon_duplicate_stop_order(client, user_auth_headers):
     payload = {

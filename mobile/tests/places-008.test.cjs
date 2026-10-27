@@ -371,3 +371,21 @@ test('nearby API also times out consumers without their own cancellation control
     assert.equal(signal.aborted, true);
   } finally { global.fetch = oldFetch; }
 });
+
+test('selection opens one venue card and collapses the sheet; reopening hides the card', async () => {
+  const item = { name: 'Nearby', latitude: center.latitude + .0001, longitude: center.longitude, stop_type: 'bar' };
+  const h = screen(async () => ({ items: [item], diagnostics: diagnostics() }));
+  try {
+    await h.settle(); h.layout();
+    h.markers()[0].props.onPress({ stopPropagation() {} }); h.render();
+    assert.equal(h.sheet().props.collapsed, true);
+    assert.equal(h.markers()[0].props.title, undefined);
+    assert.ok(h.text().includes('Nearby'));
+    assert.ok(h.text().includes('Ajouter'));
+    h.sheet().props.onCollapsedChange(false); h.render();
+    assert.equal(h.sheet().props.collapsed, false);
+    assert.equal(h.text().includes('Nearby'), false);
+    h.map().props.onPanDrag(); h.render();
+    assert.equal(h.sheet().props.collapsed, true);
+  } finally { h.close(); }
+});

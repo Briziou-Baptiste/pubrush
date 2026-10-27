@@ -24,6 +24,8 @@ async function getAuthToken() {
 async function handleJsonResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => null);
 
+  if (response.status === 408 || response.status >= 500) throw new CreationOutcomeUnknownError();
+
   if (!response.ok) {
     let message = 'Erreur serveur.';
 
@@ -37,17 +39,23 @@ async function handleJsonResponse<T>(response: Response): Promise<T> {
   return data as T;
 }
 
+export class CreationOutcomeUnknownError extends Error {}
+
 export async function createBarathon(payload: CreateBarathonPayload) {
   const token = await getAuthToken();
-    console.log('CREATE BARATHON PAYLOAD:', JSON.stringify(payload, null, 2));
-  const response = await fetch(`${API_BASE_URL}/barathons`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/barathons`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new CreationOutcomeUnknownError();
+  }
 
   return handleJsonResponse(response);
 }

@@ -288,6 +288,8 @@ export default function CreateBarathonMapScreen() {
     });
     setPointName(result.name);
     setSelectedStopType(result.stopType);
+    setSelectedSuggestion(null);
+    setIsRouteListCollapsed(true);
     setModalVisible(true);
   }
 
@@ -724,9 +726,12 @@ export default function CreateBarathonMapScreen() {
               key={`suggestion-marker-${item.name}-${lat}-${lng}`}
               coordinate={{ latitude: lat, longitude: lng }}
               pinColor={isBar ? 'yellow' : 'purple'}
-              title={`${item.name} (${isBar ? 'Bar' : 'Restaurant'})`}
-              description={`${item.estimatedMinutes != null ? `≈ ${item.estimatedMinutes} min à pied` : `${item.distanceMeters} m à vol d’oiseau`} • Toucher pour afficher`}
-              onPress={() => setSelectedSuggestion(item)}
+              onPress={(event) => {
+                event.stopPropagation();
+                setIsRouteListCollapsed(true);
+                setCompactSearch(true);
+                setSelectedSuggestion(item);
+              }}
             />
           );
         }
@@ -755,12 +760,13 @@ export default function CreateBarathonMapScreen() {
         onMapReady={() => setMapReady(true)}
         onLayout={event => setMapSize({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })}
         onTouchStart={cancelAutomaticFraming}
-        onPanDrag={cancelAutomaticFraming}
+        onPanDrag={() => { cancelAutomaticFraming(); setIsRouteListCollapsed(true); }}
         showsUserLocation={permissionGranted}
         showsMyLocationButton={false}
         onPress={() => {
           Keyboard.dismiss();
           setIsRouteListCollapsed(true);
+          setSelectedSuggestion(null);
         }}
       >
         {[
@@ -1035,7 +1041,7 @@ export default function CreateBarathonMapScreen() {
 
 
       {/* Floating Suggestion Preview Card */}
-      {selectedSuggestion && (
+      {selectedSuggestion && isRouteListCollapsed && (
         <View style={[styles.suggestionCard, { bottom: insets.bottom + sheetHeight + 32, right: insets.right + 78 }]}>
           <View style={{ alignItems: 'flex-end' }}>
             <TouchableOpacity accessibilityRole="button" accessibilityLabel="Fermer" onPress={() => setSelectedSuggestion(null)} style={navigationControlStyles.close}>
@@ -1098,7 +1104,7 @@ export default function CreateBarathonMapScreen() {
         bottom: insets.bottom + 12, left: insets.left + 12, right: insets.right + 12,
         maxHeight: Math.min(360, Math.max(190, windowHeight - headerHeight - insets.top - topHeight - insets.bottom - 100)),
       }]} onLayout={event => setSheetHeight(event.nativeEvent.layout.height)}
-        collapsed={isRouteListCollapsed} onCollapsedChange={setIsRouteListCollapsed} count={points.length}
+        collapsed={isRouteListCollapsed} onCollapsedChange={collapsed => { setIsRouteListCollapsed(collapsed); if (!collapsed) setSelectedSuggestion(null); }} count={points.length}
         attribution={<RoutingAttribution />}>
         <View style={[styles.sheetHeader, { flexWrap: 'wrap' }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
