@@ -84,14 +84,16 @@ EOF
   local host_db_url="postgresql+psycopg://photo_staging:${db_pass}@127.0.0.1:15432/pubrush_photo_staging"
   (
     cd "${ROOT_DIR}/backend"
-    PYTHONPATH="${ROOT_DIR}/backend" PYTHON_DOTENV_DISABLED=1 DATABASE_URL="${host_db_url}" .venv/bin/alembic upgrade head
+    env -u PGHOSTADDR -u PGHOST -u PGPORT -u PGDATABASE -u PGUSER -u PGPASSWORD -u PGPASSFILE -u PGSERVICE -u PGSERVICEFILE -u PGOPTIONS -u PGREQUIREPEER -u PGTARGETSESSIONATTRS \
+      PYTHONPATH="${ROOT_DIR}/backend" PYTHON_DOTENV_DISABLED=1 DATABASE_URL="${host_db_url}" .venv/bin/alembic upgrade head
   )
 
-  # 5. Exécution du seed avec STAGING_DATABASE_URL (P1-2: invocation propre avec PYTHONPATH explicite)
+  # 5. Exécution du seed avec STAGING_DATABASE_URL (P1-2: invocation propre avec PYTHONPATH explicite, P1-PG: neutralisation libpq)
   echo "Exécution du script de seed synthétique..."
   (
     cd "${ROOT_DIR}/backend"
-    PYTHONPATH="${ROOT_DIR}/backend" PYTHON_DOTENV_DISABLED=1 STAGING_DATABASE_URL="${host_db_url}" .venv/bin/python scripts/seed_staging_photo.py
+    env -u PGHOSTADDR -u PGHOST -u PGPORT -u PGDATABASE -u PGUSER -u PGPASSWORD -u PGPASSFILE -u PGSERVICE -u PGSERVICEFILE -u PGOPTIONS -u PGREQUIREPEER -u PGTARGETSESSIONATTRS \
+      PYTHONPATH="${ROOT_DIR}/backend" PYTHON_DOTENV_DISABLED=1 STAGING_DATABASE_URL="${host_db_url}" .venv/bin/python scripts/seed_staging_photo.py
   )
 
   # 6. Construction et démarrage du backend

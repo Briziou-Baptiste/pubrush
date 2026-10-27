@@ -13,6 +13,27 @@ import sys
 # P1-C: Empêcher strictement le chargement de .env ordinaire
 os.environ["PYTHON_DOTENV_DISABLED"] = "1"
 
+# P1-PG: Neutralisation stricte et proactive des variables d'environnement libpq
+# Empêche la substitution de l'hôte/IP (PGHOSTADDR, PGHOST), du port (PGPORT), de la base (PGDATABASE),
+# de l'utilisateur (PGUSER), du mot de passe (PGPASSWORD), du fichier de mot de passe (PGPASSFILE),
+# du service (PGSERVICE/PGSERVICEFILE) ou des options (PGOPTIONS, PGREQUIREPEER, PGTARGETSESSIONATTRS)
+LIBPQ_OVERRIDE_VARS = (
+    "PGHOSTADDR",
+    "PGHOST",
+    "PGPORT",
+    "PGDATABASE",
+    "PGUSER",
+    "PGPASSWORD",
+    "PGPASSFILE",
+    "PGSERVICE",
+    "PGSERVICEFILE",
+    "PGOPTIONS",
+    "PGREQUIREPEER",
+    "PGTARGETSESSIONATTRS",
+)
+for var in LIBPQ_OVERRIDE_VARS:
+    os.environ.pop(var, None)
+
 # P1-2: Rendre le seed importable indépendamment du répertoire courant et de PYTHONPATH
 from pathlib import Path
 backend_dir = Path(__file__).resolve().parent.parent
@@ -77,20 +98,29 @@ else:
         f"Cible interdite: hôte '{parsed_url.host}'. Seuls '127.0.0.1', 'localhost' ou 'db-photo' sont autorisés."
     )
 
-# P1-1: Conserver le vrai mot de passe dans DATABASE_URL sans le masquer par ***
-os.environ["DATABASE_URL"] = parsed_url.render_as_string(hide_password=False)
-
 from app.models import User, Barathon, BarathonParticipant
 from app.security import hash_password
 
 
+def get_staging_engine(url=parsed_url):
+    """Initialise l'engine SQLAlchemy avec les connect_args sécurisés pour neutraliser toute redirection libpq."""
+    connect_args = {}
+    if url.host in ("127.0.0.1", "localhost"):
+        connect_args["hostaddr"] = "127.0.0.1"
+    return create_engine(url, connect_args=connect_args)
+
+
 def seed_staging():
+    # P1-1: Conserver le vrai mot de passe dans DATABASE_URL sans le masquer par *** pour le seed
+    os.environ["DATABASE_URL"] = parsed_url.render_as_string(hide_password=False)
+
     # Affichage sécurisé de la cible expurgée (sans mot de passe)
     safe_target = f"{parsed_url.username}@{parsed_url.host}:{parsed_url.port}/{parsed_url.database}"
     print(f"Connexion validée à la base de staging dédiée : {safe_target}")
 
-    # P1-1: Passer directement l'objet URL à create_engine pour préserver le mot de passe réel
-    engine = create_engine(parsed_url)
+    # P1-1 & P1-PG: Passer l'objet URL avec connect_args explicites pour préserver le mot de passe réel
+    # et imposer hostaddr=127.0.0.1 contre toute redirection libpq
+    engine = get_staging_engine(parsed_url)
     session = Session(bind=engine)
 
     creator_password = os.getenv("STAGING_CREATOR_PASSWORD") or secrets.token_urlsafe(18)

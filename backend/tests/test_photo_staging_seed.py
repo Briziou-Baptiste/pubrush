@@ -223,3 +223,78 @@ def test_seed_staging_preserves_real_password_in_env_file(tmp_path):
     rendered = parsed.render_as_string(hide_password=False)
     assert "***" not in rendered
     assert raw_pass in rendered
+
+
+def test_seed_staging_neutralizes_pghostaddr_env():
+    """
+    P1-PG : Démontre que PGHOSTADDR ne peut pas rediriger la connexion libpq vers une adresse externe.
+    Lorsque PGHOSTADDR=198.51.100.1 (IP de test RFC 5737 non-routable) est injecté,
+    le script neutralise la variable et force hostaddr=127.0.0.1, provoquant un échec immédiat
+    sur 127.0.0.1 (Connection refused) et NON un timeout vers 198.51.100.1.
+    """
+    backend_dir = Path(__file__).resolve().parent.parent
+    script_path = backend_dir / "scripts" / "seed_staging_photo.py"
+
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(backend_dir)
+    env["PYTHON_DOTENV_DISABLED"] = "1"
+    env["STAGING_DATABASE_URL"] = "postgresql+psycopg://photo_staging:secret@127.0.0.1:15432/pubrush_photo_staging"
+    env["PGHOSTADDR"] = "198.51.100.1"  # Tentative de redirection libpq
+
+    import time
+    start = time.time()
+    proc = subprocess.run(
+        [sys.executable, str(script_path)],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    duration = time.time() - start
+
+    # Si PGHOSTADDR avait redirigé, la connexion vers 198.51.100.1 aurait expiré (timeout > 5s).
+    # Avec hostaddr=127.0.0.1 imposé et PGHOSTADDR neutralisé, le rejet local est immédiat (< 2s).
+    assert duration < 3.0, f"La tentative de connexion a duré {duration:.2f}s, suspectant un routage externe"
+    assert proc.returncode != 0
+    # Vérifie que la tentative de connexion a bien ciblé 127.0.0.1
+    assert "127.0.0.1" in proc.stderr
+    assert "198.51.100.1" not in proc.stderr
+
+
+def test_seed_staging_driver_path_enforces_hostaddr_127_0_0_1():
+    """
+    P1-PG : Vérifie le chemin réel seed -> SQLAlchemy -> psycopg -> libpq.
+    Démontre que create_engine configure formellement connect_args={'hostaddr': '127.0.0.1'}
+    dans les paramètres effectifs transmis au pilote psycopg.
+    """
+    # Fixer STAGING_DATABASE_URL avant import du module
+    valid_staging_url = "postgresql+psycopg://photo_staging:secret@127.0.0.1:15432/pubrush_photo_staging"
+    os.environ["STAGING_DATABASE_URL"] = valid_staging_url
+
+    # Simulation avec PGHOSTADDR dans os.environ
+    os.environ["PGHOSTADDR"] = "198.51.100.1"
+    os.environ["PGHOST"] = "rogue-host"
+
+    from scripts.seed_staging_photo import get_staging_engine
+    from sqlalchemy.engine import make_url
+    import inspect
+
+    test_url = make_url(valid_staging_url)
+    engine = get_staging_engine(test_url)
+
+    # Vérification que get_staging_engine a bien configuré hostaddr='127.0.0.1' dans le pool creator
+    creator_vars = inspect.getclosurevars(engine.pool._creator)
+    cparams = creator_vars.nonlocals.get("cparams", {})
+    assert cparams.get("hostaddr") == "127.0.0.1", "hostaddr doit être explicitement verrouillé sur 127.0.0.1"
+    assert cparams.get("host") == "127.0.0.1"
+    assert cparams.get("port") == 15432
+    assert cparams.get("user") == "photo_staging"
+    assert cparams.get("dbname") == "pubrush_photo_staging"
+
+    # Vérifier que les variables PG* ont été neutralisées dans os.environ
+    assert "PGHOSTADDR" not in os.environ
+    assert "PGHOST" not in os.environ
+
+    # Nettoyage
+    os.environ.pop("STAGING_DATABASE_URL", None)
+    os.environ.pop("DATABASE_URL", None)
+
