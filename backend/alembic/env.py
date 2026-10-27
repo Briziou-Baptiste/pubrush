@@ -8,23 +8,6 @@ from app.models import Base
 
 import os
 
-# P1-PG: Neutraliser les variables libpq d'environnement (ex: PGHOSTADDR)
-for var in (
-    "PGHOSTADDR",
-    "PGHOST",
-    "PGPORT",
-    "PGDATABASE",
-    "PGUSER",
-    "PGPASSWORD",
-    "PGPASSFILE",
-    "PGSERVICE",
-    "PGSERVICEFILE",
-    "PGOPTIONS",
-    "PGREQUIREPEER",
-    "PGTARGETSESSIONATTRS",
-):
-    os.environ.pop(var, None)
-
 target_metadata = Base.metadata
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -82,17 +65,10 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    section = config.get_section(config.config_ini_section, {})
-    connect_args = {}
-    main_url = config.get_main_option("sqlalchemy.url") or ""
-    if "127.0.0.1" in main_url or "localhost" in main_url:
-        connect_args["hostaddr"] = "127.0.0.1"
-
     connectable = engine_from_config(
-        section,
+        config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:
