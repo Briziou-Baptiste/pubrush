@@ -119,22 +119,48 @@ export default function RootLayout() {
       headerTintColor: '#111827',
       headerShadowVisible: false,
       headerBackVisible: false,
-      headerLeft: () => (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Retour"
-          onPress={() => {
-            if (navigation.canGoBack()) navigation.goBack();
-            else navigation.reset({ index: 0, routes: [fallbackRoute(route.name, route.params)] });
-          }}
-          style={({ pressed }) => ({
-            width: 48, height: 48, alignItems: 'center', justifyContent: 'center',
-            borderRadius: 16, backgroundColor: '#111827', opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-        </Pressable>
-      ),
+      headerLeft: () => {
+        const isSummary = route.name === 'barathon-stop-summary';
+        return (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retour"
+            onPress={() => {
+              if (navigation.canGoBack()) navigation.goBack();
+              else navigation.reset({ index: 0, routes: [fallbackRoute(route.name, route.params)] });
+            }}
+            hitSlop={isSummary ? { top: 8, bottom: 8, left: 8, right: 8 } : undefined}
+            style={({ pressed }) => (
+              isSummary
+                ? {
+                    width: 44,
+                    height: 44,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 22,
+                    backgroundColor: pressed ? '#E5E7EB' : '#FFFFFF',
+                    borderWidth: 1,
+                    borderColor: '#E5E7EB',
+                  }
+                : {
+                    width: 48,
+                    height: 48,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 16,
+                    backgroundColor: '#111827',
+                    opacity: pressed ? 0.7 : 1,
+                  }
+            )}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={isSummary ? 20 : 22}
+              color={isSummary ? '#111827' : '#FFFFFF'}
+            />
+          </Pressable>
+        );
+      },
     })}>
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />

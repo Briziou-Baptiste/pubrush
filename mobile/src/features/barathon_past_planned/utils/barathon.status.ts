@@ -32,6 +32,6 @@ export function getBarathonOutcome(status?: string, stops?: { is_completed?: boo
     targetReached,
     progressLabel: targetReached === null
       ? 'Résultat des étapes indisponible'
-      : targetReached ? 'Objectif d’étapes atteint (70 % minimum)' : 'Objectif d’étapes non atteint (70 % minimum)',
+      : targetReached ? 'Objectif atteint — seuil requis : 70 %' : 'Objectif non atteint — seuil requis : 70 %',
   };
 }

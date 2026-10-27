@@ -63,9 +63,9 @@ export default function PastScreen() {
           barathonName: barathon.name,
           totalStops: String(totalStops),
           completedStops: String(completedStopSize),
-          startDateTimeIso: barathon.start_datetime,
+          startDateTimeIso: barathon.started_at || barathon.start_datetime,
           endDateTimeIso:
-            barathon.ended_at ?? barathon.end_datetime ?? new Date().toISOString(),
+            barathon.ended_at || (barathon.end_datetime && barathon.end_datetime !== barathon.start_datetime ? barathon.end_datetime : undefined),
           stopsJson: JSON.stringify(barathon.stops),
             source: 'past',
             status: barathon.status,

@@ -89,6 +89,7 @@ type Stop = {
 
 export default function BarathonStopSummaryScreen() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
+
   useEffect(() => {
     const state = navigation.getState();
     if (!state) return;
@@ -96,6 +97,7 @@ export default function BarathonStopSummaryScreen() {
     const routes = summaryHistory(state.routes, current);
     if (routes !== state.routes) navigation.reset({ index: routes.length - 1, routes });
   }, [navigation]);
+
   const params = useLocalSearchParams<{
     barathonId?: string;
     barathonName?: string;
@@ -203,6 +205,28 @@ export default function BarathonStopSummaryScreen() {
     void loadUserDataAndExpenses();
   }, [params.barathonId]);
 
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    let devMenu: any = null;
+    try {
+      devMenu = require('expo-dev-menu');
+      if (devMenu && typeof devMenu.setToolsButtonVisible === 'function') {
+        devMenu.setToolsButtonVisible(false);
+      }
+    } catch {
+      // expo-dev-menu not installed, production build, or native module unavailable
+    }
+
+    return () => {
+      if (Platform.OS === 'web') return;
+      try {
+        if (devMenu && typeof devMenu.setToolsButtonVisible === 'function') {
+          devMenu.setToolsButtonVisible(true);
+        }
+      } catch {}
+    };
+  }, []);
+
   async function loadUserDataAndExpenses() {
     try {
       const user = await getCurrentUser();
@@ -226,8 +250,15 @@ export default function BarathonStopSummaryScreen() {
             setStops(details.stops || []);
             setTotalStops((details.stops || []).length);
             setCompletedStops((details.stops || []).filter((s: any) => s.is_completed).length);
-            setStartDateTimeIso(details.started_at || details.start_datetime);
-            setEndDateTimeIso(details.ended_at || details.end_datetime);
+
+            const realStart = details.started_at || details.start_datetime;
+            const realEnd =
+              details.ended_at ||
+              (details.end_datetime && details.end_datetime !== details.start_datetime
+                ? details.end_datetime
+                : undefined);
+            if (realStart) setStartDateTimeIso(realStart);
+            if (realEnd) setEndDateTimeIso(realEnd);
           } else {
             setDetailsError(true);
           }
@@ -250,28 +281,51 @@ export default function BarathonStopSummaryScreen() {
     ? Math.round((completedStops / totalStops) * 100)
     : 0;
 
+  const progressFillColor =
+    completedPercentage >= 70
+      ? '#10B981'
+      : completedPercentage >= 40
+      ? '#F59E0B'
+      : '#EF4444';
+
   const percentageStyle =
-    completedPercentage > 85
+    completedPercentage >= 70
       ? styles.greenText
-      : completedPercentage >= 50
+      : completedPercentage >= 40
       ? styles.orangeText
       : styles.redText;
 
   const durationText = useMemo(() => {
     if (!startDateTimeIso || !endDateTimeIso) {
-      return '--';
+      return 'Non disponible';
     }
 
     const start = new Date(startDateTimeIso);
     const end = new Date(endDateTimeIso);
 
-    const diffMs = end.getTime() - start.getTime();
-    const totalMinutes = Math.max(0, Math.floor(diffMs / 60000));
+    const startMs = start.getTime();
+    const endMs = end.getTime();
+
+    if (isNaN(startMs) || isNaN(endMs) || endMs <= startMs) {
+      return 'Non disponible';
+    }
+
+    const diffMs = endMs - startMs;
+    const totalMinutes = Math.floor(diffMs / 60000);
+
+    // If completed steps exist but recorded duration is 0, timestamps are non-representative
+    if (totalMinutes === 0 && completedStops > 0) {
+      return 'Non disponible';
+    }
+
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
 
+    if (hours === 0) {
+      return `${minutes} min`;
+    }
     return `${hours}h ${minutes}min`;
-  }, [startDateTimeIso, endDateTimeIso]);
+  }, [startDateTimeIso, endDateTimeIso, completedStops]);
 
   const totalDistanceKm = useMemo(() => {
     if (stops.length < 2) return 0;
@@ -281,6 +335,7 @@ export default function BarathonStopSummaryScreen() {
       const lon1 = Number(stops[i].longitude);
       const lat2 = Number(stops[i + 1].latitude);
       const lon2 = Number(stops[i + 1].longitude);
+      if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) continue;
       const R = 6371;
       const dLat = ((lat2 - lat1) * Math.PI) / 180;
       const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -297,81 +352,260 @@ export default function BarathonStopSummaryScreen() {
   }, [stops]);
 
   const outcome = getBarathonOutcome(barathonStatus, stops);
-  const isSuccessfulRun = outcome.completedNormally;
+
+  const statusConfig = useMemo(() => {
+    switch (barathonStatus) {
+      case 'completed':
+        return {
+          icon: 'checkmark-circle' as const,
+          color: '#15803D',
+          badgeStyle: styles.statusBadgeCompleted,
+          textStyle: styles.statusTextCompleted,
+        };
+      case 'stopped':
+        return {
+          icon: 'stop-circle-outline' as const,
+          color: '#B45309',
+          badgeStyle: styles.statusBadgeStopped,
+          textStyle: styles.statusTextStopped,
+        };
+      case 'planned':
+        return {
+          icon: 'calendar-outline' as const,
+          color: '#1D4ED8',
+          badgeStyle: styles.statusBadgePlanned,
+          textStyle: styles.statusTextPlanned,
+        };
+      case 'started':
+        return {
+          icon: 'play-circle-outline' as const,
+          color: '#7E22CE',
+          badgeStyle: styles.statusBadgeStarted,
+          textStyle: styles.statusTextStarted,
+        };
+      case 'failed':
+        return {
+          icon: 'alert-circle-outline' as const,
+          color: '#B91C1C',
+          badgeStyle: styles.statusBadgeFailed,
+          textStyle: styles.statusTextFailed,
+        };
+      default:
+        return {
+          icon: 'help-circle-outline' as const,
+          color: '#4B5563',
+          badgeStyle: styles.statusBadgeDefault,
+          textStyle: styles.statusTextDefault,
+        };
+    }
+  }, [barathonStatus]);
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Header Card moderne et explicite */}
         <View style={styles.headerCard}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <Ionicons
-              name={isSuccessfulRun ? 'trophy' : 'flag'}
-              size={24}
-              color={isSuccessfulRun ? '#D97706' : '#2563EB'}
-            />
-            <Text style={styles.title}>
-              {outcome.label}
-            </Text>
-          </View>
-          <Text style={styles.subtitle}>{barathonName}</Text>
-          <Text style={styles.subtitle}>{outcome.progressLabel}</Text>
-          {detailsError && <Text style={styles.subtitle}>Actualisation impossible. Le résultat affiché peut être incomplet.</Text>}
-        </View>
+          <Text style={styles.headerTitle}>{barathonName}</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Résumé</Text>
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Stops réalisés</Text>
-            <Text style={[styles.value, percentageStyle]}>
-              {outcome.targetReached === null
-                ? 'Données incomplètes'
-                : `${completedStops} / ${totalStops} (${completedPercentage}%)`}
+          <View style={[styles.statusBadge, statusConfig.badgeStyle]}>
+            <Ionicons name={statusConfig.icon} size={15} color={statusConfig.color} />
+            <Text style={[styles.statusBadgeText, statusConfig.textStyle]}>
+              {`Statut : ${outcome.label}`}
             </Text>
           </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Temps passé</Text>
-            <Text style={styles.value}>{durationText}</Text>
+          <View style={styles.progressionSection}>
+            <View style={styles.progressionRow}>
+              <Text style={styles.progressionLabel}>
+                {outcome.targetReached === null
+                  ? 'Étapes indisponibles'
+                  : `${completedStops} ${completedStops > 1 ? 'étapes' : 'étape'} sur ${totalStops} — ${completedPercentage} %`}
+              </Text>
+            </View>
+
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${Math.min(100, Math.max(0, completedPercentage))}%`,
+                    backgroundColor: progressFillColor,
+                  },
+                ]}
+              />
+            </View>
+
+            <View style={styles.targetRow}>
+              <Ionicons
+                name={
+                  outcome.targetReached === null
+                    ? 'information-circle-outline'
+                    : outcome.targetReached
+                    ? 'checkmark-circle'
+                    : 'close-circle-outline'
+                }
+                size={16}
+                color={
+                  outcome.targetReached === null
+                    ? '#6B7280'
+                    : outcome.targetReached
+                    ? '#059669'
+                    : '#D97706'
+                }
+              />
+              <Text
+                style={[
+                  styles.targetText,
+                  outcome.targetReached === null
+                    ? styles.targetTextUnknown
+                    : outcome.targetReached
+                    ? styles.targetTextSuccess
+                    : styles.targetTextMissed,
+                ]}
+              >
+                {outcome.progressLabel}
+              </Text>
+            </View>
           </View>
 
-          {totalDistanceKm > 0 && (
-            <View style={styles.row}>
-              <Text style={styles.label}>Distance à pied</Text>
-              <Text style={styles.value}>~{totalDistanceKm} km</Text>
+          {detailsError && (
+            <View style={styles.warningBox}>
+              <Ionicons name="alert-circle-outline" size={16} color="#B45309" />
+              <Text style={styles.warningText}>
+                Actualisation impossible. Le résultat affiché peut être incomplet.
+              </Text>
             </View>
           )}
         </View>
 
+        {/* Résumé Card */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Étapes</Text>
+          <Text style={styles.sectionTitle}>Résumé</Text>
 
-          {stops.map((stop, index) => {
+          <View style={styles.summaryGrid}>
+            <View style={styles.summaryItem}>
+              <View style={[styles.summaryIconBox, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="flag-outline" size={18} color="#2563EB" />
+              </View>
+              <View style={styles.summaryTextGroup}>
+                <Text style={styles.summaryLabel}>Étapes réalisées</Text>
+                <Text style={[styles.summaryValue, percentageStyle]}>
+                  {outcome.targetReached === null
+                    ? 'Données incomplètes'
+                    : `${completedStops} / ${totalStops} (${completedPercentage}%)`}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.summaryItem}>
+              <View style={[styles.summaryIconBox, { backgroundColor: '#F0FDF4' }]}>
+                <Ionicons name="time-outline" size={18} color="#16A34A" />
+              </View>
+              <View style={styles.summaryTextGroup}>
+                <Text style={styles.summaryLabel}>Temps passé</Text>
+                <Text style={styles.summaryValue}>{durationText}</Text>
+              </View>
+            </View>
+
+            <View style={styles.summaryItem}>
+              <View style={[styles.summaryIconBox, { backgroundColor: '#FEF3C7' }]}>
+                <Ionicons name="navigate-outline" size={18} color="#D97706" />
+              </View>
+              <View style={styles.summaryTextGroup}>
+                <Text style={styles.summaryLabel}>Distance estimée (vol d’oiseau)</Text>
+                <Text style={styles.summaryValue}>
+                  {totalDistanceKm > 0 ? `~${totalDistanceKm} km` : 'Non disponible'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Liste des Étapes */}
+        <View style={styles.card}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.sectionTitle}>Étapes</Text>
+            {stops.length > 0 && (
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{stops.length}</Text>
+              </View>
+            )}
+          </View>
+
+          {stops.length === 0 ? (
+            <Text style={styles.emptyStopsText}>Aucune étape enregistrée.</Text>
+          ) : (
+            stops.map((stop, index) => {
               const isDone = stop.is_completed;
               const isKnown = typeof isDone === 'boolean';
 
-            return (
-              <View key={stop.id} style={styles.stopRow}>
-                <Text
-                  style={[
-                    styles.stopStatus,
-                    !isKnown ? styles.label : isDone ? styles.greenText : styles.redText,
-                  ]}
-                >
-                  {!isKnown ? 'Inconnu' : isDone ? 'Fait' : 'Non fait'}
-                </Text>
+              return (
+                <View key={stop.id} style={styles.stopRow}>
+                  <View
+                    style={[
+                      styles.stopNumberBadge,
+                      !isKnown
+                        ? styles.stopNumberBadgeUnknown
+                        : isDone
+                        ? styles.stopNumberBadgeDone
+                        : styles.stopNumberBadgeNotDone,
+                    ]}
+                  >
+                    <Ionicons
+                      name={
+                        !isKnown
+                          ? 'help'
+                          : isDone
+                          ? 'checkmark'
+                          : 'close'
+                      }
+                      size={15}
+                      color={
+                        !isKnown
+                          ? '#6B7280'
+                          : isDone
+                          ? '#15803D'
+                          : '#DC2626'
+                      }
+                    />
+                  </View>
 
-                <View style={styles.stopTextBlock}>
-                  <Text style={styles.stopName}>
-                    Étape {index + 1} — {stop.name}
-                  </Text>
-                  <Text style={styles.stopType}>
-                    {stop.stop_type === 'bar' ? 'Bar' : 'Restaurant'}
-                  </Text>
+                  <View style={styles.stopTextBlock}>
+                    <Text style={styles.stopName}>
+                      Étape {index + 1} — {stop.name}
+                    </Text>
+                    <Text style={styles.stopType}>
+                      {stop.stop_type === 'bar' ? 'Bar' : 'Restaurant'}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.stopStatusBadge,
+                      !isKnown
+                        ? styles.stopStatusBadgeUnknown
+                        : isDone
+                        ? styles.stopStatusBadgeDone
+                        : styles.stopStatusBadgeNotDone,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.stopStatusText,
+                        !isKnown
+                          ? styles.stopStatusTextUnknown
+                          : isDone
+                          ? styles.stopStatusTextDone
+                          : styles.stopStatusTextNotDone,
+                      ]}
+                    >
+                      {!isKnown ? 'Inconnu' : isDone ? 'Fait' : 'Non fait'}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            );
-          })}
+              );
+            })
+          )}
         </View>
 
         {/* Card Dépenses & Compensations */}
@@ -508,19 +742,20 @@ export default function BarathonStopSummaryScreen() {
           </View>
         )}
 
+        {/* Bouton d'enregistrement avec icône et espacement soigné */}
         {params.barathonId && (
           <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: '#2563EB', marginBottom: 12 }]}
+            style={styles.primaryButton}
             onPress={() => {
               setSaveName(barathonName || params.barathonName || '');
               setIsSaveModalVisible(true);
             }}
+            activeOpacity={0.85}
           >
+            <Ionicons name="bookmark-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
             <Text style={styles.primaryButtonText}>Enregistrer ce barathon</Text>
           </TouchableOpacity>
         )}
-
-
       </ScrollView>
 
       <Modal
