@@ -30,6 +30,12 @@ export default function PhotoCapturePage() {
       const codeParam = params.get("code");
       if (codeParam) {
         setCode(codeParam.trim().toUpperCase());
+        // Clean URL to prevent leaking the code in browser history, address bar, or Referer
+        try {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch {
+          // Ignore if restricted in sandbox
+        }
       }
     }
   }, []);
