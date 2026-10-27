@@ -120,7 +120,7 @@ async def upload_photo_file(
     content_length = request.headers.get("content-length")
     if content_length:
         try:
-            if int(content_length) > MAX_UPLOAD_BYTES + 10240:
+            if int(content_length) > MAX_UPLOAD_BYTES + 65536:
                 raise HTTPException(
                     status_code=413,
                     detail="Fichier trop volumineux (maximum 2 MiB).",

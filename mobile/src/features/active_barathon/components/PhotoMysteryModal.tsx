@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   Modal,
   SafeAreaView,
   ScrollView,
@@ -72,12 +73,34 @@ export default function PhotoMysteryModal({
     }
   }, [visible, barathonId]);
 
+  // P1-B: Rechargement de l'état authentifié au retour d'arrière-plan (Android / iOS)
+  useEffect(() => {
+    if (!visible) return;
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        loadState();
+      }
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, [visible, barathonId]);
+
   async function loadState() {
     try {
       setLoading(true);
       const s = await fetchPhotoMysteryState(barathonId);
       setState(s);
       onStateUpdated?.(s);
+      // P1-B: Si le brouillon de l'auteur possède sa photo, basculer immédiatement en mode VIEW
+      // pour afficher la prévisualisation et le bouton « Publier le défi » sans forcer un « Annuler »
+      const draftWithPhoto = s.items.find(
+        (i) => i.state === 'draft' && i.photo_available
+      );
+      if (draftWithPhoto) {
+        setMode('VIEW');
+        setCreatedDraft(null);
+      }
     } catch {
       // Handled silently
     } finally {
@@ -145,12 +168,11 @@ export default function PhotoMysteryModal({
     const baseUrl =
       process.env.EXPO_PUBLIC_WEB_URL ||
       'https://pubrush.com/photo-capture';
-    const webUrl = createdDraft?.upload_code
-      ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}code=${encodeURIComponent(createdDraft.upload_code)}`
-      : baseUrl;
+    // P1-D: Ouverture de l'URL HTTPS fixe sans passer le code dans la query
+    const webUrl = baseUrl;
     try {
       await WebBrowser.openBrowserAsync(webUrl);
-      // Reload state when user returns from browser
+      // Rechargement au retour (sur iOS la promesse se résout à la fermeture du navigateur)
       await loadState();
     } catch {
       Alert.alert('Navigateur', 'Impossible d’ouvrir la page de capture.');
@@ -158,6 +180,7 @@ export default function PhotoMysteryModal({
   }
 
   async function handlePublish(challengeId: string) {
+    if (publishing) return; // P1-B: Protection contre le double appui
     try {
       setPublishing(true);
       await publishPhotoChallenge(barathonId, challengeId);
@@ -467,6 +490,9 @@ export default function PhotoMysteryModal({
                   <View style={styles.draftReadyBox}>
                     <Text style={styles.codeLabel}>Ton code de capture (valable 2 min) :</Text>
                     <Text style={styles.codeValue}>{createdDraft.upload_code}</Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', marginTop: 4, marginBottom: 12 }}>
+                      Recopie ce code à 10 caractères sur la page de capture pour autoriser la prise de vue.
+                    </Text>
                     <TouchableOpacity
                       style={styles.actionButton}
                       onPress={handleOpenWebCamera}

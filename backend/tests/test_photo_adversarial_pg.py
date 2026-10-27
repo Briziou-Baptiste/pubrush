@@ -31,7 +31,7 @@ from app.photo_models import (
     PhotoMedia,
     PhotoResult,
 )
-from app.photo_schemas import PhotoAnswerPayload
+from app.photo_schemas import PhotoAnswerPayload, PhotoChallengeCreate
 from app.security import create_access_token, hash_password
 from app.services import photo_storage
 from app.services.photo_processor import MAX_RAW_SIZE, process_photo
@@ -1065,6 +1065,192 @@ async def test_adversarial_unauthenticated_upload_blocked_by_middleware():
         )
         assert res.status_code == 401
         assert "Token manquant ou format invalide" in res.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_adversarial_multipart_spool_prevention_on_rejected_uploads():
+    """
+    P1-A : Démontre qu'aucun fichier temporaire n'est créé sur disque (/tmp) lors du rejet
+    d'uploads invalides (faux Bearer, absence de Bearer, mauvais scope, taille excessive avec
+    Content-Length, ou flux chunked volumineux).
+    """
+    rollover_count = 0
+    orig_rollover = tempfile.SpooledTemporaryFile.rollover
+
+    def tracked_rollover(self):
+        nonlocal rollover_count
+        rollover_count += 1
+        return orig_rollover(self)
+
+    tempfile.SpooledTemporaryFile.rollover = tracked_rollover
+    try:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            # 1. Corps de 1.5 Mio avec faux Bearer -> 401 et 0 rollover
+            rollover_count = 0
+            payload_1_5mb = (
+                b"--boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"test.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n"
+                + (b"X" * (1500 * 1024))
+                + b"\r\n--boundary--\r\n"
+            )
+            res = await client.post(
+                "/photo-mystery/upload",
+                content=payload_1_5mb,
+                headers={
+                    "Authorization": "Bearer fake_bearer_token",
+                    "Content-Type": "multipart/form-data; boundary=boundary",
+                },
+            )
+            assert res.status_code == 401
+            assert rollover_count == 0
+
+            # 2. Corps avec Bearer ayant un mauvais scope -> 401 et 0 rollover
+            bad_scope_token = create_access_token({"sub": "user1", "scope": "access_token"})
+            res = await client.post(
+                "/photo-mystery/upload",
+                content=payload_1_5mb,
+                headers={
+                    "Authorization": f"Bearer {bad_scope_token}",
+                    "Content-Type": "multipart/form-data; boundary=boundary",
+                },
+            )
+            assert res.status_code == 401
+            assert rollover_count == 0
+
+            # 3. Content-Length mensonger déclarant > 2.06 MiB -> 413 rejeté immédiatement avant lecture
+            valid_upload_token = create_access_token({
+                "sub": "claim_1",
+                "scope": "photo_upload",
+                "challenge_id": str(uuid.uuid4()),
+                "jti": str(uuid.uuid4()),
+            })
+            res = await client.post(
+                "/photo-mystery/upload",
+                content=payload_1_5mb,
+                headers={
+                    "Authorization": f"Bearer {valid_upload_token}",
+                    "Content-Type": "multipart/form-data; boundary=boundary",
+                    "Content-Length": str(3 * 1024 * 1024),
+                },
+            )
+            assert res.status_code == 413
+            assert rollover_count == 0
+
+            # 4. Flux chunked sans Content-Length dépassant 2.06 MiB -> 413 coupé par ASGI receive sans rollover
+            async def chunked_stream():
+                yield b"--boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"test.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n"
+                for _ in range(25):
+                    yield b"Y" * (100 * 1024)
+                yield b"\r\n--boundary--\r\n"
+
+            res = await client.post(
+                "/photo-mystery/upload",
+                content=chunked_stream(),
+                headers={
+                    "Authorization": f"Bearer {valid_upload_token}",
+                    "Content-Type": "multipart/form-data; boundary=boundary",
+                    "Transfer-Encoding": "chunked",
+                },
+            )
+            assert res.status_code == 413
+            assert rollover_count == 0
+    finally:
+        tempfile.SpooledTemporaryFile.rollover = orig_rollover
+
+
+@pytest.mark.anyio
+async def test_adversarial_valid_upload_under_limit_remains_in_memory(pg_photo_engine, monkeypatch):
+    """
+    P1-A : Démontre qu'un upload valide de 1.2 Mio est traité intégralement en mémoire
+    sans provoquer de rollover sur disque (/tmp) grâce au seuil SpooledTemporaryFile porté à 3 Mio.
+    """
+    monkeypatch.setenv("PHOTO_MYSTERY_ENABLED", "true")
+    monkeypatch.setenv("PHOTO_MYSTERY_ALLOWLIST", "*")
+
+    SessionLocal = sessionmaker(bind=pg_photo_engine)
+    session = SessionLocal()
+
+    uid = uuid.uuid4().hex[:6]
+    creator = User(username=f"mem_u_{uid}", email=f"mem_{uid}@test.com", password_hash=hash_password("p"), is_guest=False)
+    session.add(creator)
+    session.flush()
+
+    barathon = Barathon(
+        name="Memory Test Barathon",
+        start_datetime=datetime.now(timezone.utc),
+        has_started=True,
+        status="started",
+        travel_time_between_bars_minutes=10,
+        max_time_in_bar_minutes=45,
+        created_by_user_id=creator.id,
+        join_code=f"M{uid}",
+    )
+    session.add(barathon)
+    session.flush()
+
+    p1 = BarathonParticipant(barathon_id=barathon.id, user_id=creator.id, role="creator")
+    session.add(p1)
+    session.flush()
+
+    # Création du draft et obtention de la capacité
+    res_draft = PhotoService.create_draft(
+        session,
+        barathon,
+        creator,
+        PhotoChallengeCreate(
+            question="Quel verre ?",
+            options=["A", "B"],
+            correct_index=0,
+        ),
+        uuid.uuid4(),
+    )
+    upload_code = res_draft.upload_code
+
+    upload_token, challenge_id, _ = PhotoService.claim_upload_code(session, upload_code)
+
+    # Création d'une image JPEG valide
+    img = Image.new("RGB", (800, 600), color=(100, 150, 200))
+    img_buf = io.BytesIO()
+    img.save(img_buf, format="JPEG", quality=90)
+    img_bytes = img_buf.getvalue()
+
+    from app.db import get_db
+
+    def override_db():
+        try:
+            yield session
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_db
+
+    rollover_count = 0
+    orig_rollover = tempfile.SpooledTemporaryFile.rollover
+
+    def tracked_rollover(self):
+        nonlocal rollover_count
+        rollover_count += 1
+        return orig_rollover(self)
+
+    tempfile.SpooledTemporaryFile.rollover = tracked_rollover
+    try:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            res = await client.post(
+                "/photo-mystery/upload",
+                files={"file": ("photo.jpg", img_bytes, "image/jpeg")},
+                headers={"Authorization": f"Bearer {upload_token}"},
+            )
+            assert res.status_code == 201
+            assert res.json()["status"] == "ready"
+            # Rollover doit être strictement égal à 0 (l'upload est resté en mémoire vive)
+            assert rollover_count == 0
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+        tempfile.SpooledTemporaryFile.rollover = orig_rollover
+        session.close()
 
 
 def test_adversarial_finalize_expired_challenges_idempotent(pg_photo_engine, monkeypatch):

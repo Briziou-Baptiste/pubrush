@@ -7,7 +7,11 @@ from dotenv import load_dotenv
 from jose import JWTError, jwt
 from pwdlib import PasswordHash
 
-load_dotenv()
+if os.getenv("PYTHON_DOTENV_DISABLED") != "1":
+    if os.getenv("APP_ENV") == "staging" and os.path.exists(".env.staging"):
+        load_dotenv(".env.staging")
+    else:
+        load_dotenv()
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 is_production = (

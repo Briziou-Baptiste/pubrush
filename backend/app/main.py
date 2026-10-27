@@ -5,12 +5,21 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+if os.getenv("PYTHON_DOTENV_DISABLED") != "1":
+    if os.getenv("APP_ENV") == "staging" and os.path.exists(".env.staging"):
+        load_dotenv(".env.staging")
+    else:
+        load_dotenv()
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.formparsers import MultiPartParser, MultiPartException
 from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session, selectinload
+
+# P1-A: Borne de spool mémoire portée à 3 MiB pour éviter tout débordement disque (/tmp)
+# avant application stricte du plafond de requête de 2.06 MiB (2 MiB payload + délimiteurs)
+MultiPartParser.spool_max_size = 3 * 1024 * 1024
 
 from app.core.logging_filter import SensitiveDataFilter, setup_logging_filters
 
@@ -47,7 +56,7 @@ forgot_limiter = InMemoryRateLimiter(requests_limit=5, window_seconds=60)
 
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
-    # Rejet immédiat des requêtes d'upload photo volumineuses ou non authentifiées avant parsing multipart
+    # P1-A: Rejet immédiat en amont des requêtes d'upload photo volumineuses ou non authentifiées avant parsing multipart
     upload_stream_exceeded = False
     if request.method == "POST" and request.url.path.endswith("/photo-mystery/upload"):
         auth_hdr = request.headers.get("authorization", "")
@@ -57,8 +66,23 @@ async def security_headers_middleware(request: Request, call_next):
                 status_code=401,
                 media_type="application/json",
             )
+        token = auth_hdr.split("Bearer ", 1)[1].strip()
+        payload = decode_access_token(token)
+        if not payload or payload.get("scope") != "photo_upload":
+            return Response(
+                content='{"detail":"Jeton de capacité d\'upload invalide ou expiré."}',
+                status_code=401,
+                media_type="application/json",
+            )
+        if not payload.get("challenge_id") or not payload.get("jti"):
+            return Response(
+                content='{"detail":"Token d\'upload incomplet."}',
+                status_code=401,
+                media_type="application/json",
+            )
+
+        max_bytes = 2 * 1024 * 1024 + 65536  # 2.06 MiB (2 MiB payload + délimiteurs multipart)
         content_length = request.headers.get("content-length")
-        max_bytes = 2 * 1024 * 1024 + 65536  # 2.06 MiB (2 MiB + délimiteurs multipart)
         if content_length:
             try:
                 if int(content_length) > max_bytes:
@@ -73,26 +97,32 @@ async def security_headers_middleware(request: Request, call_next):
                     status_code=400,
                     media_type="application/json",
                 )
-        else:
-            # Transfer-Encoding: chunked sans Content-Length :
-            # Borne la consommation du flux ASGI pour couper Starlette dès 2.06 MiB
-            # et empêcher tout débordement de mémoire vive ou de stockage temporaire /tmp
-            bytes_received = 0
-            raw_receive = request._receive
 
-            async def bounded_receive():
-                nonlocal bytes_received, upload_stream_exceeded
-                msg = await raw_receive()
-                if msg.get("type") == "http.request":
-                    bytes_received += len(msg.get("body", b""))
-                    if bytes_received > max_bytes:
-                        upload_stream_exceeded = True
-                        raise ValueError("Upload stream payload exceeded maximum limit")
-                return msg
+        # Borne systématique du flux ASGI (avec ou sans Content-Length, couvrant flux chunked et Content-Length mensonger) :
+        # coupe Starlette dès 2.06 MiB pour empêcher tout débordement mémoire ou disque (/tmp)
+        bytes_received = 0
+        raw_receive = request._receive
 
-            request._receive = bounded_receive
+        async def bounded_receive():
+            nonlocal bytes_received, upload_stream_exceeded
+            msg = await raw_receive()
+            if msg.get("type") == "http.request":
+                bytes_received += len(msg.get("body", b""))
+                if bytes_received > max_bytes:
+                    upload_stream_exceeded = True
+                    raise MultiPartException("Fichier trop volumineux (maximum 2 MiB).")
+            return msg
 
-    response: Response = await call_next(request)
+        request._receive = bounded_receive
+
+    try:
+        response: Response = await call_next(request)
+    except MultiPartException:
+        response = Response(
+            content='{"detail":"Fichier trop volumineux (maximum 2 MiB)."}',
+            status_code=413,
+            media_type="application/json",
+        )
     if upload_stream_exceeded:
         response = Response(
             content='{"detail":"Fichier trop volumineux (maximum 2 MiB)."}',

@@ -23,22 +23,8 @@ export default function PhotoCapturePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [blobToSend, setBlobToSend] = useState<Blob | null>(null);
 
-  // Read code from query parameters (?code=...) on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const codeParam = params.get("code");
-      if (codeParam) {
-        setCode(codeParam.trim().toUpperCase());
-        // Clean URL to prevent leaking the code in browser history, address bar, or Referer
-        try {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } catch {
-          // Ignore if restricted in sandbox
-        }
-      }
-    }
-  }, []);
+  // P1-D: Pas de lecture du code depuis la query string pour éviter toute fuite (historique, Referer, logs)
+  // La saisie manuelle du code à 10 caractères dans le formulaire est requise.
 
   // Handle fallback file selection from native device camera
   const handleNativeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -397,17 +383,29 @@ export default function PhotoCapturePage() {
               <CheckCircle2 className="w-10 h-10" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Photo transmise avec succès !</h2>
-              <p className="text-sm text-neutral-400 mt-2">
-                Votre photo est chiffrée et prête. Vous pouvez fermer cet écran et retourner dans l&apos;application PubRush pour publier votre défi.
+              <h2 className="text-xl font-bold text-white">Photo validée !</h2>
+              <p className="text-sm text-neutral-300 mt-2 font-medium">
+                Votre photo est chiffrée et prête.
               </p>
+              <div className="mt-4 p-4 bg-sky-950/40 border border-sky-800/50 rounded-xl text-sky-200 text-sm leading-relaxed">
+                <p className="font-semibold text-white">👉 Retournez maintenant dans l&apos;application PubRush.</p>
+                <p className="mt-1 text-xs text-sky-300">
+                  (Sur iPhone : touchez « Terminé » en haut à gauche. Sur Android : touchez la flèche retour de votre téléphone.)
+                </p>
+              </div>
             </div>
             <button
               type="button"
-              onClick={() => window.close()}
-              className="mt-4 px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-sm font-medium transition"
+              onClick={() => {
+                try {
+                  window.close();
+                } catch {
+                  // Ignore
+                }
+              }}
+              className="mt-2 px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-xl text-sm font-medium transition"
             >
-              Fermer cette page
+              Fermer la page
             </button>
           </div>
         )}
