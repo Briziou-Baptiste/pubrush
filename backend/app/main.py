@@ -430,7 +430,14 @@ def _delete_user_data(user_to_delete: User, db: Session):
         )
     )
 
-    # 4. Delete the user
+    # 4. Révocation RGPD et purge des données Photo Mystère
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_user_all_photos(db, user_to_delete.id)
+    except Exception:
+        pass
+
+    # 5. Delete the user
     db.delete(user_to_delete)
 
 

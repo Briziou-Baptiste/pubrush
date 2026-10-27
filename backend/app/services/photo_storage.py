@@ -14,6 +14,26 @@ HEADER_LENGTH = len(MAGIC_HEADER) + NONCE_LENGTH
 # Clé de chiffrement éphémère par processus (gardée uniquement en mémoire vive)
 _EPHEMERAL_PROCESS_KEY = secrets.token_bytes(32)
 
+# Capacité maximale du volume éphémère en RAM (défaut 32 MiB)
+def get_max_storage_bytes() -> int:
+    return int(os.getenv("PHOTO_STORAGE_MAX_BYTES", str(32 * 1024 * 1024)))
+
+
+def get_current_storage_usage() -> int:
+    """Calcule le volume total consommé par les fichiers dans PHOTO_STORAGE_DIR."""
+    storage_dir = os.getenv("PHOTO_STORAGE_DIR", "/tmp/pubrush-photo-media")
+    if not os.path.isdir(storage_dir):
+        return 0
+    total = 0
+    try:
+        for fname in os.listdir(storage_dir):
+            p = os.path.join(storage_dir, fname)
+            if os.path.isfile(p):
+                total += os.path.getsize(p)
+    except OSError:
+        pass
+    return total
+
 
 def get_storage_dir() -> str:
     """Retourne et garantit l'existence du dossier de stockage avec permissions 0o700."""
@@ -76,7 +96,12 @@ def encrypt_and_store(media_uuid: uuid.UUID, jpeg_bytes: bytes) -> Tuple[uuid.UU
     payload = MAGIC_HEADER + nonce + ciphertext_and_tag
     storage_key = uuid.uuid4()
 
-    # 4. Écriture atomique dans PHOTO_STORAGE_DIR
+    # 4. Contrôle de capacité du stockage RAM (budget 32 MiB)
+    current_usage = get_current_storage_usage()
+    if current_usage + len(payload) > get_max_storage_bytes():
+        raise OSError("Capacité de stockage éphémère saturée (quota RAM 32 MiB dépassé).")
+
+    # 5. Écriture atomique dans PHOTO_STORAGE_DIR
     storage_dir = get_storage_dir()
     target_path = os.path.join(storage_dir, f"{storage_key}.enc")
 

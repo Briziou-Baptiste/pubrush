@@ -335,6 +335,12 @@ async def delete_barathon(
     if barathon.created_by_user_id != current_user.id and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Seul le créateur peut supprimer ce barathon")
 
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_all_barathon_photos(db, barathon_id)
+    except Exception:
+        pass
+
     await ws_manager.close_barathon_connections(barathon_id, code=1000, reason="Barathon deleted")
     db.delete(barathon)
     db.commit()
@@ -480,6 +486,12 @@ async def remove_participant_from_barathon(
     db.delete(participant)
     db.commit()
 
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_participant_photo_access(db, barathon_id, user_id)
+    except Exception:
+        pass
+
     # Purge participant location and close their barathon socket
     ws_manager.clear_user_location(barathon_id, user_id)
     user_ws_set = list(ws_manager.barathon_user_sockets.get(barathon_id, {}).pop(user_id, set()))
@@ -612,6 +624,12 @@ async def finish_barathon(
     barathon.status = "completed"
     barathon.ended_at = now
     barathon.updated_at = now
+
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_all_barathon_photos(db, barathon_id)
+    except Exception:
+        pass
 
     db.commit()
 
@@ -790,6 +808,12 @@ async def stop_barathon(
     barathon.status = "stopped"
     barathon.ended_at = now
     barathon.updated_at = now
+
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_all_barathon_photos(db, barathon.id)
+    except Exception:
+        pass
 
     db.commit()
     db.refresh(barathon)

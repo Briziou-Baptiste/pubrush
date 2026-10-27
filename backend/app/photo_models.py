@@ -82,6 +82,9 @@ class PhotoChallenge(Base):
     create_fingerprint = Column(String(64), nullable=False)
     upload_code_hash = Column(String(64), nullable=True, index=True)
     code_expires_at = Column(DateTime(timezone=True), nullable=True)
+    upload_claim_id = Column(GUID, nullable=True)
+    upload_claim_expires_at = Column(DateTime(timezone=True), nullable=True)
+    upload_claim_consumed_at = Column(DateTime(timezone=True), nullable=True)
     notice_version = Column(String(32), nullable=False, default="photo-private-2026-10-v1")
     confirmed_at = Column(DateTime(timezone=True), nullable=True)
 

@@ -7,11 +7,13 @@ from fastapi import (
     File,
     Header,
     HTTPException,
+    Request,
     Response,
     UploadFile,
     status,
 )
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from app.api.deps.auth import get_current_user
 from app.db import get_db
@@ -31,6 +33,8 @@ from app.services.photo_service import PhotoService
 
 
 router = APIRouter(tags=["photo-mystery"])
+
+MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2 MiB
 
 
 def get_barathon_or_404(barathon_id: int, db: Session = Depends(get_db)) -> Barathon:
@@ -54,8 +58,7 @@ def get_photo_mystery_state(
     current_user: User = Depends(get_current_user),
     barathon: Barathon = Depends(get_barathon_or_404),
 ):
-    res = PhotoService.get_state(db, barathon, current_user)
-    return res
+    return PhotoService.get_state(db, barathon, current_user)
 
 
 # 2. Création d'un défi (draft) par un auteur
@@ -99,16 +102,29 @@ def claim_upload_code(
     )
 
 
-# 4. Upload binaire de la photo (avec le jeton de capacité d'upload)
+# 4. Upload binaire de la photo (avec limites de ressources strictes et exécution threadée)
 @router.post(
     "/photo-mystery/upload",
     status_code=status.HTTP_201_CREATED,
 )
 async def upload_photo_file(
+    request: Request,
     file: UploadFile = File(...),
     authorization: str = Header(..., alias="Authorization"),
     db: Session = Depends(get_db),
 ):
+    # Contrôle de taille préalable via Content-Length (rejet immédiat avant lecture)
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_UPLOAD_BYTES + 10240:
+                raise HTTPException(
+                    status_code=413,
+                    detail="Fichier trop volumineux (maximum 2 MiB).",
+                )
+        except ValueError:
+            pass
+
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token manquant ou format invalide.")
 
@@ -122,9 +138,29 @@ async def upload_photo_file(
         raise HTTPException(status_code=400, detail="Token d'upload incomplet.")
 
     challenge_id = uuid.UUID(challenge_id_str)
-    raw_bytes = await file.read()
 
-    media_id, w, h = PhotoService.upload_photo(db, challenge_id, raw_bytes, payload)
+    # Lecture bornée par morceaux pour éviter tout pic mémoire
+    chunks = []
+    total_bytes = 0
+    chunk_size = 64 * 1024
+    while True:
+        chunk = await file.read(chunk_size)
+        if not chunk:
+            break
+        total_bytes += len(chunk)
+        if total_bytes > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail="Fichier trop volumineux (maximum 2 MiB).",
+            )
+        chunks.append(chunk)
+
+    raw_bytes = b"".join(chunks)
+
+    # Exécution du traitement Pillow hors de la boucle d'événements asynchrone principale
+    media_id, w, h = await run_in_threadpool(
+        PhotoService.upload_photo, db, challenge_id, raw_bytes, payload
+    )
     return {
         "media_id": str(media_id),
         "width": w,
@@ -199,21 +235,5 @@ def delete_challenge(
     current_user: User = Depends(get_current_user),
     barathon: Barathon = Depends(get_barathon_or_404),
 ):
-    from app.photo_models import PhotoChallenge
-
-    ch = db.scalar(
-        db.query(PhotoChallenge).filter(
-            PhotoChallenge.id == challenge_id,
-            PhotoChallenge.barathon_id == barathon.id,
-        )
-    )
-    if not ch:
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-    if ch.creator_user_id != current_user.id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Seul l'auteur peut retirer ce défi.")
-
-    ch.state = "cancelled"
-    ch.content_removed_at = PhotoService.utc_now()
-    db.commit()
+    PhotoService.delete_challenge(db, barathon, challenge_id, current_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

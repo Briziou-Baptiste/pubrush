@@ -2,7 +2,10 @@ import os
 import uuid
 import pytest
 from datetime import datetime, timezone
-from sqlalchemy import create_engine, select, func
+from pathlib import Path
+from sqlalchemy import create_engine, select, func, inspect
+from alembic.config import Config
+from alembic import command
 
 from app.models import Base, User, Barathon, BarathonParticipant, PhotoSecureGuest
 from app.photo_models import PhotoChallenge, PhotoAudience, PhotoAnswer, PhotoResult, PhotoMedia
@@ -14,18 +17,70 @@ PG_TEST_URL = os.getenv(
 )
 
 
+def get_alembic_config(db_url: str) -> Config:
+    backend_dir = Path(__file__).resolve().parent.parent
+    ini_path = backend_dir / "alembic.ini"
+    cfg = Config(str(ini_path))
+    cfg.set_main_option("sqlalchemy.url", db_url)
+    cfg.set_main_option("script_location", str(backend_dir / "alembic"))
+    cfg.attributes["configure_logger"] = False
+    return cfg
+
+
 @pytest.fixture(scope="module")
 def pg_photo_engine():
     try:
         engine = create_engine(PG_TEST_URL, pool_pre_ping=True)
         with engine.connect() as conn:
             pass
-        # Ensure all tables exist on PostgreSQL
-        Base.metadata.create_all(bind=engine)
         yield engine
         engine.dispose()
     except Exception as exc:
         pytest.skip(f"PostgreSQL test database not available: {exc}")
+
+
+def test_real_alembic_migration_and_rollback_on_postgres(pg_photo_engine):
+    """
+    P1-C : Vérification rigoureuse des migrations Alembic sur PostgreSQL réel.
+    1. Upgrade vers b1c2d3e4f5a6 : création des tables photo_*.
+    2. Vérification de l'existence des tables et colonnes.
+    3. Downgrade vers a7b8c9d0e1f2 : suppression propre des tables photo_*.
+    4. Vérification que l'ancien schéma et les données préexistantes sont intacts.
+    5. Re-upgrade vers b1c2d3e4f5a6 pour laisser la base de test opérationnelle.
+    """
+    cfg = get_alembic_config(PG_TEST_URL)
+
+    # 1. Appliquer d'abord la révision Photo
+    command.upgrade(cfg, "b1c2d3e4f5a6")
+
+    insp = inspect(pg_photo_engine)
+    tables = insp.get_table_names()
+    assert "photo_challenges" in tables
+    assert "photo_media" in tables
+    assert "photo_secure_guests" in tables
+    assert "photo_audience" in tables
+    assert "photo_answers" in tables
+    assert "photo_results" in tables
+
+    # Vérification des colonnes ajoutées pour l'anti-rejeu
+    cols = [c["name"] for c in insp.get_columns("photo_challenges")]
+    assert "upload_claim_id" in cols
+    assert "upload_claim_consumed_at" in cols
+
+    # 2. Test du rollback Alembic vers a7b8c9d0e1f2
+    command.downgrade(cfg, "a7b8c9d0e1f2")
+
+    insp_post_downgrade = inspect(pg_photo_engine)
+    tables_post = insp_post_downgrade.get_table_names()
+    assert "photo_challenges" not in tables_post
+    assert "photo_media" not in tables_post
+    assert "photo_secure_guests" not in tables_post
+    # Les tables coeur doivent être préservées
+    assert "users" in tables_post
+    assert "barathons" in tables_post
+
+    # 3. Re-upgrade vers b1c2d3e4f5a6 pour la suite des tests
+    command.upgrade(cfg, "b1c2d3e4f5a6")
 
 
 def test_additive_schema_and_backward_compatibility_on_real_pg(pg_photo_engine):

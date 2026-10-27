@@ -12,10 +12,18 @@ if [[ -z "$TARGET_IMAGE" ]]; then
   [[ -n "$STATE_ENV_FILE" ]] || STATE_ENV_FILE="$BACKUP_DIR/latest_pre_monopod_backup.env"
   validate_snapshot
   BACKEND_IMAGE=$(python3 "$STATE_TOOL" image "$STATE_ENV_FILE" backend)
-  MIGRATION_IMAGE=$(python3 "$STATE_TOOL" image "$STATE_ENV_FILE" migration)
+  if [[ -n "$TARGET_MIGRATION_IMAGE" ]]; then
+    MIGRATION_IMAGE=$(python3 "$STATE_TOOL" image-ref "$TARGET_MIGRATION_IMAGE")
+  else
+    MIGRATION_IMAGE=$(python3 "$STATE_TOOL" image "$STATE_ENV_FILE" migration)
+  fi
 else
   BACKEND_IMAGE=$(python3 "$STATE_TOOL" image-ref "$TARGET_IMAGE")
-  MIGRATION_IMAGE="$BACKEND_IMAGE"
+  if [[ -n "$TARGET_MIGRATION_IMAGE" ]]; then
+    MIGRATION_IMAGE=$(python3 "$STATE_TOOL" image-ref "$TARGET_MIGRATION_IMAGE")
+  else
+    MIGRATION_IMAGE="$BACKEND_IMAGE"
+  fi
 fi
 # Refuse a mixed/multipod target before changing either image.
 require_monopod

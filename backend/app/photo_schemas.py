@@ -74,6 +74,7 @@ class PhotoResultRead(BaseModel):
     correct_count: int
     incorrect_count: int
     passed_count: int
+    missing_count: Optional[int] = 0
     creator_dare: bool
     my_dare_assigned: Optional[bool] = None
 
