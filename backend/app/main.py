@@ -1,5 +1,6 @@
 import os
 import secrets
+import logging
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
@@ -11,12 +12,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.logging_filter import SensitiveDataFilter, setup_logging_filters
+
+# Configure sensitive data filter on root and uvicorn loggers
+setup_logging_filters()
+
 from app.api.routes.barathons import router as barathons_router
 from app.api.routes.ws import router as ws_router
 from app.api.routes.expenses import router as expenses_router
 from app.api.routes.bars import router as bars_router
 from app.api.routes.saved_barathons import router as saved_barathons_router
 from app.api.routes.partner_events import router as partner_events_router
+from app.api.routes.photo_mystery import router as photo_mystery_router
 from app.core.lifespan import lifespan
 from app.core.rate_limiter import InMemoryRateLimiter
 from app.api.deps.auth import get_current_user
@@ -75,6 +82,7 @@ app.include_router(expenses_router)
 app.include_router(bars_router)
 app.include_router(saved_barathons_router)
 app.include_router(partner_events_router)
+app.include_router(photo_mystery_router)
 
 @app.get("/health")
 def health():

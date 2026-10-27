@@ -19,6 +19,9 @@ import ActiveBarathonBottomPanel from '../components/ActiveBarathonBottomPanel';
 import BarathonRolesModal from '../components/BarathonRolesModal';
 import ReplaceOrAddStopModal from '../components/ReplaceOrAddStopModal';
 import InviteFriendsModal from '../components/InviteFriendsModal';
+import PhotoMysteryModal from '../components/PhotoMysteryModal';
+import { PhotoMysteryState } from '../types/photoMystery.types';
+import { fetchPhotoMysteryState } from '../services/photoMysteryService';
 import { fetchMyRoleInBarathon, fetchBarathon, fetchBarathonRoles, AssignedBarathonRole, API_BASE_URL } from '../../../lib/api';
 import { getAccessToken, getCurrentUserId } from '../../../lib/authStorage';
 import { connectBarathonSocket, disconnectBarathonSocket, sendBarathonLocation, WSMessage } from '../services/webSocket.service';
@@ -58,6 +61,8 @@ export default function ActiveBarathonScreen() {
   const [roles, setRoles] = useState<AssignedBarathonRole[]>([]);
   const [rolesModalVisible, setRolesModalVisible] = useState(false);
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
+  const [photoMysteryState, setPhotoMysteryState] = useState<PhotoMysteryState | null>(null);
+  const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [friendLocations, setFriendLocations] = useState<Record<number, ParticipantLocation>>({});
   const [isSousSolMode, setIsSousSolMode] = useState(false);
   const [pendingOfflineCount, setPendingOfflineCount] = useState(0);
@@ -69,6 +74,23 @@ export default function ActiveBarathonScreen() {
       .then((q) => setPendingOfflineCount(q.length))
       .catch(() => {});
   }, [isSousSolMode]);
+
+  useEffect(() => {
+    if (!barathon?.id) return;
+    let isMounted = true;
+    const loadPhoto = async () => {
+      try {
+        const s = await fetchPhotoMysteryState(barathon.id);
+        if (isMounted) setPhotoMysteryState(s);
+      } catch {}
+    };
+    loadPhoto();
+    const timer = setInterval(loadPhoto, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [barathon?.id]);
     
   useEffect(() => {
     void loadBarathon();
@@ -625,6 +647,8 @@ export default function ActiveBarathonScreen() {
             totalBarSeconds={barathon.max_time_in_bar_minutes * 60}
             onRolesPress={() => setRolesModalVisible(true)}
             onInvitePress={handleInvite}
+            onPhotoPress={photoMysteryState?.enabled ? () => setPhotoModalVisible(true) : undefined}
+            photoPendingCount={photoMysteryState?.pending_count ?? 0}
             onStopPress={() => { setEndingMode('stop'); setStopModalVisible(true); }}
             isSousSolMode={isSousSolMode}
             pendingOfflineActionsCount={pendingOfflineCount}
@@ -701,6 +725,14 @@ export default function ActiveBarathonScreen() {
         joinCode={barathon.join_code || ''}
         barathonName={barathon.name}
         participantsCount={roles.length || 1}
+      />
+
+      <PhotoMysteryModal
+        visible={photoModalVisible}
+        onClose={() => setPhotoModalVisible(false)}
+        barathonId={barathon.id}
+        initialState={photoMysteryState}
+        onStateUpdated={(s) => setPhotoMysteryState(s)}
       />
 
       <Modal

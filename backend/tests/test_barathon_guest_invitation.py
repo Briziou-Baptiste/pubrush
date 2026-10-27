@@ -88,18 +88,22 @@ def test_join_guest_success(client, db_session, test_user):
 def test_join_guest_rejoin_same_barathon(client, db_session, test_user):
     barathon = create_sample_barathon_with_code(db_session, test_user, "RUSH-REJOIN")
 
-    # 1. First join
+    # 1. First join succeeds
     res1 = client.post("/barathons/join-guest", json={"join_code": "RUSH-REJOIN", "username": "Léa"})
     assert res1.status_code == 201
-    user_id_1 = res1.json()["user"]["id"]
+    assert "access_token" in res1.json()
 
-    # 2. Re-join with same name in same barathon
+    # 2. Re-join with same name in same barathon must fail with 409 Conflict (anti-usurpation)
     res2 = client.post("/barathons/join-guest", json={"join_code": "RUSH-REJOIN", "username": "Léa"})
-    assert res2.status_code == 201
-    user_id_2 = res2.json()["user"]["id"]
+    assert res2.status_code == 409
+    assert res2.headers.get("X-Error-Code") == "GUEST_USERNAME_TAKEN"
+    assert "Ce pseudo est déjà utilisé dans ce barathon." in res2.json()["detail"]
 
-    # Should reuse the same guest account without creating duplicate participants
-    assert user_id_1 == user_id_2
+    # 3. Re-join with case-insensitive variant must also fail with 409 Conflict
+    res3 = client.post("/barathons/join-guest", json={"join_code": "RUSH-REJOIN", "username": "léa"})
+    assert res3.status_code == 409
+    assert res3.headers.get("X-Error-Code") == "GUEST_USERNAME_TAKEN"
+    assert "Ce pseudo est déjà utilisé dans ce barathon." in res3.json()["detail"]
 
 
 def test_join_guest_completed_barathon_rejected(client, db_session, test_user):

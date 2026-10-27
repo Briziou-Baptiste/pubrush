@@ -7,6 +7,7 @@ def utc_now() -> datetime:
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Column,
     DateTime,
     ForeignKey,
     Integer,
@@ -445,6 +446,30 @@ class AppUsageLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
     user: Mapped["User"] = relationship()
+
+
+class PhotoSecureGuest(Base):
+    __tablename__ = "photo_secure_guests"
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    barathon_id = Column(Integer, ForeignKey("barathons.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user: Mapped["User"] = relationship()
+    barathon: Mapped["Barathon"] = relationship()
+
+
+# Import all Photo models so Base.metadata knows about them
+from app.photo_models import (
+    PhotoChallenge,
+    PhotoAudience,
+    PhotoAnswer,
+    PhotoResult,
+    PhotoMedia,
+    PhotoRateEvent,
+)
+
+
 
 
 
