@@ -753,6 +753,13 @@ class PhotoService:
         check_rate_limits(db, user.id, "publish")
 
         now = utc_now()
+        # Verrouillage du barathon parent pour sérialiser strictement les publications concurrentes
+        db.scalar(
+            select(Barathon.id)
+            .where(Barathon.id == barathon.id)
+            .with_for_update()
+        )
+
         challenge = db.scalar(
             select(PhotoChallenge)
             .where(
@@ -1022,6 +1029,12 @@ class PhotoService:
         if challenge.state in ("closed", "cancelled", "expired"):
             return
 
+        existing_res = db.scalar(
+            select(PhotoResult).where(PhotoResult.challenge_id == challenge.id)
+        )
+        if existing_res:
+            return
+
         now = utc_now()
         answers = db.scalars(
             select(PhotoAnswer).where(PhotoAnswer.challenge_id == challenge.id)
@@ -1096,7 +1109,7 @@ class PhotoService:
                 PhotoChallenge.barathon_id == barathon_id,
                 PhotoChallenge.state == "published",
                 PhotoChallenge.expires_at <= now,
-            )
+            ).with_for_update(skip_locked=True)
         ).all()
         for ch in expired_challenges:
             PhotoService.finalize_challenge(db, ch, reason="deadline")

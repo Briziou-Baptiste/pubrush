@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.api.deps.auth import get_current_user
+from app.core.rate_limiter import InMemoryRateLimiter
 from app.db import get_db
 from app.models import Barathon, User
 from app.photo_schemas import (
@@ -34,6 +35,7 @@ from app.services.photo_service import PhotoService
 
 router = APIRouter(tags=["photo-mystery"])
 
+claim_upload_limiter = InMemoryRateLimiter(requests_limit=15, window_seconds=60)
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2 MiB
 
 
@@ -89,6 +91,7 @@ def create_challenge_draft(
 @router.post(
     "/photo-mystery/claim-upload",
     response_model=PhotoClaimUploadResponse,
+    dependencies=[Depends(claim_upload_limiter)],
 )
 def claim_upload_code(
     payload: PhotoClaimUploadRequest,

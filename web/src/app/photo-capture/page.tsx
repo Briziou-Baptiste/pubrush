@@ -19,8 +19,35 @@ export default function PhotoCapturePage() {
   // Camera stream & capture
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [blobToSend, setBlobToSend] = useState<Blob | null>(null);
+
+  // Read code from query parameters (?code=...) on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const codeParam = params.get("code");
+      if (codeParam) {
+        setCode(codeParam.trim().toUpperCase());
+      }
+    }
+  }, []);
+
+  // Handle fallback file selection from native device camera
+  const handleNativeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Le fichier dépasse 2 Mo.");
+      return;
+    }
+    stopCamera();
+    setBlobToSend(file);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setStep("PREVIEW");
+  };
 
   // Cleanup camera stream on unmount or state change
   const stopCamera = () => {
@@ -284,14 +311,32 @@ export default function PhotoCapturePage() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleNativeFileChange}
+            />
+
+            <div className="flex flex-col gap-2.5">
               <button
                 type="button"
                 onClick={handleCapture}
-                className="flex-1 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition"
+                className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition"
               >
                 <Camera className="w-5 h-5" />
                 Prendre la photo
+              </button>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white text-xs font-medium rounded-xl flex items-center justify-center gap-2 border border-neutral-700 transition"
+              >
+                <Camera className="w-4 h-4 text-neutral-400" />
+                Alternative : appareil photo natif du téléphone
               </button>
             </div>
           </div>

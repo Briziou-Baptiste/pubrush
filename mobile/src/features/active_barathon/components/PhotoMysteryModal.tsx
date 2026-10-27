@@ -142,9 +142,12 @@ export default function PhotoMysteryModal({
   }
 
   async function handleOpenWebCamera() {
-    const webUrl =
+    const baseUrl =
       process.env.EXPO_PUBLIC_WEB_URL ||
       'https://pubrush.com/photo-capture';
+    const webUrl = createdDraft?.upload_code
+      ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}code=${encodeURIComponent(createdDraft.upload_code)}`
+      : baseUrl;
     try {
       await WebBrowser.openBrowserAsync(webUrl);
       // Reload state when user returns from browser

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class PhotoChallengeCreate(BaseModel):
@@ -25,11 +25,11 @@ class PhotoChallengeCreate(BaseModel):
             raise ValueError("Les propositions doivent être uniques.")
         return cleaned
 
-    @field_validator("correct_index")
-    @classmethod
-    def validate_correct_index(cls, v: int, values) -> int:
-        # Note: in pydantic v2 options might not be validated yet if accessed from info
-        return v
+    @model_validator(mode="after")
+    def validate_correct_index_bounds(self) -> "PhotoChallengeCreate":
+        if self.correct_index < 0 or self.correct_index >= len(self.options):
+            raise ValueError("L'index de la bonne réponse doit être compris entre 0 et le nombre d'options moins 1.")
+        return self
 
 
 class PhotoDraftResponse(BaseModel):

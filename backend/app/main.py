@@ -47,6 +47,32 @@ forgot_limiter = InMemoryRateLimiter(requests_limit=5, window_seconds=60)
 
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
+    # Rejet immédiat des requêtes d'upload photo volumineuses ou non authentifiées avant parsing multipart
+    if request.method == "POST" and request.url.path.endswith("/photo-mystery/upload"):
+        auth_hdr = request.headers.get("authorization", "")
+        if not auth_hdr.startswith("Bearer "):
+            return Response(
+                content='{"detail":"Token manquant ou format invalide."}',
+                status_code=401,
+                media_type="application/json",
+            )
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                # 2 MiB + marge pour les délimiteurs multipart (64 KiB)
+                if int(content_length) > (2 * 1024 * 1024 + 65536):
+                    return Response(
+                        content='{"detail":"Fichier trop volumineux (maximum 2 MiB)."}',
+                        status_code=413,
+                        media_type="application/json",
+                    )
+            except ValueError:
+                return Response(
+                    content='{"detail":"Header Content-Length invalide."}',
+                    status_code=400,
+                    media_type="application/json",
+                )
+
     response: Response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"

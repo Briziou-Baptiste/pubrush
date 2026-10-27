@@ -39,6 +39,14 @@ class SensitiveDataFilter(logging.Filter):
             ),
             r"\1[REDACTED]",
         ),
+        # JSON fields: "code": "...", "token": "...", "upload_token": "...", "access_token": "..."
+        (
+            re.compile(
+                r'("(?:code|upload_token|token|access_token)"\s*:\s*)"[^"]+"',
+                re.IGNORECASE,
+            ),
+            r'\1"[REDACTED]"',
+        ),
     ]
 
     @classmethod
@@ -74,6 +82,8 @@ class SensitiveDataFilter(logging.Filter):
                     record.args = self._redact_value(record.args)
             else:
                 record.msg = self.redact(record.msg)
+        if getattr(record, "exc_text", None) and isinstance(record.exc_text, str):
+            record.exc_text = self.redact(record.exc_text)
         return True
 
 
