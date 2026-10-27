@@ -21,7 +21,7 @@ import {
   addParticipantsToBarathon,
   removeParticipantFromBarathon,
 } from '../services/planned.service';
-import InviteFriendsModal from '../../active_barathon/components/InviteFriendsModal';
+import { InviteFriendsContent } from '../../active_barathon/components/InviteFriendsModal';
 import { Ionicons } from '@expo/vector-icons';
 
 type ManageParticipantsModalProps = {
@@ -86,6 +86,7 @@ export default function ManageParticipantsModal({
   }, [participants]);
 
   useEffect(() => {
+    setQrModalVisible(false);
     if (visible && barathon) {
       void loadDetails();
     } else {
@@ -125,6 +126,24 @@ export default function ManageParticipantsModal({
       { text: 'Rester', style: 'cancel' },
       { text: 'Abandonner les ajouts', style: 'destructive', onPress: onClose },
     ]);
+  }
+
+  async function handleInvite() {
+    if (!barathon || loadingDetails || actionUserId !== null) return;
+    try {
+      setLoadingDetails(true);
+      // Revalidate the lifecycle and code rather than sharing stale list data.
+      const details = await getBarathonDetails(barathon.id);
+      if (!['planned', 'started'].includes(details.status) || !details.join_code?.trim()) {
+        throw new Error('Ce barathon ne permet plus les invitations.');
+      }
+      setFullBarathon(details);
+      setQrModalVisible(true);
+    } catch (error) {
+      Alert.alert('Invitation indisponible', error instanceof Error ? error.message : 'Réessaie plus tard.');
+    } finally {
+      setLoadingDetails(false);
+    }
   }
 
   function handleAddParticipant(user: SearchUserResult) {
@@ -200,14 +219,20 @@ export default function ManageParticipantsModal({
   }
 
   return (
-    <>
       <Modal
         visible={visible}
         transparent
         animationType="fade"
-        onRequestClose={handleClose}
+        onRequestClose={qrModalVisible ? () => setQrModalVisible(false) : handleClose}
       >
-      <SafeAreaView style={styles.overlay}>
+      {qrModalVisible ? (
+        <InviteFriendsContent
+          onClose={() => setQrModalVisible(false)}
+          joinCode={fullBarathon?.join_code || ''}
+          barathonName={fullBarathon?.name || ''}
+          participantsCount={fullBarathon?.participants?.length}
+        />
+      ) : <SafeAreaView style={styles.overlay}>
         <View style={styles.card}>
           <View style={navigationControlStyles.row}>
             <View style={navigationControlStyles.title}>
@@ -239,7 +264,8 @@ export default function ManageParticipantsModal({
                   paddingHorizontal: 16,
                   marginBottom: 14,
                 }}
-                onPress={() => setQrModalVisible(true)}
+                onPress={handleInvite}
+                disabled={actionUserId !== null || !['planned', 'started'].includes(fullBarathon?.status)}
                 activeOpacity={0.85}
               >
                 <Ionicons name="qr-code-outline" size={18} color="#2563EB" />
@@ -357,17 +383,8 @@ export default function ManageParticipantsModal({
             )}
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </SafeAreaView>}
     </Modal>
-
-    <InviteFriendsModal
-      visible={qrModalVisible}
-      onClose={() => setQrModalVisible(false)}
-      joinCode={fullBarathon?.join_code || barathon?.join_code || ''}
-      barathonName={barathon?.name || ''}
-      participantsCount={participants.length}
-    />
-  </>
 );
 }
 

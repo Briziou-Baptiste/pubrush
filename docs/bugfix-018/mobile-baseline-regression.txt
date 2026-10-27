@@ -1,0 +1,85 @@
+✖ QR planned: revalidates server state and uses a single native modal (22.553292ms)
+✖ deletion waits for confirmation, suppresses duplicates and survives stale GET, return and refresh (9.967083ms)
+✖ last-stop Finish validates the stop then calls /finish once and navigates on confirmation (25.110541ms)
+✖ deletion confirmed cannot be resurrected by a GET started before DELETE (9.784834ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 201.756917
+
+✖ failing tests:
+
+test at tests/bugfix-018.test.cjs:61:86
+✖ QR planned: revalidates server state and uses a single native modal (22.553292ms)
+  AssertionError [ERR_ASSERTION]: QR content must be rendered inside the existing native modal
+      at TestContext.<anonymous> (/Users/baptistebriziou/Projects/pubrush/mobile/tests/bugfix-018.test.cjs:74:12)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:297:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '=='
+  }
+
+test at tests/bugfix-018.test.cjs:108:1
+✖ deletion waits for confirmation, suppresses duplicates and survives stale GET, return and refresh (9.967083ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (/Users/baptistebriziou/Projects/pubrush/mobile/tests/bugfix-018.test.cjs:112:50)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:744:18) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual'
+  }
+
+test at tests/bugfix-018.test.cjs:189:1
+✖ last-stop Finish validates the stop then calls /finish once and navigates on confirmation (25.110541ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      'complete',
+  +   'complete',
+  +   'stop',
+  +   'stop',
+  -   'finish',
+      'trackingStopped',
+  +   'trackingStopped'
+    ]
+  
+      at TestContext.<anonymous> (/Users/baptistebriziou/Projects/pubrush/mobile/tests/bugfix-018.test.cjs:192:10)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'complete', 'complete', 'stop', 'stop', 'trackingStopped', 'trackingStopped' ],
+    expected: [ 'complete', 'finish', 'trackingStopped' ],
+    operator: 'deepStrictEqual'
+  }
+
+test at tests/bugfix-018.test.cjs:211:1
+✖ deletion confirmed cannot be resurrected by a GET started before DELETE (9.784834ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/Users/baptistebriziou/Projects/pubrush/mobile/tests/bugfix-018.test.cjs:215:46)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual'
+  }

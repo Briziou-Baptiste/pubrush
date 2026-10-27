@@ -1,0 +1,8 @@
+.........................                                                [100%]
+=============================== warnings summary ===============================
+app/security.py:23
+  /Users/baptistebriziou/Projects/pubrush/backend/app/security.py:23: UserWarning: JWT_SECRET_KEY is not configured or using dev default. Set JWT_SECRET_KEY in production.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+25 passed, 1 warning in 1.29s

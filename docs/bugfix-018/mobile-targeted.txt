@@ -1,0 +1,42 @@
+✔ QR planned: revalidates server state and uses a single native modal (89.257917ms)
+✔ QR started: revalidates server state and uses a single native modal (63.266792ms)
+✔ QR completed: revalidates server state and uses a single native modal (71.42025ms)
+✔ QR stopped: revalidates server state and uses a single native modal (72.398791ms)
+✔ QR failed: revalidates server state and uses a single native modal (23.427708ms)
+✔ QR deleted: revalidates server state and uses a single native modal (49.503ms)
+✔ shared QR encodes and shares the actual URL; image failure ends loading; missing code cannot invite (43.335834ms)
+✔ deletion waits for confirmation, suppresses duplicates and survives stale GET, return and refresh (45.494833ms)
+✔ deletion failure retains the row and unlocks retry without displaying success (38.313167ms)
+✔ older GET cannot overwrite a newer GET and unfocused responses are ignored (41.763834ms)
+✔ DELETE service accepts 204 and propagates HTTP/network failures (11.742333ms)
+✔ outcome completed 7/10: lifecycle is independent of stop target (0.238833ms)
+✔ outcome completed 6/10: lifecycle is independent of stop target (0.524333ms)
+✔ outcome stopped 10/10: lifecycle is independent of stop target (0.0305ms)
+✔ outcome stopped 1/10: lifecycle is independent of stop target (0.019666ms)
+✔ outcome failed 0/10: lifecycle is independent of stop target (0.017084ms)
+✔ outcome undefined 0/0: lifecycle is independent of stop target (0.014042ms)
+✔ outcome completed 0/0: lifecycle is independent of stop target (0.013125ms)
+✔ historical missing flags remain unknown and 69.56 percent is not promoted to success (0.064708ms)
+✔ list and summary agree for completed, even with failed expenses (208.610958ms)
+✔ list and summary agree for stopped, even with failed expenses (102.899291ms)
+✔ list and summary agree for failed, even with failed expenses (99.731084ms)
+✔ list and summary agree for undefined, even with failed expenses (66.808833ms)
+✔ last-stop Finish validates the stop then calls /finish once and navigates on confirmation (57.131334ms)
+✔ explicit Stop at last stop calls /stop without fabricating completion (64.119209ms)
+✔ failed final-stop validation prevents finish and summary navigation (50.716041ms)
+✔ active invitation started revalidates lifecycle and code (35.318416ms)
+✔ active invitation completed revalidates lifecycle and code (20.438458ms)
+✔ active invitation stopped revalidates lifecycle and code (32.169917ms)
+✔ active invitation failed revalidates lifecycle and code (16.216667ms)
+✔ active invitation deleted revalidates lifecycle and code (25.7455ms)
+✔ deletion confirmed cannot be resurrected by a GET started before DELETE (14.980208ms)
+✔ unavailable detail shows incomplete historical data without inventing success or failure (24.883667ms)
+✔ mobile closure services preserve the API endpoint and HTTP method contract (2.039ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1665.471125

@@ -8,7 +8,7 @@ import { getMapControlsLayout } from '../../create_barathon/services/mapLayout.s
 import { useLocalSearchParams, router, useNavigation } from 'expo-router';
 import { Region } from 'react-native-maps';
 
-import { getBarathonById, getMyActiveBarathon, stopBarathon, completeBarathonStop, advanceBarathonNextStep } from '../services/activeBarathon.service';
+import { getBarathonById, getMyActiveBarathon, stopBarathon, markBarathonFinished, completeBarathonStop, advanceBarathonNextStep } from '../services/activeBarathon.service';
 import { ActiveBarathonData } from '../types/activeBarathon.types';
 import { ParticipantLocation } from '../types/webSocker.types';
 import { useActiveBarathonTracking } from '../hooks/useActiveBarathonTracking';
@@ -48,6 +48,8 @@ export default function ActiveBarathonScreen() {
   const params = useLocalSearchParams<{ barathonId?: string }>();
   const [barathon, setBarathon] = useState<ActiveBarathonData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [endingMode, setEndingMode] = useState<'stop' | 'finish'>('stop');
+  const endingInFlight = useRef(false);
   const [stopModalVisible, setStopModalVisible] = useState(false);
   const [modifyModalVisible, setModifyModalVisible] = useState(false);
   const [modifyMode, setModifyMode] = useState<'replace' | 'add'>('replace');
@@ -489,9 +491,25 @@ export default function ActiveBarathonScreen() {
     return false;
   }, [barathon, currentUserId, userRole, roles]);
 
+  async function handleInvite() {
+    if (!barathon) return;
+    try {
+      // active-view rejects sessions that have ended or have been deleted.
+      const fresh = await getBarathonById(barathon.id);
+      if (fresh.status !== 'started' || !fresh.join_code?.trim()) {
+        throw new Error('Ce barathon ne permet plus les invitations.');
+      }
+      setBarathon(current => current ? { ...current, join_code: fresh.join_code } : current);
+      setInviteModalVisible(true);
+    } catch (error) {
+      Alert.alert('Invitation indisponible', error instanceof Error ? error.message : 'Réessaie plus tard.');
+    }
+  }
+
   // Handles the "Next Step" button press. Either completes the barathon or advances to the next stop
   async function handleNextStep() {
     if (isLastStop) {
+      setEndingMode('finish');
       setStopModalVisible(true);
       return;
     }
@@ -527,16 +545,15 @@ export default function ActiveBarathonScreen() {
   }
     // Completes the barathon, stops GPS tracking, and navigates to the summary screen
     async function handleConfirmStopBarathon() {
-      if (!barathon) {
-        return;
-      }
+      if (!barathon || endingInFlight.current) return;
+      endingInFlight.current = true;
 
       try {
         setStopping(true);
 
         const currentStop = barathon.stops[tracking.state.activeStopIndex];
         const shouldCompleteCurrent =
-          isLastStop ||
+          endingMode === 'finish' ||
           tracking.state.phase === 'in_stop' ||
           tracking.state.phase === 'overtime';
 
@@ -545,11 +562,14 @@ export default function ActiveBarathonScreen() {
             await completeBarathonStop(barathon.id, currentStop.id);
             currentStop.is_completed = true;
           } catch (err) {
+            if (endingMode === 'finish') throw err;
             console.error('Failed to complete current stop before ending:', err);
           }
         }
 
-        const stopResult = await stopBarathon(barathon.id);
+        const stopResult = endingMode === 'finish'
+          ? await markBarathonFinished(barathon.id)
+          : await stopBarathon(barathon.id);
         await tracking.stopTracking();
           
         const totalStops = barathon.stops.length;
@@ -574,6 +594,7 @@ export default function ActiveBarathonScreen() {
           error instanceof Error ? error.message : "Impossible d'arrêter le barathon."
         );
       } finally {
+        endingInFlight.current = false;
         setStopping(false);
         setStopModalVisible(false);
       }
@@ -603,8 +624,8 @@ export default function ActiveBarathonScreen() {
             remainingSeconds={tracking.state.remainingSeconds}
             totalBarSeconds={barathon.max_time_in_bar_minutes * 60}
             onRolesPress={() => setRolesModalVisible(true)}
-            onInvitePress={() => setInviteModalVisible(true)}
-            onStopPress={() => setStopModalVisible(true)}
+            onInvitePress={handleInvite}
+            onStopPress={() => { setEndingMode('stop'); setStopModalVisible(true); }}
             isSousSolMode={isSousSolMode}
             pendingOfflineActionsCount={pendingOfflineCount}
             onExpensesPress={
@@ -690,9 +711,9 @@ export default function ActiveBarathonScreen() {
       >
         <SafeAreaView style={styles.stopModalOverlay}>
           <View style={styles.stopModalCard}>
-            <Text style={styles.stopModalTitle}>Arrêter le barathon ?</Text>
+            <Text style={styles.stopModalTitle}>{endingMode === 'finish' ? 'Terminer le barathon ?' : 'Arrêter le barathon ?'}</Text>
             <Text style={styles.stopModalText}>
-              Veux-tu vraiment arrêter ce barathon ?
+              {endingMode === 'finish' ? 'Confirmer la fin de la tournée ?' : 'Veux-tu vraiment interrompre cette tournée ?'}
             </Text>
 
             <View style={styles.stopModalButtonsRow}>
@@ -710,7 +731,7 @@ export default function ActiveBarathonScreen() {
                 disabled={stopping}
               >
                 <Text style={styles.stopModalConfirmButtonText}>
-                  {stopping ? 'Arrêt...' : 'Arrêter'}
+                  {stopping ? 'En cours...' : endingMode === 'finish' ? 'Terminer' : 'Arrêter'}
                 </Text>
               </TouchableOpacity>
             </View>

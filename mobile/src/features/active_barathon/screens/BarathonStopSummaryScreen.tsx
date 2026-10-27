@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from '../styles/barathonStopSummary.styles';
 import { fetchBarathonExpenses, savePastBarathon, createBarathonExpense, fetchBarathon } from '../../../lib/api';
+import { getBarathonOutcome } from '../../barathon_past_planned/utils/barathon.status';
 import { getAccessToken, getCurrentUser } from '../../../lib/authStorage';
 
 type DebtSettlement = {
@@ -104,8 +105,11 @@ export default function BarathonStopSummaryScreen() {
     endDateTimeIso?: string;
     stopsJson?: string;
     source?: string;
+    status?: string;
   }>();
 
+  const [barathonStatus, setBarathonStatus] = useState<string | undefined>(params.status);
+  const [detailsError, setDetailsError] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [debts, setDebts] = useState<DebtSettlement[]>([]);
@@ -209,28 +213,35 @@ export default function BarathonStopSummaryScreen() {
       if (params.barathonId) {
         const token = await getAccessToken();
         if (token) {
-          // 1. Fetch expenses
-          const expenseData = await fetchBarathonExpenses(Number(params.barathonId), token);
-          setExpenses(expenseData.expenses);
-          setDebts(calculateSimplifiedDebts(expenseData.balances));
-
-          // 2. Fetch details to populate stops and metadata if missing or to ensure up-to-date values
-          try {
-            const details = await fetchBarathon(Number(params.barathonId), token);
-            if (details) {
-              setBarathonName(details.name);
-              setStops(details.stops || []);
-              setTotalStops((details.stops || []).length);
-              setCompletedStops((details.stops || []).filter((s: any) => s.is_completed).length);
-              setStartDateTimeIso(details.start_datetime);
-              setEndDateTimeIso(details.ended_at || details.end_datetime);
-            }
-          } catch (err) {
-            console.error('Failed to load barathon details in summary:', err);
+          // Load details independently: an expenses failure must not hide the result.
+          const [detailsResult, expensesResult] = await Promise.allSettled([
+            fetchBarathon(Number(params.barathonId), token),
+            fetchBarathonExpenses(Number(params.barathonId), token),
+          ]);
+          if (detailsResult.status === 'fulfilled' && detailsResult.value) {
+            const details = detailsResult.value;
+            setBarathonStatus(details.status);
+            setDetailsError(false);
+            setBarathonName(details.name);
+            setStops(details.stops || []);
+            setTotalStops((details.stops || []).length);
+            setCompletedStops((details.stops || []).filter((s: any) => s.is_completed).length);
+            setStartDateTimeIso(details.started_at || details.start_datetime);
+            setEndDateTimeIso(details.ended_at || details.end_datetime);
+          } else {
+            setDetailsError(true);
           }
+          if (expensesResult.status === 'fulfilled') {
+            const expenseData = expensesResult.value;
+            setExpenses(expenseData.expenses);
+            setDebts(calculateSimplifiedDebts(expenseData.balances));
+          }
+        } else {
+          setDetailsError(true);
         }
       }
     } catch (err) {
+      setDetailsError(true);
       console.error('Failed to load expenses or user in summary:', err);
     }
   }
@@ -285,7 +296,8 @@ export default function BarathonStopSummaryScreen() {
     return Number(d.toFixed(1));
   }, [stops]);
 
-  const isSuccessfulRun = completedPercentage >= 70;
+  const outcome = getBarathonOutcome(barathonStatus, stops);
+  const isSuccessfulRun = outcome.completedNormally;
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safeArea}>
@@ -298,10 +310,12 @@ export default function BarathonStopSummaryScreen() {
               color={isSuccessfulRun ? '#D97706' : '#2563EB'}
             />
             <Text style={styles.title}>
-              {isSuccessfulRun ? 'Tournée accomplie !' : 'Barathon terminé'}
+              {outcome.label}
             </Text>
           </View>
           <Text style={styles.subtitle}>{barathonName}</Text>
+          <Text style={styles.subtitle}>{outcome.progressLabel}</Text>
+          {detailsError && <Text style={styles.subtitle}>Actualisation impossible. Le résultat affiché peut être incomplet.</Text>}
         </View>
 
         <View style={styles.card}>
@@ -310,7 +324,9 @@ export default function BarathonStopSummaryScreen() {
           <View style={styles.row}>
             <Text style={styles.label}>Stops réalisés</Text>
             <Text style={[styles.value, percentageStyle]}>
-              {completedStops} / {totalStops} ({completedPercentage}%)
+              {outcome.targetReached === null
+                ? 'Données incomplètes'
+                : `${completedStops} / ${totalStops} (${completedPercentage}%)`}
             </Text>
           </View>
 
@@ -332,16 +348,17 @@ export default function BarathonStopSummaryScreen() {
 
           {stops.map((stop, index) => {
               const isDone = stop.is_completed;
+              const isKnown = typeof isDone === 'boolean';
 
             return (
               <View key={stop.id} style={styles.stopRow}>
                 <Text
                   style={[
                     styles.stopStatus,
-                    isDone ? styles.greenText : styles.redText,
+                    !isKnown ? styles.label : isDone ? styles.greenText : styles.redText,
                   ]}
                 >
-                  {isDone ? 'Fait' : 'Non fait'}
+                  {!isKnown ? 'Inconnu' : isDone ? 'Fait' : 'Non fait'}
                 </Text>
 
                 <View style={styles.stopTextBlock}>

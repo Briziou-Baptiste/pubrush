@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/baptistebriziou/Projects/pubrush/backend
+plugins: anyio-4.12.1, cov-7.1.0
+collected 124 items
+
+tests/test_auth.py .........................                             [ 20%]
+tests/test_barathon_dynamic_stops.py .....                               [ 24%]
+tests/test_barathon_guest_invitation.py .....                            [ 28%]
+tests/test_barathons.py .........                                        [ 35%]
+tests/test_bars.py ..                                                    [ 37%]
+tests/test_bugfix_018.py ....................                            [ 53%]
+tests/test_expenses.py ..                                                [ 54%]
+tests/test_main.py ......                                                [ 59%]
+tests/test_p0_fixes.py .........                                         [ 66%]
+tests/test_places_005.py ....                                            [ 70%]
+tests/test_places_008.py ...............                                 [ 82%]
+tests/test_postgres_real_integration.py ...                              [ 84%]
+tests/test_rate_limiter.py .                                             [ 85%]
+tests/test_saved_barathons.py .                                          [ 86%]
+tests/test_walking_routing.py ................                           [ 99%]
+tests/test_ws_friend_locations.py .                                      [100%]
+
+=============================== warnings summary ===============================
+app/security.py:23
+  /Users/baptistebriziou/Projects/pubrush/backend/app/security.py:23: UserWarning: JWT_SECRET_KEY is not configured or using dev default. Set JWT_SECRET_KEY in production.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 124 passed, 1 warning in 6.97s ========================

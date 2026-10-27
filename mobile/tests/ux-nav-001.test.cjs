@@ -241,7 +241,7 @@ test('participants modal uses the same guarded closure for the top close button 
   const Screen = load('features/planned/components/ManageParticipantsModal.tsx', {
     react: h.hooks, 'react-native': h.RN, 'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' },
     '@expo/vector-icons': { Ionicons: 'Icon' }, '../services/planned.service': {},
-    '../../active_barathon/components/InviteFriendsModal': () => null,
+    '../../active_barathon/components/InviteFriendsModal': { InviteFriendsContent: () => null },
   }).default;
   const tree = h.render(() => Screen({ visible: true, barathon: { id: 42, name: 'Vendredi' }, currentUserId: 1,
     onClose: () => { closed++; }, onUpdated() {} }));

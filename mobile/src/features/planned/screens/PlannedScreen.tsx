@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -29,13 +29,17 @@ export default function PlannedScreen() {
     const [participantsModalVisible, setParticipantsModalVisible] = useState(false);
     const [updatingStartTime, setUpdatingStartTime] = useState(false);
     const [startingBarathonId] = useState<number | null>(null);
+    const deletedIds = useRef(new Set<number>());
+    const deleteInFlight = useRef(false);
+    const loadSequence = useRef(0);
     useEffect(() => {
         loadCurrentUserId();
     }, []);
 
     useFocusEffect(
         useCallback(() => {
-            loadData();
+            void loadData();
+            return () => { loadSequence.current++; };
         }, [])
     );
 
@@ -49,17 +53,21 @@ export default function PlannedScreen() {
   }
 
   async function loadData() {
+    const sequence = ++loadSequence.current;
     try {
       setLoading(true);
       const data = await getMyUpcomingBarathons();
-      setBarathons(data);
+      if (sequence === loadSequence.current) {
+        setBarathons(data.filter(item => !deletedIds.current.has(item.id)));
+      }
     } catch (error) {
+      if (sequence !== loadSequence.current) return;
       Alert.alert(
         'Chargement impossible',
         error instanceof Error ? error.message : 'Erreur inconnue'
       );
     } finally {
-      setLoading(false);
+      if (sequence === loadSequence.current) setLoading(false);
     }
   }
 
@@ -69,6 +77,7 @@ export default function PlannedScreen() {
     }
 
     function handleDelete(barathon: BarathonListItem) {
+      if (deleteInFlight.current || deletedIds.current.has(barathon.id)) return;
       Alert.alert(
         'Supprimer le barathon',
         `Confirmer la suppression de "${barathon.name}" ?`,
@@ -81,10 +90,13 @@ export default function PlannedScreen() {
             text: 'Supprimer',
             style: 'destructive',
             onPress: async () => {
+              if (deleteInFlight.current || deletedIds.current.has(barathon.id)) return;
+              deleteInFlight.current = true;
               try {
                 setDeletingBarathonId(barathon.id);
 
                 await deleteBarathon(barathon.id);
+                deletedIds.current.add(barathon.id);
 
                 setBarathons((prev) =>
                   prev.filter((item) => item.id !== barathon.id)
@@ -100,6 +112,7 @@ export default function PlannedScreen() {
                   error instanceof Error ? error.message : 'Erreur inconnue'
                 );
               } finally {
+                deleteInFlight.current = false;
                 setDeletingBarathonId(null);
               }
             },
@@ -191,6 +204,9 @@ export default function PlannedScreen() {
         ) : (
           <FlatList
             data={barathons}
+            extraData={{ deletingBarathonId, currentUserId }}
+            refreshing={loading}
+            onRefresh={() => void loadData()}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={
               barathons.length === 0 ? styles.emptyListContent : styles.listContent
@@ -205,7 +221,7 @@ export default function PlannedScreen() {
                   onDelete={handleDelete}
                   onInfo={handleOpenInfo}
                   onStart={handleStartBarathon}
-                  isDeleting={deletingBarathonId === item.id || startingBarathonId === item.id}
+                  isDeleting={deletingBarathonId !== null || startingBarathonId === item.id}
                 />
              )}
             ListEmptyComponent={

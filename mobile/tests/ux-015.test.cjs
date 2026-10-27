@@ -44,8 +44,8 @@ test('creation service distinguishes validation errors and uncertain network or 
 });
 
 test('planned screen refresh on focus exposes the newly created barathon', async()=>{
-  const values=[],effects=[]; let cursor=0, focus, tree;
-  const hooks={...React,useState(init){const i=cursor++;if(!(i in values))values[i]=typeof init==='function'?init():init;return [values[i],v=>{values[i]=typeof v==='function'?v(values[i]):v;}];},useEffect:fn=>effects.push(fn),useCallback:fn=>fn};
+  const values=[],effects=[],refs=[]; let cursor=0,refCursor=0,focus,tree;
+  const hooks={...React,useState(init){const i=cursor++;if(!(i in values))values[i]=typeof init==='function'?init():init;return [values[i],v=>{values[i]=typeof v==='function'?v(values[i]):v;}];},useRef(v){const i=refCursor++;return refs[i]||={current:v};},useEffect:fn=>effects.push(fn),useCallback:fn=>fn};
   const item={id:42,name:'Vendredi'}; let calls=0;
   const rn={StyleSheet:{create:x=>x},Alert:{alert(){}},...Object.fromEntries(['View','Text','FlatList','ActivityIndicator'].map(x=>[x,x]))};
   const Component=load('features/planned/screens/PlannedScreen.tsx',{
@@ -57,7 +57,7 @@ test('planned screen refresh on focus exposes the newly created barathon', async
     '../components/ChangeStartTimeModal':{__esModule:true,default:'ChangeStartTimeModal'},
     '../components/ManageParticipantsModal':{__esModule:true,default:'ManageParticipantsModal'},
   }).default;
-  const render=()=>{cursor=0;tree=Component();};render();focus();await Promise.resolve();await Promise.resolve();render();
+  const render=()=>{cursor=refCursor=0;tree=Component();};render();focus();await Promise.resolve();await Promise.resolve();render();
   assert.equal(calls,1);assert.deepEqual(find(tree,x=>x.type==='FlatList')[0].props.data,[item]);
   focus();await Promise.resolve();await Promise.resolve();render();assert.equal(calls,2);
 });

@@ -39,7 +39,7 @@ export async function deleteBarathon(barathonId: number) {
     },
   });
 
-  if (!response.ok) {
+  if (!response.ok || response.status !== 204) {
     let message = 'Impossible de supprimer le barathon.';
 
     try {

@@ -1,18 +1,37 @@
-export function formatBarathonStatus(status: string): string {
+export function formatBarathonStatus(status?: string): string {
   switch (status) {
     case 'planned':
       return 'Planifié';
 
-    case 'in_progress':
+    case 'started':
       return 'En cours...';
 
-    case 'finished':
-      return 'Terminé';
+    case 'completed':
+      return 'Tournée terminée';
+
+    case 'stopped':
+      return 'Tournée interrompue';
 
     case 'failed':
-      return 'Non accompli';
+      return 'Non démarré à temps';
 
     default:
-      return status;
+      return 'Statut indisponible';
   }
+}
+
+// Lifecycle is stored by the API. The existing 70% target is only about stops;
+// role descriptions are not recorded mission outcomes.
+export function getBarathonOutcome(status?: string, stops?: { is_completed?: boolean }[]) {
+  const knownProgress = !!stops?.length && stops.every(stop => typeof stop.is_completed === 'boolean');
+  const completed = stops?.filter(stop => stop.is_completed === true).length ?? 0;
+  const targetReached = knownProgress ? completed / stops!.length >= 0.7 : null;
+  return {
+    label: formatBarathonStatus(status),
+    completedNormally: status === 'completed',
+    targetReached,
+    progressLabel: targetReached === null
+      ? 'Résultat des étapes indisponible'
+      : targetReached ? 'Objectif d’étapes atteint (70 % minimum)' : 'Objectif d’étapes non atteint (70 % minimum)',
+  };
 }

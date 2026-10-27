@@ -16,7 +16,7 @@ export async function getBarathonById(barathonId: number) {
 }
 
 export async function markBarathonFinished(barathonId: number) {
-  return authenticatedJsonRequest(`/barathons/${barathonId}/finish`, {
+  return authenticatedJsonRequest<{ id: number; status: string; ended_at: string }>(`/barathons/${barathonId}/finish`, {
     method: 'POST',
   });
 }

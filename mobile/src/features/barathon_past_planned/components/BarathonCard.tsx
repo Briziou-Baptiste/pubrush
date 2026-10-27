@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { BarathonListItem } from '../types/barathon.types';
 import { formatDate, formatTime } from '../utils/barathon.formatters';
-import { formatBarathonStatus } from '../utils/barathon.status';
+import { getBarathonOutcome } from '../utils/barathon.status';
 import { getStartGraceCountdown } from '../utils/barathon.countdown';
 import { styles } from '../styles/barathonCards.styles';
 import StartBarathonSlider from './StartBarathonSlider';
@@ -56,26 +56,9 @@ export default function BarathonCard({
 
   const roleLabel = isCreator ? 'Créateur' : 'Rejoint';
 
-    const pastStatusLabel =
-      item.status === 'completed'
-        ? 'Terminé avec succès'
-        : item.status === 'cancelled'
-        ? 'Annulé'
-        : 'Mission failed';
-
-    const pastStatusStyle =
-      item.status === 'completed'
-        ? styles.statusBadgeSuccess
-        : item.status === 'cancelled'
-        ? styles.statusBadgeCancelled
-        : styles.statusBadgeFailed;
-
-    const pastStatusTextStyle =
-      item.status === 'completed'
-        ? styles.statusBadgeSuccessText
-        : item.status === 'cancelled'
-        ? styles.statusBadgeCancelledText
-        : styles.statusBadgeFailedText;
+  const outcome = getBarathonOutcome(item.status, item.stops);
+  const pastStatusStyle = outcome.completedNormally ? styles.statusBadgeSuccess : styles.statusBadgeFailed;
+  const pastStatusTextStyle = outcome.completedNormally ? styles.statusBadgeSuccessText : styles.statusBadgeFailedText;
 
   const countdownStyle =
     countdown.level === 'danger'
@@ -119,7 +102,7 @@ export default function BarathonCard({
                 {variant === 'past' ? (
                   <View style={[styles.statusBadge, pastStatusStyle]}>
                     <Text style={[styles.statusBadgeText, pastStatusTextStyle]}>
-                      {pastStatusLabel}
+                      {outcome.label}
                     </Text>
                   </View>
                 ) : null}
@@ -136,6 +119,7 @@ export default function BarathonCard({
           ) : null}
           </View>
 
+      {variant === 'past' && <Text style={styles.infoLabel}>{outcome.progressLabel}</Text>}
       <View style={styles.infoGrid}>
         <View style={styles.infoBlock}>
           <Text style={styles.infoLabel}>Date de début</Text>

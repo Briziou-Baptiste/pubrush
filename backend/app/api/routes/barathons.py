@@ -598,9 +598,8 @@ async def finish_barathon(
     if not barathon:
         raise HTTPException(status_code=404, detail="Barathon introuvable.")
 
-    is_creator = barathon.created_by_user_id == current_user.id
-    if not is_creator and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Seul le créateur peut terminer le barathon.")
+    if not current_user.is_admin and not check_is_maitre_du_trajet(barathon, current_user, db):
+        raise HTTPException(status_code=403, detail="Seul le créateur ou le Maître du trajet peut terminer le barathon.")
 
     if barathon.status != "started":
         raise HTTPException(

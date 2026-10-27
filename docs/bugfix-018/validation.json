@@ -1,0 +1,19 @@
+{
+  "task": "BUGFIX-018",
+  "base": "b61b31173f11d64f824e6412cdca16f6faad58bd",
+  "branch": "fix/bugfix-018-invitations-deletion-results",
+  "verdict": "READY",
+  "mobile_targeted": {"status": "PASS", "passed": 34},
+  "mobile_suite": {"status": "PASS", "passed": 109},
+  "backend_targeted": {"status": "PASS", "passed": 25},
+  "backend_suite": {"status": "PASS", "passed": 124, "skipped": 0},
+  "mobile_typescript": {"status": "PASS", "exit_code": 0},
+  "web_typescript": {"status": "PASS", "exit_code": 0},
+  "baseline_negative_control": {"status": "EXPECTED_FAILURE", "failed": 4, "cancelled": 0},
+  "native_visual_and_physical_scan": {"status": "NOT_RUN", "reason": "No running iPhone/simulator with the app in this session"},
+  "real_user_barathons_modified": false,
+  "committed": false,
+  "pushed": false,
+  "deployed": false,
+  "schema_migration": false
+}

@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
-  Platform,
   Share,
   StyleSheet,
   Text,
@@ -23,22 +22,24 @@ type Props = {
   participantsCount?: number;
 };
 
-export default function InviteFriendsModal({
-  visible,
+// Also used inside the participants modal: iOS must present only one native Modal.
+export function InviteFriendsContent({
   onClose,
   joinCode,
   barathonName,
   participantsCount,
-}: Props) {
+}: Omit<Props, 'visible'>) {
   const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
-  const cleanCode = joinCode || 'RUSH-CODE';
-  const joinUrl = `https://pubrush.com/join/${cleanCode}`;
+  const cleanCode = joinCode.trim();
+  const joinUrl = `https://pubrush.com/join/${encodeURIComponent(cleanCode)}`;
   const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=12&data=${encodeURIComponent(
     joinUrl
   )}`;
 
   async function handleShare() {
+    if (!cleanCode) return;
     try {
       await Share.share({
         message: `Rejoins notre barathon "${barathonName}" sur PubRush en 1 seconde sans créer de compte !\n\nLien direct : ${joinUrl}\nCode : ${cleanCode}`,
@@ -51,12 +52,6 @@ export default function InviteFriendsModal({
   }
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
       <SafeAreaView style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           {/* Header */}
@@ -77,24 +72,26 @@ export default function InviteFriendsModal({
 
           {/* QR Code Container */}
           <View style={styles.qrContainer}>
-            {imageLoading && (
+            {cleanCode && imageLoading && (
               <View style={styles.qrLoader}>
                 <ActivityIndicator size="large" color="#2563EB" />
               </View>
             )}
-            <Image
+            {cleanCode && !imageError ? <Image
+              key={cleanCode}
               source={{ uri: qrApiUrl }}
               style={styles.qrImage}
               contentFit="contain"
-              onLoadStart={() => setImageLoading(true)}
+              onLoadStart={() => { setImageLoading(true); setImageError(false); }}
               onLoad={() => setImageLoading(false)}
-            />
+              onError={() => { setImageLoading(false); setImageError(true); }}
+            /> : <Text>{cleanCode ? 'QR indisponible. Utilise le code ou partage le lien.' : 'Invitation indisponible : code manquant.'}</Text>}
           </View>
 
           {/* Join Code Display */}
           <View style={styles.codeCard}>
             <Text style={styles.codeLabel}>CODE DE REJOINTEMENT</Text>
-            <Text style={styles.codeValue}>{cleanCode}</Text>
+            <Text style={styles.codeValue}>{cleanCode || 'Indisponible'}</Text>
           </View>
 
           {/* Live participant hint */}
@@ -111,6 +108,7 @@ export default function InviteFriendsModal({
           <TouchableOpacity
             style={styles.shareButton}
             onPress={handleShare}
+            disabled={!cleanCode}
             activeOpacity={0.85}
           >
             <Ionicons name="share-outline" size={20} color="#FFFFFF" />
@@ -125,6 +123,13 @@ export default function InviteFriendsModal({
           </View>
         </View>
       </SafeAreaView>
+  );
+}
+
+export default function InviteFriendsModal({ visible, ...props }: Props) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={props.onClose}>
+      {visible && <InviteFriendsContent {...props} />}
     </Modal>
   );
 }

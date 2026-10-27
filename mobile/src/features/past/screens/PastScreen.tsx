@@ -1,6 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -21,10 +21,12 @@ export default function PastScreen() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
-  useEffect(() => {
-    loadCurrentUserId();
-    loadData();
-  }, []);
+  const loadSequence = useRef(0);
+  useEffect(() => { void loadCurrentUserId(); }, []);
+  useFocusEffect(useCallback(() => {
+    void loadData();
+    return () => { loadSequence.current++; };
+  }, []));
 
   async function loadCurrentUserId() {
     try {
@@ -36,17 +38,19 @@ export default function PastScreen() {
   }
 
   async function loadData() {
+    const sequence = ++loadSequence.current;
     try {
       setLoading(true);
       const data = await getMyPastBarathons();
-      setBarathons(data);
+      if (sequence === loadSequence.current) setBarathons(data);
     } catch (error) {
+      if (sequence !== loadSequence.current) return;
       Alert.alert(
         'Chargement impossible',
         error instanceof Error ? error.message : 'Erreur inconnue'
       );
     } finally {
-      setLoading(false);
+      if (sequence === loadSequence.current) setLoading(false);
     }
   }
     function handleOpenPastSummary(barathon: BarathonListItem) {
@@ -64,6 +68,7 @@ export default function PastScreen() {
             barathon.ended_at ?? barathon.end_datetime ?? new Date().toISOString(),
           stopsJson: JSON.stringify(barathon.stops),
             source: 'past',
+            status: barathon.status,
         },
       });
     }
@@ -83,6 +88,8 @@ export default function PastScreen() {
         ) : (
           <FlatList
             data={barathons}
+            refreshing={loading}
+            onRefresh={() => void loadData()}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={
               barathons.length === 0 ? styles.emptyListContent : styles.listContent
