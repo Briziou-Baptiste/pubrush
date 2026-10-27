@@ -710,10 +710,14 @@ async def test_adversarial_chunked_upload_stream_exceeding_2mib_blocked_with_413
     ).encode("utf-8")
     part_foot = f"\r\n--{boundary}--\r\n".encode("utf-8")
 
+    chunks_consumed = 0
+
     async def stream_3mib_chunks():
+        nonlocal chunks_consumed
         yield part_head
-        # 3 MiB = 48 morceaux de 64 KiB
-        for _ in range(48):
+        # 20 MiB = 320 morceaux de 64 KiB
+        for _ in range(320):
+            chunks_consumed += 1
             yield b"A" * (64 * 1024)
         yield part_foot
 
@@ -729,6 +733,8 @@ async def test_adversarial_chunked_upload_stream_exceeding_2mib_blocked_with_413
         )
         assert res.status_code == 413
         assert "Fichier trop volumineux" in res.json()["detail"]
+        # Vérification formelle que le parseur et le réseau ont été coupés court en amont (environ 33-35 morceaux max consommés, pas 320)
+        assert chunks_consumed < 50, f"Le stream n'a pas été coupé court : {chunks_consumed} morceaux consommés !"
 
 
 def test_adversarial_decompression_bomb_pillow_rejected():

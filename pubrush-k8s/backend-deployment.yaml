@@ -91,6 +91,29 @@ spec:
               key: JWT_SECRET_KEY
         - name: ENVIRONMENT
           value: "production"
+        # 5. Stockage éphémère Photo Mystère en RAM (borné et chiffré)
+        - name: PHOTO_STORAGE_DIR
+          value: "/tmp/pubrush-photo-media"
+        - name: PHOTO_STORAGE_MAX_BYTES
+          value: "33554432" # 32 MiB budget
+        - name: PHOTO_AES_KEY
+          valueFrom:
+            secretKeyRef:
+              name: pubrush-secrets
+              key: PHOTO_AES_KEY
+              optional: true
+        - name: PHOTO_MYSTERY_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: PHOTO_MYSTERY_ENABLED
+              optional: true
+        - name: PHOTO_MYSTERY_ALLOWLIST
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: PHOTO_MYSTERY_ALLOWLIST
+              optional: true
         resources:
           requests:
             cpu: 100m
@@ -159,7 +182,9 @@ spec:
           name: tmp-volume
       volumes:
       - name: tmp-volume
-        emptyDir: {}
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
 ---
 apiVersion: v1
 kind: Service

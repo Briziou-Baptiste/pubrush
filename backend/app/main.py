@@ -48,6 +48,7 @@ forgot_limiter = InMemoryRateLimiter(requests_limit=5, window_seconds=60)
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
     # Rejet immédiat des requêtes d'upload photo volumineuses ou non authentifiées avant parsing multipart
+    upload_stream_exceeded = False
     if request.method == "POST" and request.url.path.endswith("/photo-mystery/upload"):
         auth_hdr = request.headers.get("authorization", "")
         if not auth_hdr.startswith("Bearer "):
@@ -57,10 +58,10 @@ async def security_headers_middleware(request: Request, call_next):
                 media_type="application/json",
             )
         content_length = request.headers.get("content-length")
+        max_bytes = 2 * 1024 * 1024 + 65536  # 2.06 MiB (2 MiB + délimiteurs multipart)
         if content_length:
             try:
-                # 2 MiB + marge pour les délimiteurs multipart (64 KiB)
-                if int(content_length) > (2 * 1024 * 1024 + 65536):
+                if int(content_length) > max_bytes:
                     return Response(
                         content='{"detail":"Fichier trop volumineux (maximum 2 MiB)."}',
                         status_code=413,
@@ -72,8 +73,32 @@ async def security_headers_middleware(request: Request, call_next):
                     status_code=400,
                     media_type="application/json",
                 )
+        else:
+            # Transfer-Encoding: chunked sans Content-Length :
+            # Borne la consommation du flux ASGI pour couper Starlette dès 2.06 MiB
+            # et empêcher tout débordement de mémoire vive ou de stockage temporaire /tmp
+            bytes_received = 0
+            raw_receive = request._receive
+
+            async def bounded_receive():
+                nonlocal bytes_received, upload_stream_exceeded
+                msg = await raw_receive()
+                if msg.get("type") == "http.request":
+                    bytes_received += len(msg.get("body", b""))
+                    if bytes_received > max_bytes:
+                        upload_stream_exceeded = True
+                        raise ValueError("Upload stream payload exceeded maximum limit")
+                return msg
+
+            request._receive = bounded_receive
 
     response: Response = await call_next(request)
+    if upload_stream_exceeded:
+        response = Response(
+            content='{"detail":"Fichier trop volumineux (maximum 2 MiB)."}',
+            status_code=413,
+            media_type="application/json",
+        )
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
