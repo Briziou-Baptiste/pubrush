@@ -133,7 +133,7 @@ def seed_staging():
     if not u1:
         u1 = User(
             username="tester_creator",
-            email="tester_creator@pubrush.staging.local",
+            email="tester_creator@staging.pubrush.com",
             password_hash=hash_password(creator_password),
             is_guest=False,
         )
@@ -149,7 +149,7 @@ def seed_staging():
     if not u2:
         u2 = User(
             username="tester_guesser",
-            email="tester_guesser@pubrush.staging.local",
+            email="tester_guesser@staging.pubrush.com",
             password_hash=hash_password(guesser_password),
             is_guest=False,
         )

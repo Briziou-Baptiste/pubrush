@@ -843,18 +843,21 @@ class PhotoService:
         db.add(rate_event)
         db.commit()
 
-        # Notification WS à l'audience
+        # Notification WS à l'audience et à la room barathon
+        ws_event = {
+            "type": "PHOTO_MYSTERY_UPDATE",
+            "barathon_id": barathon.id,
+            "challenge_id": str(challenge.id),
+            "action": "published",
+            "version": challenge.version,
+        }
+        try:
+            await ws_manager.broadcast_to_barathon(barathon.id, ws_event)
+        except Exception:
+            pass
         for aud in audience_entries:
             try:
-                await ws_manager.send_to_user(
-                    aud.user_id,
-                    {
-                        "type": "PHOTO_MYSTERY_UPDATE",
-                        "barathon_id": barathon.id,
-                        "challenge_id": str(challenge.id),
-                        "action": "published",
-                    },
-                )
+                await ws_manager.send_to_user(aud.user_id, ws_event)
             except Exception:
                 pass
 
@@ -988,17 +991,20 @@ class PhotoService:
             db.commit()
 
         # 9. Notification WS
+        ws_event = {
+            "type": "PHOTO_MYSTERY_UPDATE",
+            "barathon_id": barathon.id,
+            "challenge_id": str(challenge.id),
+            "action": "closed" if is_closed else "answered",
+            "version": challenge.version,
+        }
+        try:
+            await ws_manager.broadcast_to_barathon(barathon.id, ws_event)
+        except Exception:
+            pass
         for a in challenge.audience:
             try:
-                await ws_manager.send_to_user(
-                    a.user_id,
-                    {
-                        "type": "PHOTO_MYSTERY_UPDATE",
-                        "barathon_id": barathon.id,
-                        "challenge_id": str(challenge.id),
-                        "action": "closed" if is_closed else "answered",
-                    },
-                )
+                await ws_manager.send_to_user(a.user_id, ws_event)
             except Exception:
                 pass
 

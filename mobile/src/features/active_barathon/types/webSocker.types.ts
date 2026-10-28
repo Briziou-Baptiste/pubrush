@@ -3,6 +3,13 @@ export type WSMessage =
   | { type: 'PONG' }
   | { type: 'BARATHON_LIST_REFRESH'; barathon_id?: number }
   | {
+      type: 'PHOTO_MYSTERY_UPDATE';
+      barathon_id: number;
+      challenge_id: string;
+      version?: number;
+      action: 'published' | 'answered' | 'closed' | 'cancelled' | 'expired';
+    }
+  | {
       type: 'BARATHON_STARTED';
       barathon_id: number;
       timestamp?: string;

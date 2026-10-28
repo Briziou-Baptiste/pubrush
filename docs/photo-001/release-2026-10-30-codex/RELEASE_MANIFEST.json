@@ -1,0 +1,480 @@
+{
+  "base_ref": "main@aa70e63",
+  "base_commit": "aa70e6330172bddb87b95f876e23cbdca8c7318f",
+  "head": "ae74d7f0c128fa082d9d8101267742ed14fe792e",
+  "candidate_tree_sha256": "9f36634f47eacfd894c258f8bb281903cb823d040a910dbc466f709a1b7bf37f",
+  "file_count_changed": 53,
+  "files": [
+    {
+      "path": "backend/alembic/env.py",
+      "sha256": "f5b2a4098369f692305b5454545fa48ab694693bc6314ff7748ddbeb6e1f366f",
+      "base_sha256": "06c52785b6fbda52f6eb6ee1f708aeb069d4b7c9b516dd4dd00707f1ad16de69",
+      "role": "backend",
+      "bytes": 2425,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/alembic/versions/b1c2d3e4f5a6_add_photo_mystery_tables.py",
+      "sha256": "8108ec2fae87baea98910e37c83757322b6beb9caac26b1594f49b2193ea95b6",
+      "base_sha256": null,
+      "role": "backend",
+      "bytes": 8440,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/api/routes/barathons.py",
+      "sha256": "7e762dcf2858a13918fa374cb2c2bf73646fcc037dd54a144e82bdfc2f83d789",
+      "base_sha256": "7f59dcf04c2e40717ced7c763a9ca49ec07f279a3d75c71adcaa676dacc21edb",
+      "role": "backend",
+      "bytes": 44393,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/api/routes/photo_mystery.py",
+      "sha256": "07189c2281e610909dc7ded3370424feba9a5477b6da4ce2c67b537d0f789f54",
+      "base_sha256": null,
+      "role": "backend",
+      "bytes": 7515,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/core/lifespan.py",
+      "sha256": "7fba1e1bec8c20ec1cd150b53511ae96d017fe2dbe2516377af346630fa54ee2",
+      "base_sha256": "5a1002d5aa976339c861fbdcd911e56f75ce16af423649f96ba4bd23022ac8c6",
+      "role": "backend",
+      "bytes": 2467,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/core/logging_filter.py",
+      "sha256": "1177212618ecbbdc4734aa50c956927758fdbe70aa516edb742e4c1c8eb76bb7",
+      "base_sha256": null,
+      "role": "backend",
+      "bytes": 3547,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/main.py",
+      "sha256": "e904140bfe085c7ab13174a9261cc373210fdff309fc8da522e1583ed1d8902e",
+      "base_sha256": "c7812ff5394ecbc27bf761963cb739437431b25797d6a6801ad0af9829a86e44",
+      "role": "backend",
+      "bytes": 42232,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/models.py",
+      "sha256": "062c297fa9649962e736405ed5ceccd477600fcb017bc05843c8da33ac87f818",
+      "base_sha256": "7b0c7e6511523d6c7166eec3f9f9046e018c409f3c9d359641ca6f604ef0ce2b",
+      "role": "backend",
+      "bytes": 19120,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/photo_models.py",
+      "sha256": "1c6bc00c127542bd13d1449975c270745ffb85c027eb35c47a15cfc826737fb1",
+      "base_sha256": null,
+      "role": "backend",
+      "bytes": 8853,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/photo_schemas.py",
+      "sha256": "684a4c203c3cc59e0b6f79c98e893b2793cdac0b6893f3b690cd1f16d1d69fd8",
+      "base_sha256": null,
+      "role": "backend",
+      "bytes": 3861,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/security.py",
+      "sha256": "5bbe1670f2f0068ad62cb88214d5c5d58e2c8e258a040686f865fb34f27b3b93",
+      "base_sha256": "5368f54359d72eea9179a5a1c73aa86f9561d2c2662ab98ac32594e0abe0fdbf",
+      "role": "backend",
+      "bytes": 1927,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/services/photo_processor.py",
+      "sha256": "f7f96e5e21298333f5d4617699fbeae0e9f3df37d6dba6f3ac34b2837797a1bf",
+      "base_sha256": null,
+      "role": "backend",
+      "bytes": 4911,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/services/photo_purge.py",
+      "sha256": "6c3cd01e30106b3f4addaf5ff61747bd75416853e99f5d3f67e5d7e9acbd5aac",
+      "base_sha256": null,
+      "role": "backend",
+      "bytes": 6486,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/services/photo_service.py",
+      "sha256": "f01954f404c948a1f0e0d554ebbaab649f8fba36c22a890d72b5988358270660",
+      "base_sha256": null,
+      "role": "backend",
+      "bytes": 45762,
+      "source": "working-tree"
+    },
+    {
+      "path": "backend/app/services/photo_storage.py",
+      "sha256": "59e457c70b19b4fd1d9ef511f0dd7e06edc385fc5fa420f61fb511433aa8c01f",
+      "base_sha256": null,
+      "role": "backend",
+      "bytes": 6587,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/app/websocket/auth.py",
+      "sha256": "85f14f8d3a05f2c2fd41f67df3eff221ea68eda278c6d84e9dd20f92bb60e519",
+      "base_sha256": "a840706eaadd42cd88116bb9a89bdc57d46b71c8823300df51ba11e1faf7e462",
+      "role": "backend",
+      "bytes": 1495,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/requirements.txt",
+      "sha256": "05ee960094e39aeb9207073076bca462f658caf2fab8d320027a0fe0760646d4",
+      "base_sha256": "970b300a119d3bce7c89c586d6c63300b3462c9fe08b9b9595cde765b91c80d3",
+      "role": "backend",
+      "bytes": 1119,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/scripts/seed_staging_photo.py",
+      "sha256": "b7a80870b8ec023c74e343b6a46a6185df216df185780d4091c02fc85340d984",
+      "base_sha256": null,
+      "role": "staging-tooling",
+      "bytes": 10644,
+      "source": "working-tree"
+    },
+    {
+      "path": "backend/tests/test_alembic_staging_isolation.py",
+      "sha256": "06eefac3b28698694a625251c2b9536d440c2b5a173ace1a443076362fa14d71",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 5976,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/tests/test_barathon_guest_invitation.py",
+      "sha256": "2b23c7513be51672934fb6f59fac6aab05373e052e830c446763adc1214dfdcf",
+      "base_sha256": "97e9eb3da7ae5f907aa75ed267971dc1eb7d7a43bd1a4ccd832f75fa7de5bce1",
+      "role": "tests",
+      "bytes": 4303,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/tests/test_photo_adversarial_pg.py",
+      "sha256": "06e80eec72f3212f8172d6f4218538fdcf3a9f6158f8ce1284cf49988b0616bf",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 48960,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/tests/test_photo_alembic.py",
+      "sha256": "92ff512835ab9bc171ad6b23c9213091ac27ba20a7252a2ccd0f4b00d34268aa",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 7488,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/tests/test_photo_codex_blockers.py",
+      "sha256": "db0cac3f399dc27c7172562a24ffc51c175211e591f9ae294d8b31acb02381b5",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 22356,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/tests/test_photo_game.py",
+      "sha256": "530091de560d95599419793dce58f9dc68f69e2b4c00767b8863a9621ef0ae4f",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 14744,
+      "source": "working-tree"
+    },
+    {
+      "path": "backend/tests/test_photo_security.py",
+      "sha256": "d6dfd2ab98c42bc7d501e7842e3558735f3277363d6d4831f5e78a863a367444",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 7638,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/tests/test_photo_staging_seed.py",
+      "sha256": "85710db6f684d3b5a1091f15fe2efbee96c8577da06d04c6cb0d12475a4aa745",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 11415,
+      "source": "HEAD"
+    },
+    {
+      "path": "backend/tests/test_photo_storage.py",
+      "sha256": "623dd92b4236d2ec90f3e9aa5e5d5d77a0aa4673b31cc1c2fbdea6029f40d3c1",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 13571,
+      "source": "HEAD"
+    },
+    {
+      "path": "mobile/package-lock.json",
+      "sha256": "9b393a06e8b7d950f1d2a8e8ab14285fd73fe4c079424b10e58a5dcd3ff2ed2b",
+      "base_sha256": "b6f005decc79b517b92524dd02ee74ada4df3924e3b3825a86faddf209ba4f23",
+      "role": "mobile",
+      "bytes": 450778,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/package.json",
+      "sha256": "c74af5118c528d92070508906bc0c9cfbf4d86eada7f3970ad65524a92f292a7",
+      "base_sha256": "72d7ff7afe81f888aae1b2440ed00b4bdd073c474d268fb258fb107fe14af56f",
+      "role": "mobile",
+      "bytes": 1861,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/components/ActiveBarathonHeader.tsx",
+      "sha256": "61b14399575849218736e09b036c4cf74bb8cbba78405a572f1b293783546a15",
+      "base_sha256": "692d3baf95e94b163f40ef6af08d7c0052a4f546bca99cff025a19429cc18509",
+      "role": "mobile",
+      "bytes": 8298,
+      "source": "HEAD"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/components/PhotoMysteryModal.tsx",
+      "sha256": "f67c58619a6328276493eb5914442f06fe812d052f02aba23fb0da1aab5bb6dd",
+      "base_sha256": null,
+      "role": "mobile",
+      "bytes": 41109,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/screens/ActiveBarathonScreen.tsx",
+      "sha256": "e5bfdef113e60d3779574149db54e930bd0b85a81627fd365fa8294f4cf27900",
+      "base_sha256": "b34a67cca14a9c4f14ee54ce5eaac6a7c69dcea551ebd921166c5d5f9f49ccfe",
+      "role": "mobile",
+      "bytes": 31955,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/services/photoMysteryEvents.ts",
+      "sha256": "a762eeb16cebcf102ca233018d3359eb134a8a31c0edbbcd6e8db2debc896e82",
+      "base_sha256": null,
+      "role": "mobile",
+      "bytes": 1635,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/services/photoMysteryService.ts",
+      "sha256": "9fd6689e5e4d46f4f683f1374b967054de15f460f19fe441e79710575288cac0",
+      "base_sha256": null,
+      "role": "mobile",
+      "bytes": 2261,
+      "source": "HEAD"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/services/webSocket.service.ts",
+      "sha256": "f4e101f3949219c42e97b39b74a9aa2a26c4850003e7d215d4364de3fccada03",
+      "base_sha256": "3e77278f257cd27169399e4edab9d6ac95b0f73397119a15846e327ec5286008",
+      "role": "mobile",
+      "bytes": 6013,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/types/photoMystery.types.ts",
+      "sha256": "95bd1f672d9e9bf118cd3d002d81af9e9cadbd41d586f2f9b7f81f35383f9da5",
+      "base_sha256": null,
+      "role": "mobile",
+      "bytes": 1088,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/types/webSocker.types.ts",
+      "sha256": "eeed79c7ddde5ed377d4a806d46308639a5c4202eac910701b339e40f6c10a32",
+      "base_sha256": "25b078f8515dafe651041f1bdde835eac3f46279d9e23852b69f2c735dc236ec",
+      "role": "mobile",
+      "bytes": 2786,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/utils/photoMysteryPayload.ts",
+      "sha256": "43cff1dc74fe287cd352d9fb8875961a33fac45654455d5dcc51aa7393dd3ff0",
+      "base_sha256": null,
+      "role": "mobile",
+      "bytes": 2717,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/src/features/active_barathon/utils/photoMysteryState.ts",
+      "sha256": "cecef2573b4e7fa688d8f31d5f302db5acdcec51c5d189ce0dc0818b72d221c3",
+      "base_sha256": null,
+      "role": "mobile",
+      "bytes": 3811,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/tests/bugfix-018.test.cjs",
+      "sha256": "7e560c26467c716703ed39ddb49628c78f4b94a016d1b1a8377ef7af97f919ac",
+      "base_sha256": "550e88b967c19f22279b205dcbeb3233c13a662a7b015d4e1b53a6ea65261d6c",
+      "role": "tests",
+      "bytes": 18874,
+      "source": "HEAD"
+    },
+    {
+      "path": "mobile/tests/helpers/photoMysteryHarness.cjs",
+      "sha256": "6e769e4f29758c1c0b5b7c7ad34115ed927b5cc24ac2645e89ff3bbb8403295e",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 8794,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/tests/photo-001-p1.test.cjs",
+      "sha256": "d7ecbdef4d299b4527b44b984f5739157d527a2d3b0dd85ffca601886252cf20",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 19123,
+      "source": "working-tree"
+    },
+    {
+      "path": "mobile/tests/photo-sync-mounted.test.cjs",
+      "sha256": "914d00121f20ef2b1a5031cddf5e3c58b2037cd0ba930c6fca87d176260c19b4",
+      "base_sha256": null,
+      "role": "tests",
+      "bytes": 13927,
+      "source": "working-tree"
+    },
+    {
+      "path": "pubrush-k8s/backend-deployment.yaml",
+      "sha256": "1342465855c17a80ec64749dab161edca3711a3d030bdeda3ca009e1183e0212",
+      "base_sha256": "39293704da7169cbf883c091efa3af13632aa06c3fda5fabbbad55e419f6b57c",
+      "role": "deployment",
+      "bytes": 5609,
+      "source": "HEAD"
+    },
+    {
+      "path": "pubrush-k8s/monopod/deployment-common.sh",
+      "sha256": "beb4036031cd5af2110a2890d057ffe7d25f8d149f73c138e1e02b84eb213171",
+      "base_sha256": "cd5e5990a85fdc7b8f31aee880e1fd56b8151248ae441bef397a7949ebcdb17a",
+      "role": "deployment",
+      "bytes": 3633,
+      "source": "HEAD"
+    },
+    {
+      "path": "pubrush-k8s/monopod/rollback-backend.sh",
+      "sha256": "59c98d1714d0a77dd923d1cb6d7409fb322888544939faaef181fe2a75b1d389",
+      "base_sha256": "065f481ed6eca90a819bc2f08642bf66ab0c0f5347c2f4e44337e1eaff71a3e0",
+      "role": "deployment",
+      "bytes": 1542,
+      "source": "HEAD"
+    },
+    {
+      "path": "pubrush-k8s/pubrush-config.yaml",
+      "sha256": "072f67451d44478e73f7144e4fc61c926b743c1df38a9486859e19738f9bb4e4",
+      "base_sha256": "21ff67877ecb77ebc9a46f1db2507692c6f33668a12551a95ab33438ad21e88b",
+      "role": "deployment",
+      "bytes": 278,
+      "source": "HEAD"
+    },
+    {
+      "path": "pubrush-k8s/pubrush-secrets.template.yaml",
+      "sha256": "94908af0e6ecb078c495e86fea263603e37ba65ab82542f4830183777d5d0e30",
+      "base_sha256": "3159f190c8477786d17d1521eda72b1684bc8403e0f045836cd74ada84d0f8a1",
+      "role": "deployment",
+      "bytes": 919,
+      "source": "HEAD"
+    },
+    {
+      "path": "pubrush-k8s/staging/docker-compose.staging.yml",
+      "sha256": "de9ef50c82252265f3b39479b9e93fc2c3a8606b0ce9ab56eb286c97767d3de5",
+      "base_sha256": null,
+      "role": "staging-tooling",
+      "bytes": 1285,
+      "source": "HEAD"
+    },
+    {
+      "path": "pubrush-k8s/staging/staging.sh",
+      "sha256": "5848eda216a843dba2a46ef8fe0adfb48a99db829e601dccd84ff32f3d89e026",
+      "base_sha256": null,
+      "role": "staging-tooling",
+      "bytes": 6020,
+      "source": "HEAD"
+    },
+    {
+      "path": "web/Dockerfile",
+      "sha256": "6ab795757de591eaa9ba9e2af08cd01fb006ebbd9702d8ba23fbefc5cf4cd046",
+      "base_sha256": "aac792e02cc80606a51d769be909db65ede7ad3e2483b4e05d46b99ae2532a5f",
+      "role": "web",
+      "bytes": 2044,
+      "source": "HEAD"
+    },
+    {
+      "path": "web/next.config.ts",
+      "sha256": "5380aa21fe36b86d40bee638b6c7eefd2cc98bbc9fd0401e238418c7fd3bf828",
+      "base_sha256": "e0f27c149a0cd92e5d8c6f18b8838fe5e69f509635bed9ff5fd669f68013c99a",
+      "role": "web",
+      "bytes": 569,
+      "source": "HEAD"
+    },
+    {
+      "path": "web/src/app/photo-capture/page.tsx",
+      "sha256": "2857180e7b00c476cd36fc7b8a26866d13b5328a3941879ff19a06edb7eeb433",
+      "base_sha256": null,
+      "role": "web",
+      "bytes": 16695,
+      "source": "working-tree"
+    }
+  ],
+  "excluded_local_changes": [
+    "backend/app/main.py (staging CORS regex only; HEAD kept)",
+    "mobile/src/features/auth/screens/LoginScreen.tsx",
+    "mobile/src/features/auth/screens/RegisterScreen.tsx",
+    "mobile/src/lib/authStorage.ts",
+    "mobile/metro.config.js",
+    "mobile/src/components/MapMockWeb.tsx",
+    "mobile/src/components/SecureStoreMockWeb.ts",
+    "web/AGENTS.md",
+    "scripts/player_b_cli.mjs",
+    "private .env, captured media and historical local reports"
+  ],
+  "delivery_mobile": "Expo Go only; no EAS build or OTA",
+  "local_sources": [
+    "backend/app/services/photo_service.py",
+    "backend/scripts/seed_staging_photo.py",
+    "backend/tests/test_photo_game.py",
+    "mobile/package.json",
+    "mobile/package-lock.json",
+    "mobile/src/features/active_barathon/components/PhotoMysteryModal.tsx",
+    "mobile/src/features/active_barathon/screens/ActiveBarathonScreen.tsx",
+    "mobile/src/features/active_barathon/services/webSocket.service.ts",
+    "mobile/src/features/active_barathon/types/photoMystery.types.ts",
+    "mobile/src/features/active_barathon/types/webSocker.types.ts",
+    "mobile/tests/photo-001-p1.test.cjs",
+    "web/src/app/photo-capture/page.tsx",
+    "mobile/src/features/active_barathon/services/photoMysteryEvents.ts",
+    "mobile/src/features/active_barathon/utils/photoMysteryPayload.ts",
+    "mobile/src/features/active_barathon/utils/photoMysteryState.ts",
+    "mobile/tests/photo-sync-mounted.test.cjs",
+    "mobile/tests/helpers/photoMysteryHarness.cjs"
+  ],
+  "prepared_on": "2026-10-28 Europe/Paris",
+  "verdict": "BLOCKED",
+  "blockers": [
+    "Production capture web absent; pubrush.com serves a self-signed Traefik default certificate",
+    "Active main workflow automatically publishes unqualified Preview OTA and rolls both containers back to an Alembic-incompatible old image",
+    "Production Photo AES/environment bindings and bounded tmpfs are not provisioned"
+  ],
+  "generated_build_inputs": [
+    "mobile/expo-env.d.ts: generated using locked Expo CLI writeExpoEnvDTS before standalone tsc",
+    "web/next-env.d.ts and .next: generated by Next.js build"
+  ],
+  "notes": [
+    "Versioned staging tooling and tests are included in Git, excluded from runtime Docker COPY; private recipe files are excluded.",
+    "User confirmed Expo Go only. No EAS build or OTA is required for this route."
+  ]
+}

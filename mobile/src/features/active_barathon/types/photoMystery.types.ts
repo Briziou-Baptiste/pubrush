@@ -37,3 +37,9 @@ export type PhotoMysteryState = {
   unseen_results_count: number;
   items: PhotoChallengeItem[];
 };
+
+// REST snapshots carry no room id: keep their provenance at the caller boundary.
+export type PhotoMysterySnapshot = {
+  barathonId: number;
+  state: PhotoMysteryState;
+};

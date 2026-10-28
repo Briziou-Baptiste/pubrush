@@ -1,0 +1,7 @@
+PubRush avant PHOTO-001 — relevé du 28 octobre 2026
+Source stable : main@aa70e6330172bddb87b95f876e23cbdca8c7318f
+Backend et migration réellement déployés : baptistebriziou/pubrush-backend@sha256:f80fc4665d1dc06a9a98e40b302a7eb51971aea48f9ec0cea491c718f03b10b0
+Révision SQL : a7b8c9d0e1f2
+Mode : Recreate, HPA backend 1/1
+Web PubRush : aucun Deployment/Service web ; pubrush.com présente le certificat Traefik par défaut.
+Tag proposé uniquement ; non créé, non poussé.

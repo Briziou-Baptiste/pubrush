@@ -2,6 +2,7 @@ import io
 import os
 import uuid
 import pytest
+from unittest.mock import AsyncMock
 from PIL import Image
 
 from app.models import Barathon, BarathonParticipant, Role, User, PhotoSecureGuest
@@ -101,7 +102,7 @@ def test_photo_mystery_enabled_with_allowlist(client, active_photo_barathon, pho
     assert data["items"] == []
 
 
-def test_photo_full_game_lifecycle(client, active_photo_barathon, photo_users, db_session):
+def test_photo_full_game_lifecycle(client, active_photo_barathon, photo_users, db_session, monkeypatch):
     """
     Scénario bout-en-bout complet :
     1. Création de draft par l'auteur (Player_1)
@@ -116,6 +117,12 @@ def test_photo_full_game_lifecycle(client, active_photo_barathon, photo_users, d
     """
     os.environ["PHOTO_MYSTERY_ENABLED"] = "true"
     os.environ["PHOTO_MYSTERY_ALLOWLIST"] = str(active_photo_barathon.id)
+
+    from app.websocket.registry import ws_manager
+    room_events = AsyncMock()
+    user_events = AsyncMock()
+    monkeypatch.setattr(ws_manager, "broadcast_to_barathon", room_events)
+    monkeypatch.setattr(ws_manager, "send_to_user", user_events)
 
     creator = photo_users[0]
     p2 = photo_users[1]
@@ -277,6 +284,47 @@ def test_photo_full_game_lifecycle(client, active_photo_barathon, photo_users, d
         headers={"Authorization": f"Bearer {stranger_token}"},
     )
     assert res_photo_stranger.status_code == 403
+
+    # Real publish/vote producers must identify each mutation, and use the same
+    # identity on both transports. Replaying a vote must not emit another event.
+    events = [call.args[1] for call in room_events.await_args_list]
+    assert [event["action"] for event in events] == ["published", "answered", "answered", "closed"]
+    versions = [event["version"] for event in events]
+    assert versions == [publish_data["version"], res_ans_p2.json()["version"], res_ans_p3.json()["version"], closed_data["version"]]
+    assert versions == sorted(set(versions))
+    assert all(isinstance(version, int) and version > 0 for version in versions)
+    for event in events:
+        assert set(event) == {"type", "barathon_id", "challenge_id", "action", "version"}
+        copies = [call.args[1] for call in user_events.await_args_list if call.args[1]["version"] == event["version"]]
+        assert len(copies) == len(photo_users)
+        assert all(copy == event for copy in copies)
+
+
+def test_creation_permission_is_not_derived_from_visible_audience(active_photo_barathon, photo_users, db_session, monkeypatch):
+    """A later participant sees an old result, but not the current published game."""
+    from app.services.photo_service import PhotoService
+    monkeypatch.setenv("PHOTO_MYSTERY_ENABLED", "true")
+    monkeypatch.setenv("PHOTO_MYSTERY_ALLOWLIST", str(active_photo_barathon.id))
+    now = datetime.now(timezone.utc)
+    challenges = []
+    for state in ("closed", "published"):
+        challenge = PhotoChallenge(
+            barathon_id=active_photo_barathon.id, creator_user_id=photo_users[0].id,
+            state=state, question="Synthetic question", options=["A", "B"], correct_index=0,
+            version=3 if state == "closed" else 2, create_fingerprint=f"synthetic-{state}",
+            draft_expires_at=now + timedelta(minutes=15), retention_until=now + timedelta(hours=24),
+            expires_at=now + timedelta(minutes=3),
+        )
+        db_session.add(challenge)
+        challenges.append(challenge)
+    db_session.flush()
+    db_session.add(PhotoAudience(challenge_id=challenges[0].id, user_id=photo_users[1].id))
+    db_session.add(PhotoAudience(challenge_id=challenges[1].id, user_id=photo_users[0].id, is_creator=True))
+    db_session.commit()
+    state = PhotoService.get_state(db_session, active_photo_barathon, photo_users[1])
+    assert state.can_create is False
+    assert state.pending_count == 0
+    assert [item.state for item in state.items] == ["closed"]
 
 
 def test_legacy_guest_forbidden(client, active_photo_barathon, db_session):

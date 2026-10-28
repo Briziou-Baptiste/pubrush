@@ -20,8 +20,9 @@ import BarathonRolesModal from '../components/BarathonRolesModal';
 import ReplaceOrAddStopModal from '../components/ReplaceOrAddStopModal';
 import InviteFriendsModal from '../components/InviteFriendsModal';
 import PhotoMysteryModal from '../components/PhotoMysteryModal';
-import { PhotoMysteryState } from '../types/photoMystery.types';
+import { PhotoMysterySnapshot } from '../types/photoMystery.types';
 import { fetchPhotoMysteryState } from '../services/photoMysteryService';
+import { reconcilePhotoMysteryState } from '../utils/photoMysteryState';
 import { fetchMyRoleInBarathon, fetchBarathon, fetchBarathonRoles, AssignedBarathonRole, API_BASE_URL } from '../../../lib/api';
 import { getAccessToken, getCurrentUserId } from '../../../lib/authStorage';
 import { connectBarathonSocket, disconnectBarathonSocket, sendBarathonLocation, WSMessage } from '../services/webSocket.service';
@@ -61,13 +62,22 @@ export default function ActiveBarathonScreen() {
   const [roles, setRoles] = useState<AssignedBarathonRole[]>([]);
   const [rolesModalVisible, setRolesModalVisible] = useState(false);
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
-  const [photoMysteryState, setPhotoMysteryState] = useState<PhotoMysteryState | null>(null);
+  const [photoSnapshot, setPhotoSnapshot] = useState<PhotoMysterySnapshot | null>(null);
+  const photoMysteryState = photoSnapshot && photoSnapshot.barathonId === barathon?.id ? photoSnapshot.state : null;
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [friendLocations, setFriendLocations] = useState<Record<number, ParticipantLocation>>({});
   const [isSousSolMode, setIsSousSolMode] = useState(false);
   const [pendingOfflineCount, setPendingOfflineCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<number | undefined>(undefined);
   const lastLocationSentRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
+
+  function updatePhotoSnapshot(incoming: PhotoMysterySnapshot) {
+    setPhotoSnapshot(current => {
+      const previous = current?.barathonId === incoming.barathonId ? current.state : null;
+      const result = reconcilePhotoMysteryState(previous, incoming.state, incoming.barathonId, incoming.barathonId);
+      return result.shouldUpdate ? { ...incoming, state: result.nextState } : current;
+    });
+  }
 
   useEffect(() => {
     getOfflineActionsQueue()
@@ -81,7 +91,7 @@ export default function ActiveBarathonScreen() {
     const loadPhoto = async () => {
       try {
         const s = await fetchPhotoMysteryState(barathon.id);
-        if (isMounted) setPhotoMysteryState(s);
+        if (isMounted) updatePhotoSnapshot({ barathonId: barathon.id, state: s });
       } catch {}
     };
     loadPhoto();
@@ -362,6 +372,14 @@ export default function ActiveBarathonScreen() {
                 delete updated[expiredUserId];
                 return updated;
               });
+            }
+          } else if (message.type === 'PHOTO_MYSTERY_UPDATE') {
+            if (message.barathon_id === currentBarathon.id) {
+              fetchPhotoMysteryState(currentBarathon.id)
+                .then((s) => {
+                  if (isMounted) updatePhotoSnapshot({ barathonId: currentBarathon.id, state: s });
+                })
+                .catch(() => {});
             }
           } else if (message.type === 'BARATHON_STOPPED' || message.type === 'BARATHON_FINISHED') {
             void tracking.stopTracking();
@@ -731,8 +749,8 @@ export default function ActiveBarathonScreen() {
         visible={photoModalVisible}
         onClose={() => setPhotoModalVisible(false)}
         barathonId={barathon.id}
-        initialState={photoMysteryState}
-        onStateUpdated={(s) => setPhotoMysteryState(s)}
+        initialSnapshot={photoSnapshot}
+        onStateUpdated={updatePhotoSnapshot}
       />
 
       <Modal

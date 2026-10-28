@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
   AppState,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -15,11 +17,13 @@ import {
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
+import * as Clipboard from 'expo-clipboard';
 
 import { navigationControlStyles } from '../../../lib/navigation.styles';
 import {
   PhotoChallengeItem,
   PhotoMysteryState,
+  PhotoMysterySnapshot,
 } from '../types/photoMystery.types';
 import {
   cancelPhotoChallenge,
@@ -30,507 +34,728 @@ import {
   publishPhotoChallenge,
   submitPhotoAnswer,
 } from '../services/photoMysteryService';
+import { preparePhotoChallengePayload } from '../utils/photoMysteryPayload';
+import {
+  ReconcileResult,
+  reconcilePhotoMysteryState,
+  reconcileSingleItemIntoState,
+} from '../utils/photoMysteryState';
+import { subscribePhotoMysteryEvents } from '../services/photoMysteryEvents';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   barathonId: number;
-  initialState?: PhotoMysteryState | null;
-  onStateUpdated?: (newState: PhotoMysteryState) => void;
+  initialSnapshot?: PhotoMysterySnapshot | null;
+  onStateUpdated?: (snapshot: PhotoMysterySnapshot) => void;
 };
 
-export default function PhotoMysteryModal({
+type PhotoSession = {
+  barathonId: number;
+  active: boolean;
+  latestRequestId: number;
+};
+
+// A different room gets a fresh component, including forms and upload capabilities.
+export default function PhotoMysteryModal(props: Props) {
+  return <PhotoMysteryModalSession key={props.barathonId} {...props} />;
+}
+
+function PhotoMysteryModalSession({
   visible,
   onClose,
   barathonId,
-  initialState,
+  initialSnapshot,
   onStateUpdated,
 }: Props) {
-  const [state, setState] = useState<PhotoMysteryState | null>(initialState || null);
+  const initial = initialSnapshot?.barathonId === barathonId ? initialSnapshot : null;
+  const [snapshot, setSnapshot] = useState<PhotoMysterySnapshot | null>(initial);
+  const snapshotRef = useRef(initial);
+  const state = snapshot?.barathonId === barathonId ? snapshot.state : null;
   const [loading, setLoading] = useState(false);
   const [authHeaders, setAuthHeaders] = useState<Record<string, string>>({});
-
-  // Mode: "VIEW" | "CREATE"
   const [mode, setMode] = useState<'VIEW' | 'CREATE'>('VIEW');
-
-  // Form states for creation
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [correctIndex, setCorrectIndex] = useState(0);
-  const [createdDraft, setCreatedDraft] = useState<{
-    id: string;
-    upload_code: string;
-  } | null>(null);
-
-  // Submitting states
+  const [createdDraft, setCreatedDraft] = useState<{ id: string; upload_code: string } | null>(null);
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const sessionRef = useRef<PhotoSession | null>(null);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  function isCurrent(session: PhotoSession): boolean {
+    return session.active && sessionRef.current === session;
+  }
+
+  function currentSession(): PhotoSession | null {
+    const session = sessionRef.current;
+    return session && isCurrent(session) && session.barathonId === barathonId ? session : null;
+  }
+
+  // One lifetime owns requests, browser callbacks and subscriptions. Closing,
+  // unmounting or changing room invalidates every continuation from that lifetime.
   useEffect(() => {
+    const session: PhotoSession = { barathonId, active: visible, latestRequestId: 0 };
+    sessionRef.current = session;
+    setLoading(false);
+    setSubmittingAnswer(false);
+    setPublishing(false);
+    setCopiedCode(false);
     if (visible) {
-      loadState();
-      getAuthHeadersForPhoto().then(setAuthHeaders);
+      void loadState(session);
+      void getAuthHeadersForPhoto().then(headers => {
+        if (isCurrent(session)) setAuthHeaders(headers);
+      }).catch(() => {});
     }
-  }, [visible, barathonId]);
-
-  // P1-B: Rechargement de l'état authentifié au retour d'arrière-plan (Android / iOS)
-  useEffect(() => {
-    if (!visible) return;
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        loadState();
-      }
-    });
+    const unsubscribe = visible ? subscribePhotoMysteryEvents(evt => {
+      if (evt.barathon_id === session.barathonId) void loadState(session);
+    }) : undefined;
+    const appState = visible ? AppState.addEventListener('change', next => {
+      if (next === 'active') void loadState(session);
+    }) : undefined;
     return () => {
-      subscription.remove();
+      session.active = false;
+      unsubscribe?.();
+      appState?.remove();
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = null;
     };
-  }, [visible, barathonId]);
+  }, [barathonId, visible]);
 
-  async function loadState() {
+  function commit(session: PhotoSession, result: ReconcileResult, notify: boolean) {
+    if (!isCurrent(session) || !result.shouldUpdate) return;
+    const next = { barathonId: session.barathonId, state: result.nextState };
+    snapshotRef.current = next;
+    setSnapshot(next);
+    // Notify outside a React state updater: no render-phase parent update or replay.
+    if (notify) onStateUpdated?.(next);
+  }
+
+  function acceptSnapshot(session: PhotoSession, incoming: PhotoMysteryState, notify = true) {
+    if (!isCurrent(session)) return;
+    commit(session, reconcilePhotoMysteryState(
+      snapshotRef.current?.state || null, incoming, session.barathonId, session.barathonId
+    ), notify);
+  }
+
+  useEffect(() => {
+    const session = currentSession();
+    if (session && initialSnapshot?.barathonId === session.barathonId) {
+      acceptSnapshot(session, initialSnapshot.state, false);
+    }
+  }, [initialSnapshot, barathonId, visible]);
+
+  async function loadState(session: PhotoSession) {
+    // Reject before changing the request sequence or any loading state.
+    if (!isCurrent(session)) return;
+    const reqId = ++session.latestRequestId;
+    setLoading(true);
     try {
-      setLoading(true);
-      const s = await fetchPhotoMysteryState(barathonId);
-      setState(s);
-      onStateUpdated?.(s);
-      // P1-B: Si le brouillon de l'auteur possède sa photo, basculer immédiatement en mode VIEW
-      // pour afficher la prévisualisation et le bouton « Publier le défi » sans forcer un « Annuler »
-      const draftWithPhoto = s.items.find(
-        (i) => i.state === 'draft' && i.photo_available
+      const incoming = await fetchPhotoMysteryState(session.barathonId);
+      if (!isCurrent(session) || reqId !== session.latestRequestId) return;
+      acceptSnapshot(session, incoming);
+      const draftWithPhoto = snapshotRef.current?.state.items.find(
+        item => item.state === 'draft' && item.photo_available
       );
       if (draftWithPhoto) {
         setMode('VIEW');
         setCreatedDraft(null);
       }
     } catch {
-      // Handled silently
+      // Keep the last authenticated snapshot; the next event/foreground retries.
     } finally {
-      setLoading(false);
+      if (isCurrent(session) && reqId === session.latestRequestId) setLoading(false);
     }
   }
 
-  // Active challenge to display
   const activeChallenge: PhotoChallengeItem | undefined =
-    state?.items.find((i) => i.state === 'published') ||
-    state?.items.find((i) => i.state === 'draft') ||
+    state?.items.find(item => item.state === 'published') ||
+    state?.items.find(item => item.state === 'draft') ||
     state?.items[0];
 
   async function handleAnswer(choiceIndex: number | null, passed: boolean) {
-    if (!activeChallenge) return;
+    if (!activeChallenge || submittingAnswer) return;
+    if (activeChallenge.my_submission !== null || !activeChallenge.can_answer) return;
+    const session = currentSession();
+    if (!session) return;
     try {
       setSubmittingAnswer(true);
-      await submitPhotoAnswer(barathonId, activeChallenge.id, {
-        choice_index: choiceIndex,
-        passed,
+      const updatedItem = await submitPhotoAnswer(session.barathonId, activeChallenge.id, {
+        choice_index: choiceIndex, passed,
       });
-      await loadState();
+      if (!isCurrent(session)) return;
+      commit(session, reconcileSingleItemIntoState(
+        snapshotRef.current?.state || null, updatedItem, session.barathonId, session.barathonId
+      ), true);
+      await loadState(session);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Impossible de soumettre la réponse.';
-      Alert.alert('Erreur', msg);
+      if (!isCurrent(session)) return;
+      await loadState(session);
+      if (!isCurrent(session)) return;
+      Alert.alert('Erreur', err instanceof Error ? err.message : 'Impossible de soumettre la réponse.');
     } finally {
-      setSubmittingAnswer(false);
+      if (isCurrent(session)) setSubmittingAnswer(false);
     }
   }
 
   async function handleCreateDraft() {
-    const trimmedQ = question.trim();
-    if (trimmedQ.length < 3 || trimmedQ.length > 180) {
-      Alert.alert('Question invalide', 'La question doit comporter entre 3 et 180 caractères.');
+    const session = currentSession();
+    if (!session || loading) return;
+    const validation = preparePhotoChallengePayload({ question, options, correctIndex });
+    if (!validation.success) {
+      Alert.alert('Formulaire incomplet', validation.error);
       return;
     }
-
-    const trimmedOpts = options.map((o) => o.trim()).filter(Boolean);
-    if (trimmedOpts.length < 2) {
-      Alert.alert('Options requises', 'Veuillez renseigner au moins 2 options différentes.');
+    const existingDraft = state?.items.find(item => item.state === 'draft');
+    if (existingDraft && !existingDraft.photo_available) {
+      setCreatedDraft({ id: existingDraft.id, upload_code: '' });
+      setMode('VIEW');
       return;
     }
-
     try {
       setLoading(true);
-      const draft = await createPhotoChallengeDraft(barathonId, {
-        question: trimmedQ,
-        options: trimmedOpts,
-        correct_index: correctIndex,
-      });
-      setCreatedDraft({
-        id: draft.id,
-        upload_code: draft.upload_code,
-      });
-      await loadState();
+      const draft = await createPhotoChallengeDraft(session.barathonId, validation.payload);
+      if (!isCurrent(session)) return;
+      setCreatedDraft({ id: draft.id, upload_code: draft.upload_code });
+      await loadState(session);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur de création du défi.';
-      Alert.alert('Erreur', msg);
+      if (!isCurrent(session)) return;
+      await loadState(session);
+      if (!isCurrent(session)) return;
+      Alert.alert('Erreur', err instanceof Error ? err.message : 'Erreur de création du défi.');
     } finally {
-      setLoading(false);
+      if (isCurrent(session)) setLoading(false);
     }
   }
 
+  async function handleRegenerateCode() {
+    const session = currentSession();
+    if (!session || loading) return;
+    const validation = preparePhotoChallengePayload({ question, options, correctIndex });
+    if (!validation.success) {
+      Alert.alert('Formulaire incomplet', validation.error);
+      return;
+    }
+    try {
+      setLoading(true);
+      const draftId = createdDraft?.id || state?.items.find(item => item.state === 'draft')?.id;
+      if (draftId) {
+        try {
+          await cancelPhotoChallenge(session.barathonId, draftId);
+        } catch {}
+      }
+      const draft = await createPhotoChallengeDraft(session.barathonId, validation.payload);
+      if (!isCurrent(session)) return;
+      setCreatedDraft({ id: draft.id, upload_code: draft.upload_code });
+      setCopiedCode(false);
+      try {
+        await Clipboard.setStringAsync(draft.upload_code);
+        setCopiedCode(true);
+      } catch {}
+      await loadState(session);
+      Alert.alert('Nouveau code', 'Un nouveau code de capture a été généré.');
+    } catch (err: unknown) {
+      if (!isCurrent(session)) return;
+      await loadState(session);
+      Alert.alert('Erreur', err instanceof Error ? err.message : 'Impossible de régénérer le code.');
+    } finally {
+      if (isCurrent(session)) setLoading(false);
+    }
+  }
+
+  async function handleCopyCode(code: string) {
+    const session = currentSession();
+    if (!session) return;
+    try {
+      const ok = await Clipboard.setStringAsync(code);
+      if (isCurrent(session) && ok !== false) {
+        setCopiedCode(true);
+        if (copiedTimer.current) clearTimeout(copiedTimer.current);
+        copiedTimer.current = setTimeout(() => {
+          if (isCurrent(session)) setCopiedCode(false);
+        }, 2500);
+      }
+    } catch {}
+  }
+
   async function handleOpenWebCamera() {
-    const baseUrl =
-      process.env.EXPO_PUBLIC_WEB_URL ||
-      'https://pubrush.com/photo-capture';
-    // P1-D: Ouverture de l'URL HTTPS fixe sans passer le code dans la query
-    const webUrl = baseUrl;
+    const session = currentSession();
+    if (!session) return;
+    if (createdDraft?.upload_code) {
+      try {
+        const ok = await Clipboard.setStringAsync(createdDraft.upload_code);
+        if (!isCurrent(session)) return;
+        if (ok !== false) setCopiedCode(true);
+      } catch {}
+    }
+    if (!isCurrent(session)) return;
+    const webUrl = process.env.EXPO_PUBLIC_WEB_URL || 'https://pubrush.com/photo-capture';
     try {
       await WebBrowser.openBrowserAsync(webUrl);
-      // Rechargement au retour (sur iOS la promesse se résout à la fermeture du navigateur)
-      await loadState();
+      await loadState(session);
     } catch {
-      Alert.alert('Navigateur', 'Impossible d’ouvrir la page de capture.');
+      if (isCurrent(session)) Alert.alert('Navigateur', 'Impossible d’ouvrir la page de capture.');
     }
   }
 
   async function handlePublish(challengeId: string) {
-    if (publishing) return; // P1-B: Protection contre le double appui
+    if (publishing) return;
+    const session = currentSession();
+    if (!session) return;
     try {
       setPublishing(true);
-      await publishPhotoChallenge(barathonId, challengeId);
+      const current = state?.items.find(item => item.id === challengeId);
+      if (current && current.state !== 'draft') {
+        await loadState(session);
+        return;
+      }
+      await publishPhotoChallenge(session.barathonId, challengeId);
+      if (!isCurrent(session)) return;
       setCreatedDraft(null);
       setMode('VIEW');
-      await loadState();
-      Alert.alert('Défi publié !', 'Vos amis ont 3 minutes pour deviner.');
+      await loadState(session);
+      if (isCurrent(session)) Alert.alert('Défi publié !', 'Vos amis ont 3 minutes pour deviner.');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Impossible de publier le défi.';
-      Alert.alert('Erreur', msg);
+      if (!isCurrent(session)) return;
+      await loadState(session);
+      if (!isCurrent(session)) return;
+      Alert.alert('Erreur', err instanceof Error ? err.message : 'Impossible de publier le défi.');
     } finally {
-      setPublishing(false);
+      if (isCurrent(session)) setPublishing(false);
     }
   }
 
   async function handleCancel(challengeId: string) {
+    const session = currentSession();
+    if (!session) return;
     try {
-      await cancelPhotoChallenge(barathonId, challengeId);
+      setLoading(true);
+      await cancelPhotoChallenge(session.barathonId, challengeId);
+      if (!isCurrent(session)) return;
       setCreatedDraft(null);
       setMode('VIEW');
-      await loadState();
+      await loadState(session);
     } catch {
-      // Ignored
+      await loadState(session);
+    } finally {
+      if (isCurrent(session)) setLoading(false);
     }
   }
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <SafeAreaView style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
-          {/* Header */}
-          <View style={styles.headerRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="camera-outline" size={22} color="#0EA5E9" />
-              <Text style={styles.title}>Photo Mystère</Text>
-            </View>
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel="Fermer"
-              onPress={onClose}
-              style={[styles.closeButton, navigationControlStyles.close]}
-            >
-              <Ionicons name="close" size={22} color="#4B5563" />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {loading && !state && (
-              <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" color="#0EA5E9" />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardContainer}
+        >
+          <View style={styles.modalCard}>
+            {/* Header */}
+            <View style={styles.headerRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="camera-outline" size={22} color="#0EA5E9" />
+                <Text style={styles.title}>Photo Mystère</Text>
               </View>
-            )}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Fermer"
+                onPress={onClose}
+                style={[styles.closeButton, navigationControlStyles.close]}
+              >
+                <Ionicons name="close" size={22} color="#4B5563" />
+              </TouchableOpacity>
+            </View>
 
-            {/* Mode VIEW: Display challenge or empty state */}
-            {mode === 'VIEW' && (
-              <>
-                {activeChallenge ? (
-                  <View style={styles.challengeCard}>
-                    {/* Badge d'état */}
-                    <View style={styles.statusRow}>
-                      <View
-                        style={[
-                          styles.badge,
-                          activeChallenge.state === 'published'
-                            ? styles.badgePublished
-                            : activeChallenge.state === 'closed'
-                            ? styles.badgeClosed
-                            : styles.badgeDraft,
-                        ]}
-                      >
-                        <Text style={styles.badgeText}>
-                          {activeChallenge.state === 'published'
-                            ? 'Défi en cours (3 min)'
-                            : activeChallenge.state === 'closed'
-                            ? 'Défi terminé'
-                            : 'Brouillon'}
-                        </Text>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              {loading && !state && (
+                <View style={styles.centerContainer}>
+                  <ActivityIndicator size="large" color="#0EA5E9" />
+                </View>
+              )}
+
+              {/* Mode VIEW: Display challenge or empty state */}
+              {mode === 'VIEW' && (
+                <>
+                  {activeChallenge ? (
+                    <View style={styles.challengeCard}>
+                      {/* Badge d'état */}
+                      <View style={styles.statusRow}>
+                        <View
+                          style={[
+                            styles.badge,
+                            activeChallenge.state === 'published'
+                              ? styles.badgePublished
+                              : activeChallenge.state === 'closed'
+                              ? styles.badgeClosed
+                              : activeChallenge.state === 'expired'
+                              ? styles.badgeExpired
+                              : activeChallenge.state === 'cancelled'
+                              ? styles.badgeCancelled
+                              : styles.badgeDraft,
+                          ]}
+                        >
+                          <Text style={styles.badgeText}>
+                            {activeChallenge.state === 'published'
+                              ? 'Défi en cours (3 min)'
+                              : activeChallenge.state === 'closed'
+                              ? 'Défi terminé'
+                              : activeChallenge.state === 'expired'
+                              ? 'Défi expiré'
+                              : activeChallenge.state === 'cancelled'
+                              ? 'Défi annulé'
+                              : 'Brouillon'}
+                          </Text>
+                        </View>
+
+                        {activeChallenge.can_answer && (
+                          <View style={styles.mustAnswerBadge}>
+                            <Text style={styles.mustAnswerText}>À ton tour !</Text>
+                          </View>
+                        )}
                       </View>
 
-                      {activeChallenge.can_answer && (
-                        <View style={styles.mustAnswerBadge}>
-                          <Text style={styles.mustAnswerText}>À ton tour !</Text>
+                      {/* Photo - affichage intégral sans rogner (portrait ou paysage) */}
+                      {activeChallenge.photo_available ? (
+                        <View style={styles.photoContainer}>
+                          <Image
+                            source={{
+                              uri: getPhotoMediaUrl(barathonId, activeChallenge.id),
+                              headers: authHeaders,
+                            }}
+                            cachePolicy="none"
+                            style={styles.photo}
+                            contentFit="contain"
+                          />
+                        </View>
+                      ) : (
+                        <View style={styles.noPhotoPlaceholder}>
+                          <Ionicons name="image-outline" size={32} color="#6B7280" />
+                          <Text style={styles.noPhotoText}>Photo en attente de capture</Text>
+                        </View>
+                      )}
+
+                      {/* Question */}
+                      <Text style={styles.questionText}>{activeChallenge.question}</Text>
+
+                      {/* Options / Réponse */}
+                      {activeChallenge.state === 'published' && activeChallenge.can_answer && (
+                        <View style={styles.optionsContainer}>
+                          {activeChallenge.options?.map((opt, idx) => (
+                            <TouchableOpacity
+                              key={idx}
+                              style={styles.optionButton}
+                              activeOpacity={0.8}
+                              disabled={submittingAnswer}
+                              onPress={() => handleAnswer(idx, false)}
+                            >
+                              <Text style={styles.optionButtonText}>{opt}</Text>
+                            </TouchableOpacity>
+                          ))}
+
+                          <TouchableOpacity
+                            style={styles.passButton}
+                            activeOpacity={0.8}
+                            disabled={submittingAnswer}
+                            onPress={() => handleAnswer(null, true)}
+                          >
+                            <Text style={styles.passButtonText}>Passer mon tour</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+
+                      {/* Déjà répondu mais pas encore clos */}
+                      {activeChallenge.state === 'published' && !activeChallenge.can_answer && (
+                        <View style={styles.waitingResultBox}>
+                          <Ionicons name="hourglass-outline" size={20} color="#0EA5E9" />
+                          <Text style={styles.waitingResultText}>
+                            {activeChallenge.my_submission
+                              ? 'Ta réponse est enregistrée ! En attente des autres joueurs...'
+                              : 'Tu es l’auteur de ce défi. En attente des réponses de tes amis...'}
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Résultats clos */}
+                      {activeChallenge.state === 'closed' && activeChallenge.results && (
+                        <View style={styles.resultsBox}>
+                          <Text style={styles.resultsTitle}>Résultats du défi</Text>
+                          <Text style={styles.correctAnswerText}>
+                            Bonne réponse :{' '}
+                            <Text style={{ fontWeight: '800', color: '#10B981' }}>
+                              {activeChallenge.options?.[activeChallenge.correct_index ?? 0] || 'Inconnue'}
+                            </Text>
+                          </Text>
+
+                          <View style={styles.scoreRow}>
+                            <View style={styles.scoreBadgeItem}>
+                              <Ionicons name="checkmark-circle" size={15} color="#10B981" />
+                              <Text style={styles.scoreText}>
+                                {activeChallenge.results.correct_count} correct(s)
+                              </Text>
+                            </View>
+                            <View style={styles.scoreBadgeItem}>
+                              <Ionicons name="close-circle" size={15} color="#EF4444" />
+                              <Text style={styles.scoreText}>
+                                {activeChallenge.results.incorrect_count} faux
+                              </Text>
+                            </View>
+                            <View style={styles.scoreBadgeItem}>
+                              <Ionicons name="play-forward-circle" size={15} color="#9CA3AF" />
+                              <Text style={styles.scoreText}>
+                                {activeChallenge.results.passed_count} passé(s)
+                              </Text>
+                            </View>
+                          </View>
+
+                          {/* Gage sans objet imposé */}
+                          {activeChallenge.results.my_dare_assigned && (
+                            <View style={styles.dareBox}>
+                              <Ionicons name="alert-circle-outline" size={20} color="#EF4444" />
+                              <Text style={styles.dareText}>
+                                Gage pour toi ! (À vous de décider entre vous)
+                              </Text>
+                            </View>
+                          )}
+                          {activeChallenge.results.creator_dare && (
+                            <View style={styles.dareBox}>
+                              <Ionicons name="trophy-outline" size={20} color="#F59E0B" />
+                              <Text style={styles.dareText}>
+                                100% de bonnes réponses ! Gage pour l’auteur ! (À vous de décider entre vous)
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
+
+                      {/* Phase 2: État expiré explicite */}
+                      {activeChallenge.state === 'expired' && (
+                        <View style={styles.expiredBox}>
+                          <Ionicons name="time-outline" size={20} color="#F59E0B" />
+                          <Text style={styles.expiredText}>
+                            Le temps imparti pour répondre à ce défi est écoulé.
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Phase 2: État annulé explicite */}
+                      {activeChallenge.state === 'cancelled' && (
+                        <View style={styles.cancelledBox}>
+                          <Ionicons name="close-circle-outline" size={20} color="#EF4444" />
+                          <Text style={styles.cancelledText}>
+                            Ce défi a été annulé par son auteur ou un organisateur.
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Brouillon en attente de publication */}
+                      {activeChallenge.state === 'draft' && (
+                        <View style={styles.draftBox}>
+                          {activeChallenge.photo_available ? (
+                            <TouchableOpacity
+                              style={styles.publishButton}
+                              disabled={publishing}
+                              onPress={() => handlePublish(activeChallenge.id)}
+                            >
+                              {publishing ? (
+                                <ActivityIndicator color="#FFFFFF" />
+                              ) : (
+                                <>
+                                  <Ionicons name="send" size={16} color="#FFFFFF" />
+                                  <Text style={styles.publishButtonText}>Publier le défi</Text>
+                                </>
+                              )}
+                            </TouchableOpacity>
+                          ) : (
+                            <TouchableOpacity
+                              style={styles.actionButton}
+                              onPress={handleOpenWebCamera}
+                            >
+                              <Ionicons name="camera" size={16} color="#FFFFFF" />
+                              <Text style={styles.actionButtonText}>Prendre la photo</Text>
+                            </TouchableOpacity>
+                          )}
+                          <TouchableOpacity
+                            style={{ marginTop: 8 }}
+                            onPress={() => handleCancel(activeChallenge.id)}
+                          >
+                            <Text style={{ color: '#EF4444', textAlign: 'center', fontSize: 13 }}>
+                              Abandonner ce brouillon
+                            </Text>
+                          </TouchableOpacity>
                         </View>
                       )}
                     </View>
+                  ) : (
+                    <View style={styles.emptyCard}>
+                      <Ionicons name="camera-reverse-outline" size={40} color="#9CA3AF" />
+                      <Text style={styles.emptyTitle}>Aucun défi en cours</Text>
+                      <Text style={styles.emptySubtitle}>
+                        Prends en photo un détail insolite dans le bar et mets tes amis au défi de deviner !
+                      </Text>
+                    </View>
+                  )}
 
-                    {/* Photo */}
-                    {activeChallenge.photo_available ? (
-                      <View style={styles.photoContainer}>
-                        <Image
-                          source={{
-                            uri: getPhotoMediaUrl(barathonId, activeChallenge.id),
-                            headers: authHeaders,
-                          }}
-                          cachePolicy="none"
-                          style={styles.photo}
-                          contentFit="cover"
+                  {/* Bouton Créer un défi (disponible aussi après défi terminé, expiré ou annulé) */}
+                  {state?.can_create && !createdDraft && activeChallenge?.state !== 'draft' && (
+                    <TouchableOpacity
+                      style={styles.createChallengeButton}
+                      activeOpacity={0.85}
+                      onPress={() => setMode('CREATE')}
+                    >
+                      <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+                      <Text style={styles.createChallengeText}>Créer un nouveau défi</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+
+              {/* Mode CREATE: Create Challenge Form */}
+              {mode === 'CREATE' && (
+                <View style={styles.createForm}>
+                  <Text style={styles.sectionTitle}>1. Pose ta question</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Ex : De quelle couleur est le dessous de verre ?"
+                    placeholderTextColor="#9CA3AF"
+                    value={question}
+                    onChangeText={setQuestion}
+                    maxLength={180}
+                  />
+
+                  <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
+                    2. Propositions (choisis la bonne réponse)
+                  </Text>
+                  {options.map((opt, idx) => (
+                    <View key={idx} style={styles.optionInputRow}>
+                      <TouchableOpacity
+                        style={[
+                          styles.radioCircle,
+                          correctIndex === idx && styles.radioCircleSelected,
+                        ]}
+                        onPress={() => setCorrectIndex(idx)}
+                      >
+                        {correctIndex === idx && <View style={styles.radioDot} />}
+                      </TouchableOpacity>
+                      <TextInput
+                        style={[styles.textInput, { flex: 1 }]}
+                        placeholder={`Option ${idx + 1}`}
+                        placeholderTextColor="#9CA3AF"
+                        value={opt}
+                        onChangeText={(t) => {
+                          const newOpts = [...options];
+                          newOpts[idx] = t;
+                          setOptions(newOpts);
+                        }}
+                        maxLength={60}
+                      />
+                    </View>
+                  ))}
+
+                  {options.length < 4 && (
+                    <TouchableOpacity
+                      style={styles.addOptionButton}
+                      onPress={() => setOptions([...options, ''])}
+                    >
+                      <Ionicons name="add" size={16} color="#0EA5E9" />
+                      <Text style={styles.addOptionText}>Ajouter une option</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Code de capture & Caméra */}
+                  {createdDraft ? (
+                    <View style={styles.draftReadyBox}>
+                      <Text style={styles.codeLabel}>Ton code de capture :</Text>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => handleCopyCode(createdDraft.upload_code)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 10,
+                          backgroundColor: 'rgba(14, 165, 233, 0.12)',
+                          borderWidth: 1,
+                          borderColor: copiedCode ? '#10B981' : '#0EA5E9',
+                          borderRadius: 12,
+                          paddingVertical: 10,
+                          paddingHorizontal: 16,
+                          marginVertical: 8,
+                        }}
+                      >
+                        <Text selectable={true} style={[styles.codeValue, { letterSpacing: 3 }]}>
+                          {createdDraft.upload_code}
+                        </Text>
+                        <Ionicons
+                          name={copiedCode ? 'checkmark-circle' : 'copy-outline'}
+                          size={20}
+                          color={copiedCode ? '#10B981' : '#0EA5E9'}
                         />
-                      </View>
-                    ) : (
-                      <View style={styles.noPhotoPlaceholder}>
-                        <Ionicons name="image-outline" size={32} color="#6B7280" />
-                        <Text style={styles.noPhotoText}>Photo en attente de capture</Text>
-                      </View>
-                    )}
-
-                    {/* Question */}
-                    <Text style={styles.questionText}>{activeChallenge.question}</Text>
-
-                    {/* Options / Réponse */}
-                    {activeChallenge.state === 'published' && activeChallenge.can_answer && (
-                      <View style={styles.optionsContainer}>
-                        {activeChallenge.options?.map((opt, idx) => (
-                          <TouchableOpacity
-                            key={idx}
-                            style={styles.optionButton}
-                            activeOpacity={0.8}
-                            disabled={submittingAnswer}
-                            onPress={() => handleAnswer(idx, false)}
-                          >
-                            <Text style={styles.optionButtonText}>{opt}</Text>
-                          </TouchableOpacity>
-                        ))}
-
-                        <TouchableOpacity
-                          style={styles.passButton}
-                          activeOpacity={0.8}
-                          disabled={submittingAnswer}
-                          onPress={() => handleAnswer(null, true)}
-                        >
-                          <Text style={styles.passButtonText}>Passer mon tour</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-
-                    {/* Déjà répondu mais pas encore clos */}
-                    {activeChallenge.state === 'published' && !activeChallenge.can_answer && (
-                      <View style={styles.waitingResultBox}>
-                        <Ionicons name="hourglass-outline" size={20} color="#0EA5E9" />
-                        <Text style={styles.waitingResultText}>
-                          {activeChallenge.my_submission
-                            ? 'Ta réponse est enregistrée ! En attente des autres joueurs...'
-                            : 'Tu es l’auteur de ce défi. En attente des réponses de tes amis...'}
-                        </Text>
-                      </View>
-                    )}
-
-                    {/* Résultats clos */}
-                    {activeChallenge.state === 'closed' && activeChallenge.results && (
-                      <View style={styles.resultsBox}>
-                        <Text style={styles.resultsTitle}>Résultats du défi</Text>
-                        <Text style={styles.correctAnswerText}>
-                          Bonne réponse :{' '}
-                          <Text style={{ fontWeight: '800', color: '#10B981' }}>
-                            {activeChallenge.options?.[activeChallenge.correct_index ?? 0] || 'Inconnue'}
-                          </Text>
-                        </Text>
-
-                        <View style={styles.scoreRow}>
-                          <Text style={styles.scoreText}>
-                            ✅ {activeChallenge.results.correct_count} correct(s)
-                          </Text>
-                          <Text style={styles.scoreText}>
-                            ❌ {activeChallenge.results.incorrect_count} faux
-                          </Text>
-                          <Text style={styles.scoreText}>
-                            ⏭️ {activeChallenge.results.passed_count} passé(s)
-                          </Text>
-                        </View>
-
-                        {/* Gage */}
-                        {activeChallenge.results.my_dare_assigned && (
-                          <View style={styles.dareBox}>
-                            <Ionicons name="alert-circle-outline" size={20} color="#EF4444" />
-                            <Text style={styles.dareText}>
-                              Gage facultatif pour toi : Choisis le thème du prochain bar ou mime un objet !
+                      </TouchableOpacity>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2, marginBottom: 12 }}>
+                        {copiedCode ? (
+                          <>
+                            <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                            <Text style={{ color: '#10B981', fontSize: 13, textAlign: 'center' }}>
+                              Code copié dans le presse-papier !
                             </Text>
-                          </View>
-                        )}
-                        {activeChallenge.results.creator_dare && (
-                          <View style={styles.dareBox}>
-                            <Ionicons name="trophy-outline" size={20} color="#F59E0B" />
-                            <Text style={styles.dareText}>
-                              100% de bonnes réponses ! Gage pour l’auteur : offre une tournée ou choisis le prochain bar !
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                    )}
-
-                    {/* Brouillon en attente de publication */}
-                    {activeChallenge.state === 'draft' && (
-                      <View style={styles.draftBox}>
-                        {activeChallenge.photo_available ? (
-                          <TouchableOpacity
-                            style={styles.publishButton}
-                            disabled={publishing}
-                            onPress={() => handlePublish(activeChallenge.id)}
-                          >
-                            {publishing ? (
-                              <ActivityIndicator color="#FFFFFF" />
-                            ) : (
-                              <>
-                                <Ionicons name="send" size={16} color="#FFFFFF" />
-                                <Text style={styles.publishButtonText}>Publier le défi</Text>
-                              </>
-                            )}
-                          </TouchableOpacity>
+                          </>
                         ) : (
-                          <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={handleOpenWebCamera}
-                          >
-                            <Ionicons name="camera" size={16} color="#FFFFFF" />
-                            <Text style={styles.actionButtonText}>Prendre la photo</Text>
-                          </TouchableOpacity>
-                        )}
-                        <TouchableOpacity
-                          style={{ marginTop: 8 }}
-                          onPress={() => handleCancel(activeChallenge.id)}
-                        >
-                          <Text style={{ color: '#EF4444', textAlign: 'center', fontSize: 13 }}>
-                            Abandonner ce brouillon
+                          <Text style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center' }}>
+                            Touche le code pour le copier, puis colle-le sur la page de capture.
                           </Text>
-                        </TouchableOpacity>
+                        )}
                       </View>
-                    )}
-                  </View>
-                ) : (
-                  <View style={styles.emptyCard}>
-                    <Ionicons name="camera-reverse-outline" size={40} color="#9CA3AF" />
-                    <Text style={styles.emptyTitle}>Aucun défi en cours</Text>
-                    <Text style={styles.emptySubtitle}>
-                      Prends en photo un détail insolite dans le bar et mets tes amis au défi de deviner !
-                    </Text>
-                  </View>
-                )}
-
-                {/* Bouton Créer un défi */}
-                {state?.can_create && !createdDraft && activeChallenge?.state !== 'draft' && (
-                  <TouchableOpacity
-                    style={styles.createChallengeButton}
-                    activeOpacity={0.85}
-                    onPress={() => setMode('CREATE')}
-                  >
-                    <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
-                    <Text style={styles.createChallengeText}>Créer un nouveau défi</Text>
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
-
-            {/* Mode CREATE: Create Challenge Form */}
-            {mode === 'CREATE' && (
-              <View style={styles.createForm}>
-                <Text style={styles.sectionTitle}>1. Pose ta question</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Ex : De quelle couleur est le dessous de verre ?"
-                  placeholderTextColor="#9CA3AF"
-                  value={question}
-                  onChangeText={setQuestion}
-                  maxLength={180}
-                />
-
-                <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
-                  2. Propositions (choisis la bonne réponse)
-                </Text>
-                {options.map((opt, idx) => (
-                  <View key={idx} style={styles.optionInputRow}>
+                      <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={handleOpenWebCamera}
+                      >
+                        <Ionicons name="camera" size={16} color="#FFFFFF" />
+                        <Text style={styles.actionButtonText}>Ouvrir la caméra sécurisée</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.secondaryButton, { marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }]}
+                        disabled={loading}
+                        onPress={handleRegenerateCode}
+                      >
+                        <Ionicons name="refresh" size={16} color="#0EA5E9" />
+                        <Text style={{ color: '#0EA5E9', fontSize: 13, fontWeight: '600' }}>
+                          Régénérer un nouveau code
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
                     <TouchableOpacity
-                      style={[
-                        styles.radioCircle,
-                        correctIndex === idx && styles.radioCircleSelected,
-                      ]}
-                      onPress={() => setCorrectIndex(idx)}
+                      style={[styles.actionButton, { marginTop: 24 }]}
+                      disabled={loading}
+                      onPress={handleCreateDraft}
                     >
-                      {correctIndex === idx && <View style={styles.radioDot} />}
+                      {loading ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                      ) : (
+                        <>
+                          <Ionicons name="key-outline" size={16} color="#FFFFFF" />
+                          <Text style={styles.actionButtonText}>Générer le code de capture</Text>
+                        </>
+                      )}
                     </TouchableOpacity>
-                    <TextInput
-                      style={[styles.textInput, { flex: 1 }]}
-                      placeholder={`Option ${idx + 1}`}
-                      placeholderTextColor="#9CA3AF"
-                      value={opt}
-                      onChangeText={(t) => {
-                        const newOpts = [...options];
-                        newOpts[idx] = t;
-                        setOptions(newOpts);
-                      }}
-                      maxLength={60}
-                    />
-                  </View>
-                ))}
+                  )}
 
-                {options.length < 4 && (
                   <TouchableOpacity
-                    style={styles.addOptionButton}
-                    onPress={() => setOptions([...options, ''])}
+                    style={styles.cancelFormButton}
+                    onPress={() => {
+                      setMode('VIEW');
+                      setCreatedDraft(null);
+                    }}
                   >
-                    <Ionicons name="add" size={16} color="#0EA5E9" />
-                    <Text style={styles.addOptionText}>Ajouter une option</Text>
+                    <Text style={styles.cancelFormText}>Annuler</Text>
                   </TouchableOpacity>
-                )}
-
-                {/* Code de capture & Caméra */}
-                {createdDraft ? (
-                  <View style={styles.draftReadyBox}>
-                    <Text style={styles.codeLabel}>Ton code de capture (valable 2 min) :</Text>
-                    <Text style={styles.codeValue}>{createdDraft.upload_code}</Text>
-                    <Text style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', marginTop: 4, marginBottom: 12 }}>
-                      Recopie ce code à 10 caractères sur la page de capture pour autoriser la prise de vue.
-                    </Text>
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={handleOpenWebCamera}
-                    >
-                      <Ionicons name="camera" size={16} color="#FFFFFF" />
-                      <Text style={styles.actionButtonText}>Ouvrir la caméra sécurisée</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={[styles.actionButton, { marginTop: 24 }]}
-                    disabled={loading}
-                    onPress={handleCreateDraft}
-                  >
-                    {loading ? (
-                      <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                      <>
-                        <Ionicons name="key-outline" size={16} color="#FFFFFF" />
-                        <Text style={styles.actionButtonText}>Générer le code de capture</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  style={styles.cancelFormButton}
-                  onPress={() => {
-                    setMode('VIEW');
-                    setCreatedDraft(null);
-                  }}
-                >
-                  <Text style={styles.cancelFormText}>Annuler</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </ScrollView>
-        </View>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
   );
@@ -541,6 +766,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  keyboardContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
   },
   modalCard: {
     backgroundColor: '#111827',
@@ -548,6 +780,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     padding: 20,
     maxHeight: '90%',
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
   },
   headerRow: {
     flexDirection: 'row',
@@ -601,6 +836,12 @@ const styles = StyleSheet.create({
   badgeClosed: {
     backgroundColor: '#10B981',
   },
+  badgeExpired: {
+    backgroundColor: '#D97706',
+  },
+  badgeCancelled: {
+    backgroundColor: '#DC2626',
+  },
   badgeDraft: {
     backgroundColor: '#6B7280',
   },
@@ -622,11 +863,14 @@ const styles = StyleSheet.create({
   },
   photoContainer: {
     width: '100%',
-    height: 220,
+    aspectRatio: 4 / 3,
+    maxHeight: 380,
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#000000',
     marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   photo: {
     width: '100%',
@@ -709,13 +953,27 @@ const styles = StyleSheet.create({
   },
   scoreRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
     marginBottom: 8,
   },
+  scoreBadgeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   scoreText: {
-    color: '#9CA3AF',
+    color: '#D1D5DB',
     fontSize: 13,
     fontWeight: '600',
+  },
+  secondaryButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(14, 165, 233, 0.4)',
+    backgroundColor: 'rgba(14, 165, 233, 0.08)',
   },
   dareBox: {
     flexDirection: 'row',
@@ -731,6 +989,40 @@ const styles = StyleSheet.create({
     fontSize: 12,
     flex: 1,
     fontWeight: '600',
+  },
+  expiredBox: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: 'rgba(217, 119, 6, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(217, 119, 6, 0.3)',
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  expiredText: {
+    color: '#FDE68A',
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+  },
+  cancelledBox: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  cancelledText: {
+    color: '#FCA5A5',
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
   },
   draftBox: {
     marginTop: 8,

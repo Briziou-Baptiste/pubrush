@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Camera, CheckCircle2, AlertCircle, RefreshCw, ArrowLeft, Shield, Lock } from "lucide-react";
+import { Camera, CheckCircle2, AlertCircle, RefreshCw, ArrowLeft, Shield, Lock, Clipboard } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.pubrush.com";
 
@@ -23,8 +23,23 @@ export default function PhotoCapturePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [blobToSend, setBlobToSend] = useState<Blob | null>(null);
 
-  // P1-D: Pas de lecture du code depuis la query string pour éviter toute fuite (historique, Referer, logs)
-  // La saisie manuelle du code à 10 caractères dans le formulaire est requise.
+  const [pasteError, setPasteError] = useState<string | null>(null);
+
+  const handlePasteCode = async () => {
+    setPasteError(null);
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim()) {
+          setCode(text.trim().toUpperCase().slice(0, 10));
+          return;
+        }
+      }
+      setPasteError("Accès refusé au presse-papier. Maintenez le doigt dans le champ pour Coller.");
+    } catch {
+      setPasteError("Accès refusé par le navigateur. Maintenez le doigt dans le champ pour Coller.");
+    }
+  };
 
   // Handle fallback file selection from native device camera
   const handleNativeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,6 +229,14 @@ export default function PhotoCapturePage() {
       setBlobToSend(null);
       setUploadToken(null);
       setStep("SUCCESS");
+      try {
+        window.close();
+      } catch {}
+      setTimeout(() => {
+        try {
+          window.close();
+        } catch {}
+      }, 400);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erreur lors de l'upload.";
       setError(msg);
@@ -264,9 +287,24 @@ export default function PhotoCapturePage() {
                 spellCheck="false"
                 className="w-full bg-neutral-950 border border-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-4 py-3.5 text-center text-2xl font-mono tracking-widest text-white uppercase placeholder:text-neutral-600 outline-none transition"
               />
-              <p className="text-xs text-neutral-400 mt-2">
-                Recopiez le code à 10 caractères affiché dans votre application PubRush. Valable 2 minutes.
-              </p>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-xs text-neutral-400">
+                  Code à 10 caractères généré dans l&apos;application.
+                </p>
+                <button
+                  type="button"
+                  onClick={handlePasteCode}
+                  className="min-h-[44px] px-3.5 py-2 text-xs font-semibold text-blue-400 hover:text-blue-300 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-850 active:bg-neutral-800 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Clipboard className="w-4 h-4" /> Coller
+                </button>
+              </div>
+              {pasteError && (
+                <p className="text-xs text-amber-400 mt-1.5 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  {pasteError}
+                </p>
+              )}
             </div>
 
             <button
@@ -343,7 +381,7 @@ export default function PhotoCapturePage() {
               <img
                 src={previewUrl}
                 alt="Aperçu du défi"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
 
@@ -387,10 +425,13 @@ export default function PhotoCapturePage() {
               <p className="text-sm text-neutral-300 mt-2 font-medium">
                 Votre photo est chiffrée et prête.
               </p>
-              <div className="mt-4 p-4 bg-sky-950/40 border border-sky-800/50 rounded-xl text-sky-200 text-sm leading-relaxed">
-                <p className="font-semibold text-white">👉 Retournez maintenant dans l&apos;application PubRush.</p>
-                <p className="mt-1 text-xs text-sky-300">
-                  (Sur iPhone : touchez « Terminé » en haut à gauche. Sur Android : touchez la flèche retour de votre téléphone.)
+              <div className="mt-4 p-4 bg-emerald-950/40 border border-emerald-800/50 rounded-xl text-emerald-200 text-sm leading-relaxed">
+                <p className="font-semibold text-white flex items-center justify-center gap-1.5">
+                  <ArrowLeft className="w-4 h-4 text-emerald-400 shrink-0" />
+                  Retournez maintenant dans l&apos;application PubRush.
+                </p>
+                <p className="mt-1 text-xs text-emerald-300/80">
+                  (Sur iPhone : touchez « Terminé » en haut à gauche de l&apos;écran)
                 </p>
               </div>
             </div>
@@ -399,12 +440,14 @@ export default function PhotoCapturePage() {
               onClick={() => {
                 try {
                   window.close();
-                } catch {
-                  // Ignore
-                }
+                } catch {}
+                try {
+                  window.history.back();
+                } catch {}
               }}
-              className="mt-2 px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-xl text-sm font-medium transition"
+              className="mt-2 w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-2"
             >
+              <CheckCircle2 className="w-4 h-4" />
               Fermer la page
             </button>
           </div>
