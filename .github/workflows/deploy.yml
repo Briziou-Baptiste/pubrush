@@ -1,17 +1,24 @@
-name: CI/CD Pubrush Backend
+name: CI Pubrush Validation
 
-on:
+"on":
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
-  group: pubrush-production
-  cancel-in-progress: false
+  group: ci-pubrush-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # --- PHASE 0 : RUN AUTOMATED TESTS ---
-  run-tests:
+  # --- PHASE 1 : VALIDATION TESTS BACKEND & INVARIANTS MONOPOD ---
+  run-backend-tests:
+    name: Backend Tests & Deployment Invariants
     runs-on: ubuntu-latest
     steps:
       - name: Checkout du code
@@ -22,141 +29,28 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Installer les dépendances
+      - name: Installer les dépendances backend
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
+          pip install pyyaml
 
       - name: Exécuter les tests avec pytest
         env:
           DATABASE_URL: 'sqlite:///:memory:'
+          PYTHONPATH: '.'
         run: |
           cd backend
           python -m pytest -v
 
-  # --- PHASE 1 : BUILD & PUSH (S'exécute uniquement si les tests passent) ---
-  build-and-push:
-    runs-on: ubuntu-latest
-    needs: run-tests
-    outputs:
-      image_digest: ${{ steps.build_backend.outputs.digest }}
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Connexion à Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build et Push de l'image Docker
-        id: build_backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          file: ./backend/Dockerfile
-          push: true
-          tags: |
-            baptistebriziou/pubrush-backend:latest
-            baptistebriziou/pubrush-backend:${{ github.sha }}
-
-  # --- PHASE 2 : DEPLOIEMENT SECURISE VIA TUNNEL SSH ---
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Configurer la clé SSH locale
+      - name: Exécuter les tests unitaires des scripts de déploiement et de rollback
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          # Ajoute le VPS aux hôtes connus pour éviter le blocage "untrusted host"
-          ssh-keyscan -p 22 ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          python3 -m unittest discover -s pubrush-k8s/monopod/tests -v
 
-      - name: Connexion au registre pour vérifier les images de repli
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Ouvrir le tunnel SSH et lancer le Déploiement
-        env:
-          BUILD_DIGEST: ${{ needs.build-and-push.outputs.image_digest }}
-        run: |
-          set -Eeuo pipefail
-
-          # 1. Ouverture du tunnel SSH vers l'API Kubernetes du VPS
-          ssh -f -N -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -L 6443:127.0.0.1:6443 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i ~/.ssh/id_ed25519
-          
-          # 2. Installation de kubectl
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-          
-          # 3. Décodage du kubeconfig
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 --decode > ~/.kube/config
-          
-          # Force kubectl à utiliser le tunnel localhost
-          kubectl config set-cluster default --server=https://127.0.0.1:6443 --insecure-skip-tls-verify=true
-          
-          # 4. Même validation de cible et mêmes invariants que les scripts opérateur.
-          export KUBE_CONTEXT=default KUBE_NAMESPACE=default EXPECTED_CLUSTER=default
-          source pubrush-k8s/monopod/deployment-common.sh
-          prepare_workspace
-          validate_target
-          check_monopod
-
-          IMMUTABLE_IMAGE=$(python3 "$STATE_TOOL" image-ref "baptistebriziou/pubrush-backend@${BUILD_DIGEST}")
-          STATE_FILE="$RUNNER_TEMP/pubrush-predeploy.json"
-          capture_snapshot "$STATE_FILE"
-          PREVIOUS_BACKEND=$(python3 "$STATE_TOOL" image "$STATE_FILE" backend)
-          PREVIOUS_MIGRATION=$(python3 "$STATE_TOOL" image "$STATE_FILE" migration)
-          # Vérifier la récupération des deux références avant toute mutation.
-          docker buildx imagetools inspect "$PREVIOUS_BACKEND" > /dev/null
-          docker buildx imagetools inspect "$PREVIOUS_MIGRATION" > /dev/null
-
-          # Le lot P0 ne modifie pas le schéma : vérifier avant autorisation que
-          # l'ancienne image de migration reconnaît la révision SQL courante.
-          # Aucun downgrade n'est exécuté. Toute erreur après la première mutation
-          # (rollout OU convergence) entraîne le même rollback contrôlé.
-          rollback_on_error() {
-            local failure="$1"
-            trap - ERR
-            echo "Échec du déploiement ; tentative de restauration des deux digests sauvegardés."
-            if bash pubrush-k8s/monopod/rollback-backend.sh \
-              --from-env "$STATE_FILE" --context "$TARGET_CONTEXT" \
-              --namespace "$TARGET_NAMESPACE" --expected-cluster "$EXPECTED_CLUSTER"; then
-              echo "Rollback terminé et contrôlé ; le déploiement reste en échec."
-            else
-              echo "ERREUR : rollback non convergé, intervention opérateur requise." >&2
-            fi
-            exit "$failure"
-          }
-          trap 'rollback_on_error "$?"' ERR
-          kube set image deployment/pubrush-backend backend="$IMMUTABLE_IMAGE" migration="$IMMUTABLE_IMAGE"
-          wait_convergence monopod
-          check_images "$IMMUTABLE_IMAGE" "$IMMUTABLE_IMAGE"
-          trap - ERR
-          echo "Déploiement par digest validé en mode monopod."
-
-      - name: Conserver les paramètres et digests de repli
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pubrush-predeploy-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/pubrush-predeploy.json
-          if-no-files-found: ignore
-          retention-days: 14
-
-  # --- PHASE 3 : DEPLOIEMENT EXPO / EAS UPDATE (MOBILE) ---
-  deploy-mobile:
+  # --- PHASE 2 : VALIDATION TYPESCRIPT MOBILE ---
+  run-mobile-typecheck:
+    name: Mobile TypeScript Check
     runs-on: ubuntu-latest
-    needs: deploy
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
@@ -168,20 +62,38 @@ jobs:
           cache: 'npm'
           cache-dependency-path: mobile/package-lock.json
 
-      - name: Configurer EAS / Expo CLI
-        uses: expo/expo-github-action@v8
+      - name: Installer les dépendances mobile
+        run: |
+          cd mobile
+          npm ci --legacy-peer-deps --ignore-scripts
+
+      - name: Valider les types TypeScript mobile
+        run: |
+          cd mobile
+          test -f expo-env.d.ts || printf '/// <reference types="expo/types" />\n' > expo-env.d.ts
+          npx tsc --noEmit
+
+  # --- PHASE 3 : VALIDATION TYPESCRIPT WEB ---
+  run-web-typecheck:
+    name: Web TypeScript Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
         with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-          packager: npm
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
 
-      - name: Installer les dépendances
+      - name: Installer les dépendances web
         run: |
-          cd mobile
-          npm ci --legacy-peer-deps
+          cd web
+          npm ci --ignore-scripts
 
-      - name: Publier la mise à jour EAS Update (iOS & Android)
+      - name: Valider les types TypeScript web
         run: |
-          cd mobile
-          eas update --branch preview --environment preview --message "Mise à jour automatique (iOS) - Build #${{ github.run_number }}" --platform ios --non-interactive
-          eas update --branch preview --environment preview --message "Mise à jour automatique (Android) - Build #${{ github.run_number }}" --platform android --non-interactive
+          cd web
+          npx tsc --noEmit

@@ -203,16 +203,6 @@ class DeploymentScripts(unittest.TestCase):
         file.write_text(json.dumps(state))
         return str(file)
 
-    def run_ci(self, ok=True, env=None):
-        workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
-        step = next(s for s in workflow["jobs"]["deploy"]["steps"] if "run" in s and "BUILD_DIGEST" in s.get("env", {}))
-        body = step["run"]
-        body = "set -euo pipefail\n" + body[body.index("# 4. Même"):]
-        result = subprocess.run(["bash", "-c", body], cwd=ROOT, text=True, capture_output=True,
-                                env=dict(self.env, BUILD_DIGEST="sha256:" + "a" * 64, **(env or {})), timeout=15)
-        self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
-        return result
-
     def test_activation_zero_terminating_and_zero_not_ready(self):
         web = self.read()["web_hpa"]
         self.activate()
@@ -384,57 +374,46 @@ class DeploymentScripts(unittest.TestCase):
                         env={"MOCK_FAIL": "set image"})
         self.assertEqual(self.read()["mutations"], count)
 
-    def test_ci_nominal_uses_both_build_digests_and_shared_invariants(self):
-        self.activate()
-        self.run_ci()
-        spec = self.read()["deployment"]["spec"]["template"]["spec"]
-        self.assertEqual(spec["containers"][0]["image"], NEW)
-        self.assertEqual(spec["initContainers"][0]["image"], NEW)
-        self.assertTrue((self.path / "pubrush-predeploy.json").is_file())
-        self.assertEqual(len(self.read()["docker_calls"]), 2)
+    def test_ci_only_expected_events_and_jobs(self):
+        workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
+        self.assertEqual(workflow["on"], {"pull_request": {"branches": ["main"]}, "push": {"branches": ["main"]}})
+        self.assertEqual(set(workflow["jobs"]), {"run-backend-tests", "run-mobile-typecheck", "run-web-typecheck"})
+        self.assertEqual(workflow["permissions"], {"contents": "read"})
 
-    def test_ci_refuses_unrecoverable_previous_image_before_mutation(self):
-        self.activate()
-        count = self.read()["mutations"]
-        self.run_ci(ok=False, env={"MOCK_DOCKER_FAIL": "1"})
-        self.assertEqual(self.read()["mutations"], count)
+    def test_ci_all_workflows_are_validation_only(self):
+        workflows = list((ROOT / ".github/workflows").glob("*.y*ml"))
+        self.assertEqual([f.name for f in workflows], ["deploy.yml"])
+        workflow = yaml.safe_load(workflows[0].read_text())
+        allowed_actions = {"actions/checkout@v4", "actions/setup-python@v5", "actions/setup-node@v4"}
+        for job in workflow["jobs"].values():
+            self.assertNotIn("environment", job)
+            self.assertNotIn("permissions", job)
+            for step in job["steps"]:
+                if "uses" in step:
+                    self.assertIn(step["uses"], allowed_actions)
+                if "run" in step:
+                    self.assertNotRegex(step["run"], r"(?i)docker|kubectl|ssh|eas|alembic|curl|wget")
+                    subprocess.run(["bash", "-n"], input=step["run"], text=True, check=True)
+        self.assertNotIn("secrets.", workflows[0].read_text())
 
-    def test_ci_refuses_non_monopod_target(self):
-        self.run_ci(ok=False)
-        self.assertEqual(self.read()["mutations"], 0)
+    def test_ci_installs_do_not_execute_npm_lifecycle_scripts(self):
+        workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
+        for job_name in ("run-mobile-typecheck", "run-web-typecheck"):
+            runs = [s["run"] for s in workflow["jobs"][job_name]["steps"] if "run" in s]
+            installs = [r for r in runs if "npm ci" in r]
+            self.assertEqual(len(installs), 1)
+            self.assertIn("--ignore-scripts", installs[0])
+            self.assertTrue(any("npx tsc --noEmit" in r for r in runs))
 
-    def test_ci_rollout_failure_restores_previous_distinct_digests(self):
-        file = self.activate()
-        self.run_script("rollback-backend.sh", "--from-env", str(file))
-        self.run_ci(ok=False, env={"MOCK_FAIL": "rollout status", "MOCK_FAIL_AFTER_MUTATION": "1", "MOCK_FAIL_TIMES": "1"})
-        spec = self.read()["deployment"]["spec"]["template"]["spec"]
-        self.assertEqual(spec["containers"][0]["image"], OLD)
-        self.assertEqual(spec["initContainers"][0]["image"], OLD_MIGRATION)
+    def test_ci_runs_backend_and_offline_operational_tests(self):
+        workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
+        runs = [s["run"] for s in workflow["jobs"]["run-backend-tests"]["steps"] if "run" in s]
+        self.assertTrue(any("python -m pytest -v" in r for r in runs))
+        self.assertTrue(any("python3 -m unittest discover -s pubrush-k8s/monopod/tests -v" in r for r in runs))
 
-    def test_ci_convergence_kubectl_error_is_not_hidden_in_error_handler(self):
-        self.activate()
-        # Fail on the first read after the new images are installed, not during preflight.
-        state = self.read()
-        state["mutations"] = 0
-        self.save(state)
-        self.run_ci(ok=False, env={"MOCK_FAIL": "get endpoints", "MOCK_FAIL_AFTER_MUTATION": "1", "MOCK_FAIL_TIMES": "1"})
-        spec = self.read()["deployment"]["spec"]["template"]["spec"]
-        self.assertEqual(spec["containers"][0]["image"], OLD)
-        self.assertEqual(spec["initContainers"][0]["image"], OLD_MIGRATION)
-
-    def test_bash_and_workflow_syntax_and_digest_wiring(self):
+    def test_bash_syntax(self):
         for file in SCRIPTS.glob("*.sh"):
             subprocess.run(["bash", "-n", str(file)], check=True)
-        workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
-        build = workflow["jobs"]["build-and-push"]
-        self.assertEqual(build["outputs"]["image_digest"], "${{ steps.build_backend.outputs.digest }}")
-        self.assertIn("build_backend", [s.get("id") for s in build["steps"]])
-        self.assertFalse(workflow["concurrency"]["cancel-in-progress"])
-        for job in workflow["jobs"].values():
-            for step in job["steps"]:
-                if "run" in step:
-                    run = re.sub(r"\$\{\{.*?\}\}", "placeholder", step["run"])
-                    subprocess.run(["bash", "-n"], input=run, text=True, check=True)
 
 
 if __name__ == "__main__":
