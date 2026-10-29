@@ -1,6 +1,6 @@
 import { useUnsavedNavigation } from '../../../hooks/useUnsavedNavigation';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { useNavigation, Link } from 'expo-router';
+import { useNavigation, Link, router } from 'expo-router';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -21,6 +21,7 @@ import { loginUser, registerUser, checkUsernameAvailability } from '../../../lib
 import { saveSession } from '../../../lib/authStorage';
 import { isValidEmail, isValidPassword } from '../../../lib/validators';
 import { styles } from '../styles/register.styles';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterScreen() {
   const headerHeight = useHeaderHeight();
@@ -28,12 +29,15 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   useUnsavedNavigation(!authenticated && Boolean(email || username || password), !authenticated && loading);
   useEffect(() => {
-    if (authenticated) navigation.reset({ index: 0, routes: [{ name: 'home' }] });
-  }, [authenticated, navigation]);
+    if (authenticated) {
+      router.replace('/home');
+    }
+  }, [authenticated]);
   const [usernameIsTaken, setUsernameIsTaken] = useState<boolean | null>(null);
 
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
@@ -204,21 +208,37 @@ export default function RegisterScreen() {
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Mot de passe</Text>
-                <TextInput
-                  placeholder="Minimum 8 caractères"
-                  placeholderTextColor="#9CA3AF"
-                  secureTextEntry
-                  textContentType="newPassword"
-                  autoComplete="password-new"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  value={password}
-                  onChangeText={setPassword}
-                  style={[
-                    styles.input,
-                    passwordTouched && !passwordIsValid ? styles.inputError : null,
-                  ]}
-                />
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    placeholder="Minimum 8 caractères"
+                    placeholderTextColor="#9CA3AF"
+                    secureTextEntry={!showPassword}
+                    textContentType="newPassword"
+                    autoComplete="password-new"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={password}
+                    onChangeText={setPassword}
+                    style={[
+                      styles.input,
+                      styles.passwordInput,
+                      passwordTouched && !passwordIsValid ? styles.inputError : null,
+                    ]}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword((prev) => !prev)}
+                    style={styles.eyeButton}
+                    accessibilityLabel={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    accessibilityRole="button"
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                      size={20}
+                      color="#6B7280"
+                    />
+                  </TouchableOpacity>
+                </View>
                 {passwordTouched && !passwordIsValid ? (
                   <Text style={styles.errorText}>
                     Le mot de passe doit contenir au moins 8 caractères.

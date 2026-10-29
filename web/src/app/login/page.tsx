@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Lock, ShieldAlert, ArrowLeft, User, Sparkles } from "lucide-react";
+import { Mail, Lock, ShieldAlert, ArrowLeft, User, Sparkles, Eye, EyeOff } from "lucide-react";
 import { api } from "../admin/api";
 import styles from "./login.module.css";
 import Footer from "../../components/Footer";
@@ -16,11 +16,13 @@ export default function LoginRegister() {
   // Login Form States
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   
   // Register Form States
   const [regUsername, setRegUsername] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [showRegPassword, setShowRegPassword] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -172,15 +174,25 @@ export default function LoginRegister() {
                 <label htmlFor="password" className={styles.label}>
                   <Lock className="w-3.5 h-3.5" /> Mot de passe
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  required
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className={styles.input}
-                />
+                <div className={styles.passwordWrapper}>
+                  <input
+                    type={showLoginPassword ? "text" : "password"}
+                    id="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className={`${styles.input} ${styles.passwordInput}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword((prev) => !prev)}
+                    className={styles.eyeBtn}
+                    aria-label={showLoginPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  >
+                    {showLoginPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -238,16 +250,26 @@ export default function LoginRegister() {
                 <label htmlFor="regPassword" className={styles.label}>
                   <Lock className="w-3.5 h-3.5" /> Mot de passe
                 </label>
-                <input
-                  type="password"
-                  id="regPassword"
-                  required
-                  minLength={6}
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className={styles.input}
-                />
+                <div className={styles.passwordWrapper}>
+                  <input
+                    type={showRegPassword ? "text" : "password"}
+                    id="regPassword"
+                    required
+                    minLength={6}
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className={`${styles.input} ${styles.passwordInput}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegPassword((prev) => !prev)}
+                    className={styles.eyeBtn}
+                    aria-label={showRegPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  >
+                    {showRegPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <button

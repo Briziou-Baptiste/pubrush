@@ -1,4 +1,4 @@
-import { useNavigation, Link } from 'expo-router';
+import { useNavigation, Link, router } from 'expo-router';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 //
 //  HomeScreen.tsx
@@ -26,11 +26,13 @@ import { loginUser } from '../../../lib/api';
 import { isValidEmail } from '../../../lib/validators';
 import { styles } from '../styles/login.styles';
 import { saveSession } from '../../../lib/authStorage';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
@@ -56,8 +58,8 @@ export default function LoginScreen() {
         password,
       });
 
-        await saveSession(result.access_token);
-      navigation.reset({ index: 0, routes: [{ name: 'home' }] });
+      await saveSession(result.access_token);
+      router.replace('/home');
     } catch (error) {
       Alert.alert(
         'Connexion impossible',
@@ -117,18 +119,33 @@ export default function LoginScreen() {
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Mot de passe</Text>
-                <TextInput
-                  placeholder="Ton mot de passe"
-                  placeholderTextColor="#9CA3AF"
-                  secureTextEntry
-                  textContentType="password"
-                  autoComplete="password"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  value={password}
-                  onChangeText={setPassword}
-                  style={styles.input}
-                />
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    placeholder="Ton mot de passe"
+                    placeholderTextColor="#9CA3AF"
+                    secureTextEntry={!showPassword}
+                    textContentType="password"
+                    autoComplete="password"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={password}
+                    onChangeText={setPassword}
+                    style={[styles.input, styles.passwordInput]}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword((prev) => !prev)}
+                    style={styles.eyeButton}
+                    accessibilityLabel={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    accessibilityRole="button"
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                      size={20}
+                      color="#6B7280"
+                    />
+                  </TouchableOpacity>
+                </View>
                 <Link href="/forgot-password" style={styles.forgotPasswordLink}>
                   Mot de passe oublié ?
                 </Link>

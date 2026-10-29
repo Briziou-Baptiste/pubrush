@@ -17,6 +17,7 @@ import {
 
 import { resetPassword } from '../../../lib/api';
 import { styles } from '../styles/login.styles';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ResetPasswordScreen() {
   const headerHeight = useHeaderHeight();
@@ -28,6 +29,8 @@ export default function ResetPasswordScreen() {
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
   useUnsavedNavigation(!completed && Boolean(code || newPassword || confirmPassword), !completed && loading);
@@ -137,35 +140,66 @@ export default function ResetPasswordScreen() {
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Nouveau mot de passe (8+ car.)</Text>
-                <TextInput
-                  placeholder="Minimum 8 caractères"
-                  placeholderTextColor="#9CA3AF"
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  style={styles.input}
-                />
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    placeholder="Minimum 8 caractères"
+                    placeholderTextColor="#9CA3AF"
+                    secureTextEntry={!showNewPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    style={[styles.input, styles.passwordInput]}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowNewPassword((prev) => !prev)}
+                    style={styles.eyeButton}
+                    accessibilityLabel={showNewPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    accessibilityRole="button"
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons
+                      name={showNewPassword ? 'eye-outline' : 'eye-off-outline'}
+                      size={20}
+                      color="#6B7280"
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Confirmer le mot de passe</Text>
-                <TextInput
-                  placeholder="Confirmer le mot de passe"
-                  placeholderTextColor="#9CA3AF"
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  style={[
-                    styles.input,
-                    confirmPassword.length > 0 && newPassword !== confirmPassword
-                      ? styles.inputError
-                      : null,
-                  ]}
-                />
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    placeholder="Confirmer le mot de passe"
+                    placeholderTextColor="#9CA3AF"
+                    secureTextEntry={!showConfirmPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    style={[
+                      styles.input,
+                      styles.passwordInput,
+                      confirmPassword.length > 0 && newPassword !== confirmPassword
+                        ? styles.inputError
+                        : null,
+                    ]}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowConfirmPassword((prev) => !prev)}
+                    style={styles.eyeButton}
+                    accessibilityLabel={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    accessibilityRole="button"
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons
+                      name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
+                      size={20}
+                      color="#6B7280"
+                    />
+                  </TouchableOpacity>
+                </View>
                 {confirmPassword.length > 0 && newPassword !== confirmPassword ? (
                   <Text style={styles.errorText}>Les mots de passe ne correspondent pas.</Text>
                 ) : null}
