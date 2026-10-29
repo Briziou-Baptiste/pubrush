@@ -1,4 +1,4 @@
-name: CI Pubrush Validation
+name: CI Pubrush Validation & Mobile Test Delivery
 
 "on":
   pull_request:
@@ -97,3 +97,49 @@ jobs:
         run: |
           cd web
           npx tsc --noEmit
+
+  # --- PHASE 4 : PUBLICATION TEST EXPO GO (MOBILE PREVIEW) ---
+  deploy-mobile-test:
+    name: Expo Preview Test Publication
+    runs-on: ubuntu-latest
+    needs: [run-backend-tests, run-mobile-typecheck, run-web-typecheck]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Configurer EAS / Expo CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: npm
+
+      - name: Installer les dépendances mobile
+        run: |
+          cd mobile
+          npm ci --legacy-peer-deps
+
+      - name: Publier la mise à jour EAS Update (iOS & Android)
+        env:
+          EXPO_PUBLIC_API_URL: https://api.pubrush.com
+          EXPO_PUBLIC_WEB_URL: https://pubrush.com/photo-capture
+        run: |
+          cd mobile
+          echo "Publication EAS Update iOS..."
+          eas update --branch preview --environment preview --message "Mise à jour automatique (iOS) - Build #${{ github.run_number }} (${{ github.sha }})" --platform ios --non-interactive
+          echo "Publication EAS Update Android..."
+          eas update --branch preview --environment preview --message "Mise à jour automatique (Android) - Build #${{ github.run_number }} (${{ github.sha }})" --platform android --non-interactive
+
+      - name: Vérifier la publication EAS
+        run: |
+          cd mobile
+          echo "=== État de la branche preview après publication ==="
+          eas branch:view preview --non-interactive

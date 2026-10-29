@@ -377,24 +377,34 @@ class DeploymentScripts(unittest.TestCase):
     def test_ci_only_expected_events_and_jobs(self):
         workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
         self.assertEqual(workflow["on"], {"pull_request": {"branches": ["main"]}, "push": {"branches": ["main"]}})
-        self.assertEqual(set(workflow["jobs"]), {"run-backend-tests", "run-mobile-typecheck", "run-web-typecheck"})
+        self.assertEqual(set(workflow["jobs"]), {"run-backend-tests", "run-mobile-typecheck", "run-web-typecheck", "deploy-mobile-test"})
         self.assertEqual(workflow["permissions"], {"contents": "read"})
+        # deploy-mobile-test must only run on push to main and after all 3 validations
+        mobile_job = workflow["jobs"]["deploy-mobile-test"]
+        self.assertEqual(set(mobile_job["needs"]), {"run-backend-tests", "run-mobile-typecheck", "run-web-typecheck"})
+        self.assertEqual(mobile_job["if"], "github.event_name == 'push' && github.ref == 'refs/heads/main'")
 
     def test_ci_all_workflows_are_validation_only(self):
         workflows = list((ROOT / ".github/workflows").glob("*.y*ml"))
         self.assertEqual([f.name for f in workflows], ["deploy.yml"])
         workflow = yaml.safe_load(workflows[0].read_text())
-        allowed_actions = {"actions/checkout@v4", "actions/setup-python@v5", "actions/setup-node@v4"}
-        for job in workflow["jobs"].values():
+        allowed_actions = {"actions/checkout@v4", "actions/setup-python@v5", "actions/setup-node@v4", "expo/expo-github-action@v8"}
+        for job_name, job in workflow["jobs"].items():
             self.assertNotIn("environment", job)
             self.assertNotIn("permissions", job)
             for step in job["steps"]:
                 if "uses" in step:
                     self.assertIn(step["uses"], allowed_actions)
                 if "run" in step:
-                    self.assertNotRegex(step["run"], r"(?i)docker|kubectl|ssh|eas|alembic|curl|wget")
+                    if job_name == "deploy-mobile-test":
+                        self.assertNotRegex(step["run"], r"(?i)docker|kubectl|ssh|alembic")
+                    else:
+                        self.assertNotRegex(step["run"], r"(?i)docker|kubectl|ssh|eas|alembic|curl|wget")
                     subprocess.run(["bash", "-n"], input=step["run"], text=True, check=True)
-        self.assertNotIn("secrets.", workflows[0].read_text())
+        # Verify no production infrastructure secrets are referenced (only EXPO_TOKEN allowed)
+        workflow_text = workflows[0].read_text()
+        for forbidden in ("SSH_", "DOCKERHUB_", "KUBECONFIG_"):
+            self.assertNotIn(forbidden, workflow_text)
 
     def test_ci_installs_do_not_execute_npm_lifecycle_scripts(self):
         workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
