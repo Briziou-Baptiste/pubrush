@@ -76,6 +76,21 @@ export const styles = StyleSheet.create({
   inputError: {
     borderColor: '#DC2626',
   },
+  passwordContainer: {
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  passwordInput: {
+    paddingRight: 44,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 12,
+    height: 48,
+    width: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   errorText: {
     marginTop: 6,
     fontSize: 12,

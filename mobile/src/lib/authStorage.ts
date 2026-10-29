@@ -5,10 +5,42 @@
 //  Created by Baptiste Briziou on 31/03/2026.
 //
 
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const CURRENT_USER_ID_KEY = 'current_user_id';
+
+async function storageGetItem(key: string): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    try {
+      return typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
+    } catch {
+      return null;
+    }
+  }
+  return SecureStore.getItemAsync(key);
+}
+
+async function storageSetItem(key: string, value: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    try {
+      if (typeof window !== 'undefined') window.localStorage.setItem(key, value);
+    } catch {}
+    return;
+  }
+  return SecureStore.setItemAsync(key, value);
+}
+
+async function storageDeleteItem(key: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    try {
+      if (typeof window !== 'undefined') window.localStorage.removeItem(key);
+    } catch {}
+    return;
+  }
+  return SecureStore.deleteItemAsync(key);
+}
 
 type AuthListener = (token: string | null) => void;
 const listeners = new Set<AuthListener>();
@@ -80,13 +112,13 @@ export async function saveSession(accessToken: string) {
     throw new Error("L'id utilisateur est absent du token.");
   }
 
-  await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
-  await SecureStore.setItemAsync(CURRENT_USER_ID_KEY, payload.sub);
+  await storageSetItem(ACCESS_TOKEN_KEY, accessToken);
+  await storageSetItem(CURRENT_USER_ID_KEY, payload.sub);
   notifyListeners(accessToken);
 }
 
 export async function getAccessToken(): Promise<string | null> {
-  const token = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+  const token = await storageGetItem(ACCESS_TOKEN_KEY);
   if (!token) {
     return null;
   }
@@ -105,7 +137,7 @@ export async function getCurrentUserId() {
     return null;
   }
 
-  const value = await SecureStore.getItemAsync(CURRENT_USER_ID_KEY);
+  const value = await storageGetItem(CURRENT_USER_ID_KEY);
 
   if (!value) {
     return null;
@@ -116,8 +148,8 @@ export async function getCurrentUserId() {
 }
 
 export async function clearSession() {
-  await SecureStore.deleteItemAsync('access_token');
-  await SecureStore.deleteItemAsync('current_user_id');
+  await storageDeleteItem('access_token');
+  await storageDeleteItem('current_user_id');
   notifyListeners(null);
 }
 

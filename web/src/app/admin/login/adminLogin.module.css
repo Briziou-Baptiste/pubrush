@@ -71,3 +71,31 @@
 .spinner {
   @apply w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin;
 }
+
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInput {
+  padding-right: 2.75rem !important;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  transition: color 0.2s ease;
+}
+
+.eyeBtn:hover {
+  color: #ffffff;
+}
