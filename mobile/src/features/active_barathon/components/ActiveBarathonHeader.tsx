@@ -15,6 +15,8 @@ type Props = {
   onExpensesPress?: () => void;
   onRolesPress?: () => void;
   onInvitePress?: () => void;
+  onPhotoPress?: () => void;
+  photoPendingCount?: number;
   isSousSolMode?: boolean;
   onSousSolPress?: () => void;
   pendingOfflineActionsCount?: number;
@@ -30,6 +32,8 @@ function ActiveBarathonHeader({
   onExpensesPress,
   onRolesPress,
   onInvitePress,
+  onPhotoPress,
+  photoPendingCount = 0,
   isSousSolMode,
   onSousSolPress,
   pendingOfflineActionsCount = 0,
@@ -102,6 +106,50 @@ function ActiveBarathonHeader({
 
           {/* Boutons d'équipe compacts */}
           <View style={{ flexDirection: 'row', gap: 6 }}>
+            {onPhotoPress && (
+              <TouchableOpacity
+                style={[
+                  styles.rolesButton,
+                  {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    paddingHorizontal: 10,
+                    paddingVertical: 7,
+                    backgroundColor: '#0EA5E9',
+                    position: 'relative',
+                  },
+                ]}
+                activeOpacity={0.85}
+                onPress={onPhotoPress}
+              >
+                <Ionicons name="camera-outline" size={13} color="#FFFFFF" />
+                <Text style={[styles.rolesButtonText, { fontSize: 12 }]}>Photo</Text>
+                {photoPendingCount > 0 && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: -4,
+                      right: -4,
+                      backgroundColor: '#EF4444',
+                      borderRadius: 9,
+                      minWidth: 18,
+                      height: 18,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      paddingHorizontal: 4,
+                      borderWidth: 1.5,
+                      borderColor: '#FFFFFF',
+                    }}
+                  >
+                    <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>
+                      {photoPendingCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+
             {onInvitePress && (
               <TouchableOpacity
                 style={[styles.rolesButton, { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 7 }]}

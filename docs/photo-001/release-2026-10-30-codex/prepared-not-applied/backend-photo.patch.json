@@ -1,0 +1,107 @@
+{
+  "spec": {
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "name": "backend",
+            "env": [
+              {
+                "name": "PHOTO_STORAGE_DIR",
+                "value": "/tmp/pubrush-photo-media"
+              },
+              {
+                "name": "PHOTO_STORAGE_MAX_BYTES",
+                "value": "33554432"
+              },
+              {
+                "name": "PHOTO_AES_KEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "pubrush-secrets",
+                    "key": "PHOTO_AES_KEY",
+                    "optional": true
+                  }
+                }
+              },
+              {
+                "name": "PHOTO_MYSTERY_ENABLED",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "pubrush-config",
+                    "key": "PHOTO_MYSTERY_ENABLED",
+                    "optional": true
+                  }
+                }
+              },
+              {
+                "name": "PHOTO_MYSTERY_ALLOWLIST",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "pubrush-config",
+                    "key": "PHOTO_MYSTERY_ALLOWLIST",
+                    "optional": true
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "initContainers": [
+          {
+            "name": "migration",
+            "env": [
+              {
+                "name": "PHOTO_STORAGE_DIR",
+                "value": "/tmp/pubrush-photo-media"
+              },
+              {
+                "name": "PHOTO_STORAGE_MAX_BYTES",
+                "value": "33554432"
+              },
+              {
+                "name": "PHOTO_AES_KEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "pubrush-secrets",
+                    "key": "PHOTO_AES_KEY",
+                    "optional": true
+                  }
+                }
+              },
+              {
+                "name": "PHOTO_MYSTERY_ENABLED",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "pubrush-config",
+                    "key": "PHOTO_MYSTERY_ENABLED",
+                    "optional": true
+                  }
+                }
+              },
+              {
+                "name": "PHOTO_MYSTERY_ALLOWLIST",
+                "valueFrom": {
+                  "configMapKeyRef": {
+                    "name": "pubrush-config",
+                    "key": "PHOTO_MYSTERY_ALLOWLIST",
+                    "optional": true
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "tmp-volume",
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "64Mi"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { WSMessage } from '../types/webSocker.types';
+import { emitPhotoMysteryEvent } from './photoMysteryEvents';
 
 export { WSMessage };
 
@@ -65,6 +66,9 @@ export function connectUserSocket({
         const parsed = JSON.parse(event.data);
         if (parsed.type === 'PONG') {
           return;
+        }
+        if (parsed.type === 'PHOTO_MYSTERY_UPDATE') {
+          emitPhotoMysteryEvent(parsed);
         }
         onMessage(parsed as WSMessage);
       } catch (error) {
@@ -159,6 +163,9 @@ export function connectBarathonSocket({
         const parsed = JSON.parse(event.data);
         if (parsed.type === 'PONG') {
           return;
+        }
+        if (parsed.type === 'PHOTO_MYSTERY_UPDATE') {
+          emitPhotoMysteryEvent(parsed);
         }
         onMessage(parsed as WSMessage);
       } catch (error) {
