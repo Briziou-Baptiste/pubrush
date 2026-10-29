@@ -7,6 +7,7 @@ from fastapi import FastAPI
 logger = logging.getLogger(__name__)
 
 from app.services.barathon_service import barathon_status_watcher
+from app.services.photo_purge import photo_purge_watcher, reconcile_photo_storage
 from app.websocket.registry import ws_manager
 
 
@@ -43,14 +44,24 @@ async def lifespan(app: FastAPI):
         yield
         return
 
+    # Réconciliation initiale du stockage photo
+    try:
+        from app.db import SessionLocal
+        with SessionLocal() as db:
+            reconcile_photo_storage(db)
+    except Exception as exc:
+        logger.warning("Échec de la réconciliation initiale du stockage photo: %s", exc)
+
     status_task = asyncio.create_task(barathon_status_watcher())
     expiry_task = asyncio.create_task(location_expiry_watcher())
+    photo_purge_task = asyncio.create_task(photo_purge_watcher())
     try:
         yield
     finally:
         status_task.cancel()
         expiry_task.cancel()
-        for t in (status_task, expiry_task):
+        photo_purge_task.cancel()
+        for t in (status_task, expiry_task, photo_purge_task):
             try:
                 await t
             except asyncio.CancelledError:

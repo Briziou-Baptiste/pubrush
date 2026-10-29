@@ -180,8 +180,8 @@ function active({ failCompletion=false,invitationState='started' }={}) {
       stopBarathon:async () => { calls.push('stop'); return { status:'stopped',ended_at:'2026-10-30T23:00:00Z' }; },
     },
     '../hooks/useActiveBarathonTracking':{ useActiveBarathonTracking:() => ({ state:{ activeStopIndex:0,phase:'en_route' },activeStop:data.stops[0],stopTracking:async () => calls.push('trackingStopped') }) },
-    '../components/ActiveBarathonHeader':'Header','../components/ActiveBarathonBottomPanel':'Panel','../components/ActiveBarathonMap':'Map','../components/BarathonRolesModal':'Roles','../components/ReplaceOrAddStopModal':'Modify','../components/InviteFriendsModal':'Invite',
-    '../../../lib/api':{},'../../../lib/authStorage':{},'../services/webSocket.service':{},'../services/offlineSync.service':{},
+    '../components/ActiveBarathonHeader':'Header','../components/ActiveBarathonBottomPanel':'Panel','../components/ActiveBarathonMap':'Map','../components/BarathonRolesModal':'Roles','../components/ReplaceOrAddStopModal':'Modify','../components/InviteFriendsModal':'Invite','../components/PhotoMysteryModal':'PhotoMystery',
+    '../../../lib/api':{},'../../../lib/authStorage':{},'../services/webSocket.service':{},'../services/offlineSync.service':{},'../services/photoMysteryService':{ fetchPhotoMysteryState: async () => ({ enabled: false, items: [] }) },
     '../../create_barathon/components/RoutingAttribution':'Attribution','../../create_barathon/services/mapLayout.service':{ getMapControlsLayout:() => ({}) },
   }).default;
   return { ...h,calls,navigations,render:() => h.render(Screen) };

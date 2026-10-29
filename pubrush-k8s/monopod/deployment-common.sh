@@ -11,11 +11,12 @@ STATE_TOOL="$SCRIPT_DIR/deployment_state.py"
 BACKUP_DIR="${PUBRUSH_BACKUP_DIR:-$SCRIPT_DIR/backups}"
 STATE_ENV_FILE=""
 TARGET_IMAGE=""
+TARGET_MIGRATION_IMAGE=""
 
 parse_arguments() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --context|--namespace|--expected-cluster|--from-env|--image)
+      --context|--namespace|--expected-cluster|--from-env|--image|--migration-image)
         [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "Valeur manquante pour $1" >&2; return 1; }
         case "$1" in
           --context) TARGET_CONTEXT="$2" ;;
@@ -23,10 +24,11 @@ parse_arguments() {
           --expected-cluster) EXPECTED_CLUSTER="$2" ;;
           --from-env) STATE_ENV_FILE="$2" ;;
           --image) TARGET_IMAGE="$2" ;;
+          --migration-image) TARGET_MIGRATION_IMAGE="$2" ;;
         esac
         shift 2 ;;
       -h|--help)
-        echo "Usage: $0 [--context ctx] [--namespace ns] [--expected-cluster cluster] [--from-env snapshot.json] [--image repo@sha256:...]"
+        echo "Usage: $0 [--context ctx] [--namespace ns] [--expected-cluster cluster] [--from-env snapshot.json] [--image repo@sha256:...] [--migration-image repo@sha256:...]"
         exit 0 ;;
       *) echo "Option inconnue : $1" >&2; return 1 ;;
     esac

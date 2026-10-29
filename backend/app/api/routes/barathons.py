@@ -21,6 +21,7 @@ from app.models import (
     User,
     BarathonExpense,
     AppUsageLog,
+    PhotoSecureGuest,
 )
 from app.security import hash_password, create_access_token
 from app.services.websocket_service import websocket_service
@@ -334,6 +335,12 @@ async def delete_barathon(
     if barathon.created_by_user_id != current_user.id and not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Seul le créateur peut supprimer ce barathon")
 
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_all_barathon_photos(db, barathon_id)
+    except Exception:
+        pass
+
     await ws_manager.close_barathon_connections(barathon_id, code=1000, reason="Barathon deleted")
     db.delete(barathon)
     db.commit()
@@ -479,6 +486,12 @@ async def remove_participant_from_barathon(
     db.delete(participant)
     db.commit()
 
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_participant_photo_access(db, barathon_id, user_id)
+    except Exception:
+        pass
+
     # Purge participant location and close their barathon socket
     ws_manager.clear_user_location(barathon_id, user_id)
     user_ws_set = list(ws_manager.barathon_user_sockets.get(barathon_id, {}).pop(user_id, set()))
@@ -611,6 +624,12 @@ async def finish_barathon(
     barathon.status = "completed"
     barathon.ended_at = now
     barathon.updated_at = now
+
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_all_barathon_photos(db, barathon_id)
+    except Exception:
+        pass
 
     db.commit()
 
@@ -789,6 +808,12 @@ async def stop_barathon(
     barathon.status = "stopped"
     barathon.ended_at = now
     barathon.updated_at = now
+
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_all_barathon_photos(db, barathon.id)
+    except Exception:
+        pass
 
     db.commit()
     db.refresh(barathon)
@@ -1251,58 +1276,71 @@ async def join_barathon_as_guest(
             detail="Le pseudo ne peut pas être vide.",
         )
 
-    # Check if the user already exists in this barathon with this username
-    existing_participant = next(
-        (p for p in barathon.participants if p.user and p.user.username.lower() == clean_username.lower()),
-        None,
+    # Check if a participant with this username already exists in this barathon
+    existing_participant = db.scalar(
+        select(BarathonParticipant)
+        .join(User, BarathonParticipant.user_id == User.id)
+        .where(
+            BarathonParticipant.barathon_id == barathon.id,
+            func.lower(User.username) == func.lower(clean_username),
+        )
     )
 
-    if existing_participant and existing_participant.user and existing_participant.user.is_guest:
-        # Re-connexion transparente de l'invité existant
-        guest_user = existing_participant.user
-    else:
-        # If the name is already taken by another user, add a short suffix
-        final_username = clean_username
-        user_with_name = db.scalar(select(User).where(func.lower(User.username) == clean_username.lower()))
-        if user_with_name:
-            final_username = f"{clean_username}_{secrets.randbelow(900) + 100}"
-
-        guest_email = f"guest_{uuid.uuid4().hex[:12]}@guest.pubrush.internal"
-        guest_user = User(
-            email=guest_email,
-            username=final_username,
-            password_hash=hash_password(secrets.token_urlsafe(16)),
-            is_admin=False,
-            is_guest=True,
+    if existing_participant:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ce pseudo est déjà utilisé dans ce barathon.",
+            headers={"X-Error-Code": "GUEST_USERNAME_TAKEN"},
         )
-        db.add(guest_user)
-        db.flush()
 
-        participant = BarathonParticipant(
-            barathon_id=barathon.id,
-            user_id=guest_user.id,
-            role="participant",
-        )
-        db.add(participant)
+    # If the name is already taken by another user, add a short suffix
+    final_username = clean_username
+    user_with_name = db.scalar(select(User).where(func.lower(User.username) == clean_username.lower()))
+    if user_with_name:
+        final_username = f"{clean_username}_{secrets.randbelow(900) + 100}"
 
-        log = AppUsageLog(user_id=guest_user.id, action=f"guest_join:{barathon.id}")
-        db.add(log)
-        db.commit()
-        db.refresh(barathon)
+    guest_email = f"guest_{uuid.uuid4().hex[:12]}@guest.pubrush.internal"
+    guest_user = User(
+        email=guest_email,
+        username=final_username,
+        password_hash=hash_password(secrets.token_urlsafe(16)),
+        is_admin=False,
+        is_guest=True,
+    )
+    db.add(guest_user)
+    db.flush()
 
-        # Broadcast WebSocket notification to the room
-        participant_ids = [p.user_id for p in barathon.participants if p.user_id != guest_user.id]
-        await websocket_service.notify_participant_joined(
-            barathon_id=barathon.id,
-            participant_ids=participant_ids,
-            user_data={
-                "id": guest_user.id,
-                "username": guest_user.username,
-                "is_guest": True,
-            },
-            participants_count=len(barathon.participants),
-            timestamp=utc_now().isoformat(),
-        )
+    participant = BarathonParticipant(
+        barathon_id=barathon.id,
+        user_id=guest_user.id,
+        role="participant",
+    )
+    db.add(participant)
+
+    secure_guest = PhotoSecureGuest(
+        user_id=guest_user.id,
+        barathon_id=barathon.id,
+    )
+    db.add(secure_guest)
+
+    log = AppUsageLog(user_id=guest_user.id, action=f"guest_join:{barathon.id}")
+    db.add(log)
+    db.commit()
+    db.refresh(barathon)
+
+    # Broadcast WebSocket notification to the room
+    participant_ids = [p.user_id for p in barathon.participants if p.user_id != guest_user.id]
+    await websocket_service.notify_participant_joined(
+        barathon_id=barathon.id,
+        participant_ids=participant_ids,
+        user_data={
+            "id": guest_user.id,
+            "username": guest_user.username,
+            "is_guest": True,
+        },
+        participants_count=len(barathon.participants),
+        timestamp=utc_now().isoformat(),
+    )
 
     access_token = create_access_token(
         {

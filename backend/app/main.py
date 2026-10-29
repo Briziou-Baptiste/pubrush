@@ -1,15 +1,30 @@
 import os
 import secrets
+import logging
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+if os.getenv("PYTHON_DOTENV_DISABLED") != "1":
+    if os.getenv("APP_ENV") == "staging" and os.path.exists(".env.staging"):
+        load_dotenv(".env.staging")
+    else:
+        load_dotenv()
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.formparsers import MultiPartParser, MultiPartException
 from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session, selectinload
+
+# P1-A: Borne de spool mémoire portée à 3 MiB pour éviter tout débordement disque (/tmp)
+# avant application stricte du plafond de requête de 2.06 MiB (2 MiB payload + délimiteurs)
+MultiPartParser.spool_max_size = 3 * 1024 * 1024
+
+from app.core.logging_filter import SensitiveDataFilter, setup_logging_filters
+
+# Configure sensitive data filter on root and uvicorn loggers
+setup_logging_filters()
 
 from app.api.routes.barathons import router as barathons_router
 from app.api.routes.ws import router as ws_router
@@ -17,6 +32,7 @@ from app.api.routes.expenses import router as expenses_router
 from app.api.routes.bars import router as bars_router
 from app.api.routes.saved_barathons import router as saved_barathons_router
 from app.api.routes.partner_events import router as partner_events_router
+from app.api.routes.photo_mystery import router as photo_mystery_router
 from app.core.lifespan import lifespan
 from app.core.rate_limiter import InMemoryRateLimiter
 from app.api.deps.auth import get_current_user
@@ -40,7 +56,79 @@ forgot_limiter = InMemoryRateLimiter(requests_limit=5, window_seconds=60)
 
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
-    response: Response = await call_next(request)
+    # P1-A: Rejet immédiat en amont des requêtes d'upload photo volumineuses ou non authentifiées avant parsing multipart
+    upload_stream_exceeded = False
+    if request.method == "POST" and request.url.path.endswith("/photo-mystery/upload"):
+        auth_hdr = request.headers.get("authorization", "")
+        if not auth_hdr.startswith("Bearer "):
+            return Response(
+                content='{"detail":"Token manquant ou format invalide."}',
+                status_code=401,
+                media_type="application/json",
+            )
+        token = auth_hdr.split("Bearer ", 1)[1].strip()
+        payload = decode_access_token(token)
+        if not payload or payload.get("scope") != "photo_upload":
+            return Response(
+                content='{"detail":"Jeton de capacité d\'upload invalide ou expiré."}',
+                status_code=401,
+                media_type="application/json",
+            )
+        if not payload.get("challenge_id") or not payload.get("jti"):
+            return Response(
+                content='{"detail":"Token d\'upload incomplet."}',
+                status_code=401,
+                media_type="application/json",
+            )
+
+        max_bytes = 2 * 1024 * 1024 + 65536  # 2.06 MiB (2 MiB payload + délimiteurs multipart)
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                if int(content_length) > max_bytes:
+                    return Response(
+                        content='{"detail":"Fichier trop volumineux (maximum 2 MiB)."}',
+                        status_code=413,
+                        media_type="application/json",
+                    )
+            except ValueError:
+                return Response(
+                    content='{"detail":"Header Content-Length invalide."}',
+                    status_code=400,
+                    media_type="application/json",
+                )
+
+        # Borne systématique du flux ASGI (avec ou sans Content-Length, couvrant flux chunked et Content-Length mensonger) :
+        # coupe Starlette dès 2.06 MiB pour empêcher tout débordement mémoire ou disque (/tmp)
+        bytes_received = 0
+        raw_receive = request._receive
+
+        async def bounded_receive():
+            nonlocal bytes_received, upload_stream_exceeded
+            msg = await raw_receive()
+            if msg.get("type") == "http.request":
+                bytes_received += len(msg.get("body", b""))
+                if bytes_received > max_bytes:
+                    upload_stream_exceeded = True
+                    raise MultiPartException("Fichier trop volumineux (maximum 2 MiB).")
+            return msg
+
+        request._receive = bounded_receive
+
+    try:
+        response: Response = await call_next(request)
+    except MultiPartException:
+        response = Response(
+            content='{"detail":"Fichier trop volumineux (maximum 2 MiB)."}',
+            status_code=413,
+            media_type="application/json",
+        )
+    if upload_stream_exceeded:
+        response = Response(
+            content='{"detail":"Fichier trop volumineux (maximum 2 MiB)."}',
+            status_code=413,
+            media_type="application/json",
+        )
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
@@ -75,6 +163,7 @@ app.include_router(expenses_router)
 app.include_router(bars_router)
 app.include_router(saved_barathons_router)
 app.include_router(partner_events_router)
+app.include_router(photo_mystery_router)
 
 @app.get("/health")
 def health():
@@ -422,7 +511,14 @@ def _delete_user_data(user_to_delete: User, db: Session):
         )
     )
 
-    # 4. Delete the user
+    # 4. Révocation RGPD et purge des données Photo Mystère
+    try:
+        from app.services.photo_service import PhotoService
+        PhotoService.revoke_user_all_photos(db, user_to_delete.id)
+    except Exception:
+        pass
+
+    # 5. Delete the user
     db.delete(user_to_delete)
 
 

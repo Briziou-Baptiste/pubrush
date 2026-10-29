@@ -28,6 +28,7 @@ MarkupSafe==3.0.3
 mdurl==0.1.2
 psycopg==3.2.13
 psycopg-binary==3.2.13
+Pillow==11.3.0
 pwdlib==0.2.1
 pyasn1==0.6.3
 pycparser==2.23

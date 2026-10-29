@@ -1,0 +1,39 @@
+{
+  "candidate_tree_sha256": "9f36634f47eacfd894c258f8bb281903cb823d040a910dbc466f709a1b7bf37f",
+  "backend": {
+    "PASS": 197,
+    "FAIL": 0,
+    "SKIP": 0,
+    "postgres_version": "15.19",
+    "non_superuser_role": "photo_app",
+    "staging_launcher_hostile_PGHOSTADDR": "PASS"
+  },
+  "mobile": {
+    "PASS": 149,
+    "FAIL": 0,
+    "SKIP": 0
+  },
+  "deployment_scripts": {
+    "PASS": 27,
+    "FAIL": 0,
+    "SKIP": 0
+  },
+  "typescript_mobile": "PASS after standard Expo-generated environment declaration",
+  "typescript_web": "PASS",
+  "web_build": "PASS; NEXT_PUBLIC_API_URL=https://api.pubrush.com verified in capture chunk",
+  "migration": {
+    "production_before": "a7b8c9d0e1f2",
+    "candidate_after": "b1c2d3e4f5a6",
+    "indexes": 19,
+    "constraints": 24,
+    "photo_tables_with_DML_permissions": 7
+  },
+  "rollback": {
+    "stable_ORM_reads_new_schema": "PASS",
+    "stable_health": "200",
+    "stable_migration_recognizes_new_revision": false,
+    "candidate_migration_recognizes_new_revision": true
+  },
+  "staging_final": "both containers healthy; GET /health=200",
+  "remote_writes": false
+}

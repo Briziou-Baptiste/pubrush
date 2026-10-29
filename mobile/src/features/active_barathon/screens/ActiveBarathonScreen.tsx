@@ -19,6 +19,10 @@ import ActiveBarathonBottomPanel from '../components/ActiveBarathonBottomPanel';
 import BarathonRolesModal from '../components/BarathonRolesModal';
 import ReplaceOrAddStopModal from '../components/ReplaceOrAddStopModal';
 import InviteFriendsModal from '../components/InviteFriendsModal';
+import PhotoMysteryModal from '../components/PhotoMysteryModal';
+import { PhotoMysterySnapshot } from '../types/photoMystery.types';
+import { fetchPhotoMysteryState } from '../services/photoMysteryService';
+import { reconcilePhotoMysteryState } from '../utils/photoMysteryState';
 import { fetchMyRoleInBarathon, fetchBarathon, fetchBarathonRoles, AssignedBarathonRole, API_BASE_URL } from '../../../lib/api';
 import { getAccessToken, getCurrentUserId } from '../../../lib/authStorage';
 import { connectBarathonSocket, disconnectBarathonSocket, sendBarathonLocation, WSMessage } from '../services/webSocket.service';
@@ -58,17 +62,45 @@ export default function ActiveBarathonScreen() {
   const [roles, setRoles] = useState<AssignedBarathonRole[]>([]);
   const [rolesModalVisible, setRolesModalVisible] = useState(false);
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
+  const [photoSnapshot, setPhotoSnapshot] = useState<PhotoMysterySnapshot | null>(null);
+  const photoMysteryState = photoSnapshot && photoSnapshot.barathonId === barathon?.id ? photoSnapshot.state : null;
+  const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [friendLocations, setFriendLocations] = useState<Record<number, ParticipantLocation>>({});
   const [isSousSolMode, setIsSousSolMode] = useState(false);
   const [pendingOfflineCount, setPendingOfflineCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<number | undefined>(undefined);
   const lastLocationSentRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
 
+  function updatePhotoSnapshot(incoming: PhotoMysterySnapshot) {
+    setPhotoSnapshot(current => {
+      const previous = current?.barathonId === incoming.barathonId ? current.state : null;
+      const result = reconcilePhotoMysteryState(previous, incoming.state, incoming.barathonId, incoming.barathonId);
+      return result.shouldUpdate ? { ...incoming, state: result.nextState } : current;
+    });
+  }
+
   useEffect(() => {
     getOfflineActionsQueue()
       .then((q) => setPendingOfflineCount(q.length))
       .catch(() => {});
   }, [isSousSolMode]);
+
+  useEffect(() => {
+    if (!barathon?.id) return;
+    let isMounted = true;
+    const loadPhoto = async () => {
+      try {
+        const s = await fetchPhotoMysteryState(barathon.id);
+        if (isMounted) updatePhotoSnapshot({ barathonId: barathon.id, state: s });
+      } catch {}
+    };
+    loadPhoto();
+    const timer = setInterval(loadPhoto, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [barathon?.id]);
     
   useEffect(() => {
     void loadBarathon();
@@ -340,6 +372,14 @@ export default function ActiveBarathonScreen() {
                 delete updated[expiredUserId];
                 return updated;
               });
+            }
+          } else if (message.type === 'PHOTO_MYSTERY_UPDATE') {
+            if (message.barathon_id === currentBarathon.id) {
+              fetchPhotoMysteryState(currentBarathon.id)
+                .then((s) => {
+                  if (isMounted) updatePhotoSnapshot({ barathonId: currentBarathon.id, state: s });
+                })
+                .catch(() => {});
             }
           } else if (message.type === 'BARATHON_STOPPED' || message.type === 'BARATHON_FINISHED') {
             void tracking.stopTracking();
@@ -625,6 +665,8 @@ export default function ActiveBarathonScreen() {
             totalBarSeconds={barathon.max_time_in_bar_minutes * 60}
             onRolesPress={() => setRolesModalVisible(true)}
             onInvitePress={handleInvite}
+            onPhotoPress={photoMysteryState?.enabled ? () => setPhotoModalVisible(true) : undefined}
+            photoPendingCount={photoMysteryState?.pending_count ?? 0}
             onStopPress={() => { setEndingMode('stop'); setStopModalVisible(true); }}
             isSousSolMode={isSousSolMode}
             pendingOfflineActionsCount={pendingOfflineCount}
@@ -701,6 +743,14 @@ export default function ActiveBarathonScreen() {
         joinCode={barathon.join_code || ''}
         barathonName={barathon.name}
         participantsCount={roles.length || 1}
+      />
+
+      <PhotoMysteryModal
+        visible={photoModalVisible}
+        onClose={() => setPhotoModalVisible(false)}
+        barathonId={barathon.id}
+        initialSnapshot={photoSnapshot}
+        onStateUpdated={updatePhotoSnapshot}
       />
 
       <Modal

@@ -1,0 +1,10 @@
+{
+  "original_files_preserved": 501,
+  "index_unchanged": true,
+  "candidate_sources_unchanged": true,
+  "candidate_patch_cached_check": "PASS (no index write)",
+  "prepared_templates_parse": "PASS",
+  "head": "ae74d7f0c128fa082d9d8101267742ed14fe792e",
+  "candidate_source_sha256": "9f36634f47eacfd894c258f8bb281903cb823d040a910dbc466f709a1b7bf37f",
+  "verdict": "BLOCKED"
+}

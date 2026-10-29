@@ -9,4 +9,6 @@ data:
   SMTP_HOST: "smtp.gmail.com"
   SMTP_PORT: "587"
   SMTP_FROM: "noreply@pubrush.com"
+  PHOTO_MYSTERY_ENABLED: "false"
+  PHOTO_MYSTERY_ALLOWLIST: ""
 

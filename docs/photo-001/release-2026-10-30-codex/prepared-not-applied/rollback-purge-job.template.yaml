@@ -1,0 +1,143 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pubrush-photo-rollback-purge
+  namespace: default
+spec:
+  activeDeadlineSeconds: 120
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: pubrush-photo-rollback-purge
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: purge
+        image: ${PHOTO_BACKEND_IMAGE}
+        command:
+        - python
+        - -B
+        - -c
+        - |
+          import os
+          import sys
+          from datetime import datetime
+
+          try:
+              # Only after the old Photo pod and its emptyDir have disappeared.
+              cutoff = datetime.fromisoformat(
+                  os.environ["PHOTO_ROLLBACK_STORAGE_LOST_BEFORE"].replace("Z", "+00:00")
+              )
+              if cutoff.tzinfo is None:
+                  raise ValueError("A timezone-aware storage-loss cutoff is required")
+              if os.environ.get("PHOTO_MYSTERY_ENABLED") != "false":
+                  raise ValueError("Photo must remain disabled")
+
+              import app.models
+              import app.photo_models
+              from sqlalchemy import func, select, text, update
+              from sqlalchemy.orm import configure_mappers
+              from app.db import engine
+              from app.photo_models import PhotoMedia
+
+              configure_mappers()
+              if engine.dialect.name != "postgresql":
+                  raise ValueError("PostgreSQL is required")
+              with engine.begin() as connection:
+                  connection.execute(text("SET LOCAL statement_timeout = '30s'"))
+                  connection.execute(text("SET LOCAL lock_timeout = '5s'"))
+                  revision = connection.execute(
+                      text("SELECT version_num FROM alembic_version")
+                  ).scalar_one()
+                  if revision != "b1c2d3e4f5a6":
+                      raise ValueError("Unexpected migration revision")
+                  if cutoff > connection.scalar(select(func.now())):
+                      raise ValueError("The storage-loss cutoff cannot be in the future")
+
+                  scope = (
+                      PhotoMedia.created_at <= cutoff,
+                      PhotoMedia.state != "deleted",
+                  )
+                  result = connection.execute(
+                      update(PhotoMedia).where(*scope).values(
+                          state="deleted",
+                          delete_requested_at=func.coalesce(
+                              PhotoMedia.delete_requested_at, func.now()
+                          ),
+                          deleted_at=func.now(),
+                          next_attempt_at=None,
+                      )
+                  )
+                  remaining = connection.scalar(
+                      select(func.count()).select_from(PhotoMedia).where(*scope)
+                  )
+                  if remaining != 0:
+                      raise RuntimeError("Photo cleanup is incomplete")
+              print("Photo rollback SQL cleanup complete; updated=" + str(result.rowcount))
+          except Exception as error:
+              # Never print connection strings, credentials or SQL parameters.
+              print("Photo rollback SQL cleanup failed: " + type(error).__name__, file=sys.stderr)
+              sys.exit(1)
+        env:
+        - name: _DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: DB_USER
+        - name: _DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: DB_NAME
+        - name: _DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: pubrush-config
+              key: DB_PORT
+        - name: _DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pubrush-secrets
+              key: DB_PASSWORD
+        - name: DATABASE_URL
+          value: postgresql+psycopg://$(_DB_USER):$(_DB_PASSWORD)@db:$(_DB_PORT)/$(_DB_NAME)
+        - name: PGCONNECT_TIMEOUT
+          value: '10'
+        - name: ENVIRONMENT
+          value: production
+        - name: PHOTO_MYSTERY_ENABLED
+          value: 'false'
+        - name: PHOTO_MYSTERY_ALLOWLIST
+          value: ''
+        - name: PHOTO_ROLLBACK_STORAGE_LOST_BEFORE
+          value: "${PHOTO_ROLLBACK_STORAGE_LOST_BEFORE}"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+      volumes:
+      - name: tmp-volume
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Mi
