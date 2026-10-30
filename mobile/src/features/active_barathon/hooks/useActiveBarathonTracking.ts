@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import * as Location from 'expo-location';
+import * as SecureStore from 'expo-secure-store';
 
 import {
   ActiveBarathonData,
@@ -9,7 +10,6 @@ import {
   LatLng,
 } from '../types/activeBarathon.types';
 import { completeBarathonStop } from '../services/activeBarathon.service';
-import { queueOfflineAction } from '../services/offlineSync.service';
 import { getDistanceMeters } from '../utils/activeBarathon.distance';
 import { secondsFromMinutes } from '../utils/activeBarathon.timer';
 import {
@@ -32,7 +32,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
   );
 
     const ENTER_RADIUS_METERS = 50;
-    const EXIT_RADIUS_METERS = 100;
+
     
   const firstIncompleteIdx = barathon.stops.findIndex((s) => !s.is_completed);
   const initialStopIndex = firstIncompleteIdx === -1 ? 0 : firstIncompleteIdx;
@@ -48,7 +48,8 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     overtimeNotificationId: null,
   });
 
-  const consecutiveExitCountRef = useRef(0);
+  const [timerReady, setTimerReady] = useState(false);
+  const hydratedTimerKeyRef = useRef<string | null>(null);
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasStartedTimerForCurrentStopRef = useRef(false);
@@ -178,7 +179,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
       fiveMinNotificationId: null,
       overtimeNotificationId: null,
     }));
-  }, [barathon.id, barathon.stops.length, maxBarSeconds]);
+  }, [barathon.id]);
 
   useEffect(() => {
     if (!activeStop) {
@@ -187,6 +188,9 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
 
     if (currentStopIdRef.current !== activeStop.id) {
       currentStopIdRef.current = activeStop.id;
+      stopDeadlineRef.current = null;
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
       hasStartedTimerForCurrentStopRef.current = false;
 
       setState((prev) => ({
@@ -200,45 +204,31 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     }
   }, [activeStop?.id, maxBarSeconds]);
 
-    useEffect(() => {
-      if (!activeStop || !state.currentLocation || !activeStopLocation) {
-        return;
+  useEffect(() => {
+    if (!activeStop) return;
+    let cancelled = false;
+    hydratedTimerKeyRef.current = null;
+    setTimerReady(false);
+    const key = `stop_timer_${barathon.id}_${activeStop.id}`;
+    void SecureStore.getItemAsync(key).then((value) => {
+      if (cancelled) return;
+      const deadline = Number(value);
+      if (value && Number.isFinite(deadline) && deadline > 0) {
+        void startStopTimer(deadline);
       }
+      hydratedTimerKeyRef.current = key;
+      setTimerReady(true);
+    }).catch(() => { if (!cancelled) { hydratedTimerKeyRef.current = key; setTimerReady(true); } });
+    return () => { cancelled = true; };
+  }, [barathon.id, activeStop?.id]);
 
-      const distance = getDistanceMeters(state.currentLocation, activeStopLocation);
-
-      const hasStarted = hasStartedTimerForCurrentStopRef.current;
-      const isOvertime = state.phase === 'overtime';
-
-      console.log('STOP ZONE CHECK', {
-        stopId: activeStop.id,
-        stopName: activeStop.name,
-        distance: Math.round(distance),
-        hasStarted,
-        phase: state.phase,
-      });
-
-      // Enter the bar zone: start only if the timer hasn't been started yet
-      if (!hasStarted && distance <= ENTER_RADIUS_METERS) {
-        consecutiveExitCountRef.current = 0;
-        void startStopTimer();
-        return;
-      }
-
-      // Leave the bar zone: indoor GPS jitter should never cancel an active countdown
-      if (hasStarted && !isOvertime) {
-        if (distance >= EXIT_RADIUS_METERS) {
-          consecutiveExitCountRef.current += 1;
-        } else {
-          consecutiveExitCountRef.current = 0;
-        }
-      }
-    }, [
-      state.currentLocation,
-      activeStopLocation,
-      activeStop,
-      state.phase,
-    ]);
+  useEffect(() => {
+    if (!timerReady || !activeStop || hydratedTimerKeyRef.current !== `stop_timer_${barathon.id}_${activeStop.id}` || !state.currentLocation || !activeStopLocation) return;
+    if (!hasStartedTimerForCurrentStopRef.current &&
+        getDistanceMeters(state.currentLocation, activeStopLocation) <= ENTER_RADIUS_METERS) {
+      void startStopTimer();
+    }
+  }, [timerReady, state.currentLocation, activeStop?.id]);
 
   async function startLocationTracking() {
     if (locationSubscriptionRef.current) {
@@ -305,12 +295,12 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     );
   }
 
-    async function startStopTimer() {
+    async function startStopTimer(savedDeadline?: number) {
       if (!activeStop) {
         return;
       }
 
-      if (hasStartedTimerForCurrentStopRef.current && timerRef.current) {
+      if (hasStartedTimerForCurrentStopRef.current) {
         return;
       }
 
@@ -318,13 +308,17 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
 
       // 1. Immediately start local real-time countdown
       const now = Date.now();
-      stopDeadlineRef.current = now + maxBarSeconds * 1000;
+      stopDeadlineRef.current = savedDeadline ?? now + maxBarSeconds * 1000;
+      const deadline = stopDeadlineRef.current;
+      if (!savedDeadline) {
+        void SecureStore.setItemAsync(`stop_timer_${barathon.id}_${activeStop.id}`, String(deadline)).catch(() => {});
+      }
 
       setState((prev) => ({
         ...prev,
-        phase: 'in_stop',
+        phase: deadline <= now ? 'overtime' : 'in_stop',
         isInsideStopRadius: true,
-        remainingSeconds: maxBarSeconds,
+        remainingSeconds: Math.max(0, Math.ceil((deadline - now) / 1000)),
       }));
 
       if (timerRef.current) {
@@ -379,6 +373,8 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
         }));
       }, 1000);
 
+      if (savedDeadline) return;
+
       // 2. Schedule push notifications asynchronously (isolated to prevent any failure from blocking timer)
       void (async () => {
         try {
@@ -415,33 +411,8 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
         }
       })();
     }
-  async function resetStopTimerAndGoBackToRoute() {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    await cancelStopNotifications(notificationIdsRef.current);
-
-    notificationIdsRef.current = {
-      fiveMin: null,
-      overtime: null,
-    };
-
-    hasStartedTimerForCurrentStopRef.current = false;
-    consecutiveExitCountRef.current = 0;
-
-    setState((prev) => ({
-      ...prev,
-      phase: 'en_route',
-      remainingSeconds: maxBarSeconds,
-      isInsideStopRadius: false,
-      fiveMinNotificationId: null,
-      overtimeNotificationId: null,
-    }));
-  }
-
   async function advanceToStop(targetIndex: number) {
+    stopDeadlineRef.current = null;
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -455,7 +426,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     };
 
     hasStartedTimerForCurrentStopRef.current = false;
-    consecutiveExitCountRef.current = 0;
+
     currentStopIdRef.current = barathon.stops[targetIndex]?.id ?? null;
 
     setState((prev) => {
@@ -486,6 +457,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
   }
 
   async function goToNextStop() {
+    stopDeadlineRef.current = null;
     if (activeStop && !activeStop.is_completed) {
       try {
         await completeBarathonStop(barathon.id, activeStop.id);
@@ -503,7 +475,7 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     };
 
     hasStartedTimerForCurrentStopRef.current = false;
-    consecutiveExitCountRef.current = 0;
+
 
     setState((prev) => {
       const nextIndex = prev.activeStopIndex + 1;
@@ -566,6 +538,6 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     stopTracking,
     goToNextStop,
     advanceToStop,
-    startStopTimer,
+    startStopTimer: () => { if (timerReady && activeStop && hydratedTimerKeyRef.current === `stop_timer_${barathon.id}_${activeStop.id}`) void startStopTimer(); },
   };
 }
