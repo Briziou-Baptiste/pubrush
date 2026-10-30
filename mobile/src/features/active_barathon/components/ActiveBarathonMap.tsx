@@ -177,7 +177,7 @@ function ActiveBarathonMap({
             statusText = 'Visité';
             pinBgColor = '#2563EB';
           } else if (isNext) {
-            statusText = 'Prochaine étape';
+            statusText = 'À venir';
             pinBgColor = '#D97706';
           }
 

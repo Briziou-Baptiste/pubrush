@@ -210,6 +210,15 @@ export const styles = StyleSheet.create({
 
     headerTextBlock: {
       flex: 1,
+      minWidth: 0,
+      marginRight: 12,
+    },
+
+    headerActions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 10,
     },
 
     /* ===== BOUTON STOP ===== */
@@ -234,8 +243,8 @@ export const styles = StyleSheet.create({
     /* ===== CHRONO ===== */
 
     timerContainer: {
-      marginTop: 16,
-      paddingTop: 12,
+      marginTop: 10,
+      paddingTop: 8,
       borderTopWidth: 1,
       borderTopColor: '#E5E7EB',
       alignItems: 'center',

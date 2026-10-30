@@ -84,7 +84,6 @@ function ActiveBarathonHeader({
         </View>
 
         {/* Boutons d'action en haut à droite */}
-        <View style={{ alignItems: 'flex-end', gap: 8 }}>
           {/* Bouton sécurisé Arrêter isolé */}
           {onStopPress && (
             <TouchableOpacity
@@ -106,8 +105,10 @@ function ActiveBarathonHeader({
             </TouchableOpacity>
           )}
 
-          {/* Boutons d'équipe compacts */}
-          <View style={{ flexDirection: 'row', gap: 6 }}>
+      </View>
+
+      {/* Actions d'équipe sur leur propre ligne pour garder le titre lisible. */}
+      <View style={styles.headerActions}>
             {onPhotoPress && (
               <TouchableOpacity
                 style={[
@@ -184,8 +185,6 @@ function ActiveBarathonHeader({
                 <Text style={[styles.expensesButtonText, { fontSize: 12 }]}>Comptes</Text>
               </TouchableOpacity>
             )}
-          </View>
-        </View>
       </View>
 
       {/* Chrono avec jauge de progression visuelle */}

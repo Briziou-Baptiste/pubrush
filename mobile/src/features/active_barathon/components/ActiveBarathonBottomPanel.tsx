@@ -61,7 +61,7 @@ function ActiveBarathonBottomPanel({
       <View style={styles.compactPanelHeader}>
         <View style={{ flex: 1, marginRight: 8 }}>
           <Text style={{ fontSize: 11, fontWeight: '800', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            {isInsideStop ? 'Étape actuelle' : 'Prochain arrêt'}
+            Étape actuelle
           </Text>
           <Text style={{ fontSize: 17, fontWeight: '800', color: '#111827', marginTop: 1 }} numberOfLines={1}>
             {stopName}
