@@ -225,14 +225,10 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
         return;
       }
 
-      // Leave the bar zone: hysteresis to prevent an indoor GPS drop from cancelling the timer
+      // Leave the bar zone: indoor GPS jitter should never cancel an active countdown
       if (hasStarted && !isOvertime) {
         if (distance >= EXIT_RADIUS_METERS) {
           consecutiveExitCountRef.current += 1;
-          if (consecutiveExitCountRef.current >= 4) {
-            void resetStopTimerAndGoBackToRoute();
-            consecutiveExitCountRef.current = 0;
-          }
         } else {
           consecutiveExitCountRef.current = 0;
         }
@@ -314,125 +310,110 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
         return;
       }
 
-      if (hasStartedTimerForCurrentStopRef.current) {
+      if (hasStartedTimerForCurrentStopRef.current && timerRef.current) {
         return;
       }
 
       hasStartedTimerForCurrentStopRef.current = true;
 
-      try {
-        await completeBarathonStop(barathon.id, activeStop.id);
-        onStopCompleted?.(activeStop.id);
-      } catch (err) {
-        console.warn(
-          '[useActiveBarathonTracking] Network failed completing stop, queueing offline action:',
-          err
-        );
-        try {
-          await queueOfflineAction({
-            type: 'COMPLETE_STOP',
-            barathonId: barathon.id,
-            stopId: activeStop.id,
-          });
-        } catch (queueErr) {
-          console.warn('[useActiveBarathonTracking] Failed to queue offline action:', queueErr);
-        }
-        onStopCompleted?.(activeStop.id);
+      // 1. Immediately start local real-time countdown
+      const now = Date.now();
+      stopDeadlineRef.current = now + maxBarSeconds * 1000;
+
+      setState((prev) => ({
+        ...prev,
+        phase: 'in_stop',
+        isInsideStopRadius: true,
+        remainingSeconds: maxBarSeconds,
+      }));
+
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
 
-      try {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
+      timerRef.current = setInterval(() => {
+        const deadline = stopDeadlineRef.current;
+
+        if (!deadline) {
+          return;
         }
 
-        await cancelStopNotifications(notificationIdsRef.current);
-
-        let fiveMinId: string | null = null;
-        let overtimeId: string | null = null;
-
-        if (maxBarSeconds >= 300) {
-          const secondsUntilFiveMinutesLeft = maxBarSeconds - 300;
-
-          fiveMinId = await scheduleFiveMinutesLeftNotification(
-            activeStop.name,
-            Math.max(1, secondsUntilFiveMinutesLeft)
-          );
-        }
-
-        overtimeId = await scheduleOvertimeNotification(
-          activeStop.name,
-          maxBarSeconds
+        const secondsLeft = Math.max(
+          0,
+          Math.ceil((deadline - Date.now()) / 1000)
         );
 
-        notificationIdsRef.current = {
-          fiveMin: fiveMinId,
-          overtime: overtimeId,
-        };
-
-        const now = Date.now();
-        stopDeadlineRef.current = now + maxBarSeconds * 1000;
-
-        setState((prev) => ({
-          ...prev,
-          phase: 'in_stop',
-          isInsideStopRadius: true,
-          remainingSeconds: maxBarSeconds,
-          fiveMinNotificationId: fiveMinId,
-          overtimeNotificationId: overtimeId,
-        }));
-
-        timerRef.current = setInterval(() => {
-          const deadline = stopDeadlineRef.current;
-
-          if (!deadline) {
-            return;
+        if (secondsLeft <= 0) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
           }
 
-          const secondsLeft = Math.max(
-            0,
-            Math.ceil((deadline - Date.now()) / 1000)
-          );
+          stopDeadlineRef.current = null;
 
-          if (secondsLeft <= 0) {
-            if (timerRef.current) {
-              clearInterval(timerRef.current);
-              timerRef.current = null;
-            }
+          void cancelStopNotifications(notificationIdsRef.current);
 
-            stopDeadlineRef.current = null;
-
-            void cancelStopNotifications(notificationIdsRef.current);
-
-            notificationIdsRef.current = {
-              fiveMin: null,
-              overtime: null,
-            };
-              
-            setState((prev) => ({
-              ...prev,
-              remainingSeconds: 0,
-              phase: 'overtime',
-              isInsideStopRadius: true,
-              fiveMinNotificationId: null,
-              overtimeNotificationId: null,
-            }));
-
-            return;
-          }
+          notificationIdsRef.current = {
+            fiveMin: null,
+            overtime: null,
+          };
 
           setState((prev) => ({
             ...prev,
-            remainingSeconds: secondsLeft,
-            phase: 'in_stop',
+            remainingSeconds: 0,
+            phase: 'overtime',
             isInsideStopRadius: true,
+            fiveMinNotificationId: null,
+            overtimeNotificationId: null,
           }));
-        }, 1000);
-      } catch (error) {
-        console.error('[useActiveBarathonTracking] Error starting stop timer notifications/interval:', error);
-        hasStartedTimerForCurrentStopRef.current = false;
-        stopDeadlineRef.current = null;
-      }
+
+          return;
+        }
+
+        setState((prev) => ({
+          ...prev,
+          remainingSeconds: secondsLeft,
+          phase: 'in_stop',
+          isInsideStopRadius: true,
+        }));
+      }, 1000);
+
+      // 2. Schedule push notifications asynchronously (isolated to prevent any failure from blocking timer)
+      void (async () => {
+        try {
+          await cancelStopNotifications(notificationIdsRef.current);
+
+          let fiveMinId: string | null = null;
+          let overtimeId: string | null = null;
+
+          if (maxBarSeconds >= 300) {
+            const secondsUntilFiveMinutesLeft = maxBarSeconds - 300;
+            fiveMinId = await scheduleFiveMinutesLeftNotification(
+              activeStop.name,
+              Math.max(1, secondsUntilFiveMinutesLeft)
+            );
+          }
+
+          overtimeId = await scheduleOvertimeNotification(
+            activeStop.name,
+            maxBarSeconds
+          );
+
+          notificationIdsRef.current = {
+            fiveMin: fiveMinId,
+            overtime: overtimeId,
+          };
+
+          setState((prev) => ({
+            ...prev,
+            fiveMinNotificationId: fiveMinId,
+            overtimeNotificationId: overtimeId,
+          }));
+        } catch (error) {
+          console.warn('[useActiveBarathonTracking] Notification scheduling warning:', error);
+        }
+      })();
     }
   async function resetStopTimerAndGoBackToRoute() {
     if (timerRef.current) {
@@ -585,5 +566,6 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     stopTracking,
     goToNextStop,
     advanceToStop,
+    startStopTimer,
   };
 }

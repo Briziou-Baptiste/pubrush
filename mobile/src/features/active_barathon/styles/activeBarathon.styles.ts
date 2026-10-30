@@ -802,4 +802,23 @@ export const styles = StyleSheet.create({
       fontSize: 15,
       fontWeight: '800',
     },
+    arrivedAtBarButton: {
+      backgroundColor: '#16A34A',
+      borderRadius: 14,
+      height: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      shadowColor: '#16A34A',
+      shadowOpacity: 0.25,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 3 },
+      elevation: 3,
+    },
+    arrivedAtBarButtonText: {
+      color: '#FFFFFF',
+      fontSize: 15,
+      fontWeight: '800',
+    },
 });

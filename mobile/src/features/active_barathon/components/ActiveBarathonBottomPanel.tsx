@@ -10,6 +10,7 @@ type Props = {
   distanceLabel: string;
   estimatedMinutes?: number | null;
   onOpenGoogleMaps: () => void;
+  onArrivedAtBar?: () => void;
   onNextStep?: () => void;
   onReplacePress?: () => void;
   onAddStopPress?: () => void;
@@ -24,6 +25,7 @@ function ActiveBarathonBottomPanel({
   distanceLabel,
   estimatedMinutes,
   onOpenGoogleMaps,
+  onArrivedAtBar,
   onNextStep,
   onReplacePress,
   onAddStopPress,
@@ -129,11 +131,26 @@ function ActiveBarathonBottomPanel({
         )}
       </View>
 
+      {/* Bouton Arrivée au bar (si en route) */}
+      {!isInsideStop && onArrivedAtBar && (
+        <TouchableOpacity
+          style={styles.arrivedAtBarButton}
+          onPress={onArrivedAtBar}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="beer-outline" size={18} color="#FFFFFF" />
+          <Text style={styles.arrivedAtBarButtonText}>
+            Je suis arrivé au bar (démarrer le chrono)
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {/* Bouton principal sécurisé d'avancement d'étape */}
       {onNextStep && (
         <TouchableOpacity
           style={[
             styles.safeNextStepButton,
+            !isInsideStop && { backgroundColor: '#4B5563', shadowColor: '#4B5563', marginTop: 8 },
             isLastStop && { backgroundColor: '#DC2626', shadowColor: '#DC2626' },
           ]}
           onPress={handleSecureNextStep}
@@ -145,7 +162,11 @@ function ActiveBarathonBottomPanel({
             color="#FFFFFF"
           />
           <Text style={styles.safeNextStepButtonText}>
-            {isLastStop ? 'Terminer le barathon' : "Passer à l'étape suivante"}
+            {isLastStop
+              ? 'Terminer le barathon'
+              : isInsideStop
+              ? "Passer à l'étape suivante"
+              : "Passer directement à l'étape suivante"}
           </Text>
         </TouchableOpacity>
       )}

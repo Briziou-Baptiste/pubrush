@@ -283,15 +283,17 @@ function PhotoMysteryModalSession({
   async function handleOpenWebCamera() {
     const session = currentSession();
     if (!session) return;
-    if (createdDraft?.upload_code) {
+    const uploadCode = createdDraft?.upload_code;
+    if (uploadCode) {
       try {
-        const ok = await Clipboard.setStringAsync(createdDraft.upload_code);
+        const ok = await Clipboard.setStringAsync(uploadCode);
         if (!isCurrent(session)) return;
         if (ok !== false) setCopiedCode(true);
       } catch {}
     }
     if (!isCurrent(session)) return;
-    const webUrl = process.env.EXPO_PUBLIC_WEB_URL || 'https://pubrush.com/photo-capture';
+    const baseWebUrl = process.env.EXPO_PUBLIC_WEB_URL || 'https://pubrush.com/photo-capture';
+    const webUrl = uploadCode ? `${baseWebUrl}?code=${uploadCode}` : baseWebUrl;
     try {
       await WebBrowser.openBrowserAsync(webUrl);
       await loadState(session);
@@ -370,8 +372,11 @@ function PhotoMysteryModalSession({
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
               {loading && !state && (
-                <View style={styles.centerContainer}>
+                <View style={[styles.centerContainer, { paddingVertical: 20 }]}>
                   <ActivityIndicator size="large" color="#0EA5E9" />
+                  <Text style={{ color: '#9CA3AF', marginTop: 10, fontSize: 13, textAlign: 'center' }}>
+                    Chargement de Photo Mystère...
+                  </Text>
                 </View>
               )}
 
@@ -587,6 +592,14 @@ function PhotoMysteryModalSession({
                         </View>
                       )}
                     </View>
+                  ) : state && state.enabled === false ? (
+                    <View style={styles.emptyCard}>
+                      <Ionicons name="information-circle-outline" size={40} color="#F59E0B" />
+                      <Text style={styles.emptyTitle}>Photo Mystère non activé</Text>
+                      <Text style={styles.emptySubtitle}>
+                        La fonctionnalité Photo Mystère n'est pas activée pour ce barathon.
+                      </Text>
+                    </View>
                   ) : (
                     <View style={styles.emptyCard}>
                       <Ionicons name="camera-reverse-outline" size={40} color="#9CA3AF" />
@@ -597,8 +610,8 @@ function PhotoMysteryModalSession({
                     </View>
                   )}
 
-                  {/* Bouton Créer un défi (disponible aussi après défi terminé, expiré ou annulé) */}
-                  {state?.can_create && !createdDraft && activeChallenge?.state !== 'draft' && (
+                  {/* Bouton Créer un défi (disponible si activé et pas de défi en cours) */}
+                  {state?.enabled !== false && state?.can_create && !createdDraft && activeChallenge?.state !== 'draft' && (
                     <TouchableOpacity
                       style={styles.createChallengeButton}
                       activeOpacity={0.85}

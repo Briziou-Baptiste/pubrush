@@ -665,8 +665,9 @@ export default function ActiveBarathonScreen() {
             totalBarSeconds={barathon.max_time_in_bar_minutes * 60}
             onRolesPress={() => setRolesModalVisible(true)}
             onInvitePress={handleInvite}
-            onPhotoPress={photoMysteryState?.enabled ? () => setPhotoModalVisible(true) : undefined}
+            onPhotoPress={() => setPhotoModalVisible(true)}
             photoPendingCount={photoMysteryState?.pending_count ?? 0}
+            onTimerPress={tracking.state.phase === 'en_route' ? tracking.startStopTimer : undefined}
             onStopPress={() => { setEndingMode('stop'); setStopModalVisible(true); }}
             isSousSolMode={isSousSolMode}
             pendingOfflineActionsCount={pendingOfflineCount}
@@ -699,6 +700,7 @@ export default function ActiveBarathonScreen() {
             }
             estimatedMinutes={tracking.estimatedWalkMinutes}
             onOpenGoogleMaps={tracking.openInGoogleMaps}
+            onArrivedAtBar={tracking.startStopTimer}
             onNextStep={handleNextStep}
             onReplacePress={() => {
               setModifyMode('replace');
