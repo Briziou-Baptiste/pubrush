@@ -26,7 +26,7 @@ interface BarathonStop {
   longitude: number;
   stop_order: number;
   is_completed: boolean;
-  is_active: boolean;
+  is_active?: boolean;
 }
 
 interface BarathonPreview {
@@ -34,8 +34,7 @@ interface BarathonPreview {
   name: string;
   join_code: string;
   status: string;
-  created_by_user_id: number;
-  organizer_name: string;
+  creator_username: string;
   stops_count: number;
   participants_count: number;
   current_stop?: BarathonStop | null;
@@ -76,6 +75,7 @@ export default function JoinBarathonPage() {
   const [joinError, setJoinError] = useState<string | null>(null);
 
   const [session, setSession] = useState<GuestSession | null>(null);
+  const [stops, setStops] = useState<BarathonStop[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [isSousSolMode, setIsSousSolMode] = useState(false);
@@ -109,7 +109,7 @@ export default function JoinBarathonPage() {
         throw new Error(errJson.detail || "Ce barathon n'existe pas ou est introuvable.");
       }
       const data = (await res.json()) as BarathonPreview;
-      setPreview(data);
+      setPreview({ ...data, all_stops: Array.isArray(data.all_stops) ? data.all_stops : [] });
       setFetchError(null);
       setIsSousSolMode(false);
       try {
@@ -121,7 +121,8 @@ export default function JoinBarathonPage() {
       try {
         const cached = localStorage.getItem(`pubrush_preview_cache_${code}`);
         if (cached) {
-          setPreview(JSON.parse(cached));
+          const cachedPreview = JSON.parse(cached) as BarathonPreview;
+          setPreview({ ...cachedPreview, all_stops: Array.isArray(cachedPreview.all_stops) ? cachedPreview.all_stops : [] });
           setIsSousSolMode(true);
           setFetchError(null);
           return;
@@ -142,6 +143,24 @@ export default function JoinBarathonPage() {
       void loadPreview();
     }
   }, [code]);
+
+  async function loadStops(token: string, barathonId: number) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/barathons/${barathonId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.stops)) setStops(data.stops);
+      }
+    } catch {
+      // Keep the last known route when the network is unavailable.
+    }
+  }
+
+  useEffect(() => {
+    if (session?.token && preview?.id) void loadStops(session.token, preview.id);
+  }, [session?.token, preview?.id]);
 
   // WebSocket real-time connection for active guests
   useEffect(() => {
@@ -222,6 +241,7 @@ export default function JoinBarathonPage() {
     // Quiet 15s polling fallback to keep synced
     const interval = setInterval(() => {
       void loadPreview(true);
+      void loadStops(session.token, barathonId);
     }, 15000);
 
     return () => {
@@ -256,7 +276,7 @@ export default function JoinBarathonPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code,
+          join_code: code,
           username: cleanUsername,
         }),
       });
@@ -269,14 +289,14 @@ export default function JoinBarathonPage() {
       const joinData = await res.json();
       const newSession: GuestSession = {
         token: joinData.access_token,
-        user_id: joinData.user_id,
-        username: joinData.username,
-        barathon_id: joinData.barathon_id,
-        barathon_name: joinData.barathon_name,
-        assigned_role: joinData.assigned_role,
+        user_id: joinData.user.id,
+        username: joinData.user.username,
+        barathon_id: joinData.barathon.id,
+        barathon_name: joinData.barathon.name,
       };
 
-      localStorage.setItem(`pubrush_guest_${code}`, JSON.stringify(newSession));
+      try { localStorage.setItem(`pubrush_guest_${code}`, JSON.stringify(newSession)); } catch {}
+      setStops(joinData.barathon.stops || []);
       setSession(newSession);
       showToast(`Bienvenue dans le barathon, ${cleanUsername} ! 🍻`);
       void loadPreview(true);
@@ -291,14 +311,14 @@ export default function JoinBarathonPage() {
   const currentStop = useMemo(() => {
     if (!preview) return null;
     if (preview.current_stop) return preview.current_stop;
-    return preview.all_stops.find((s) => s.is_active) || preview.all_stops[0] || null;
-  }, [preview]);
+    return stops.find((s) => s.is_active) || stops.find((s) => !s.is_completed) || null;
+  }, [preview, stops]);
 
   const currentStopIndex = useMemo(() => {
     if (!preview || !currentStop) return 0;
-    const idx = preview.all_stops.findIndex((s) => s.id === currentStop.id);
+    const idx = stops.findIndex((s) => s.id === currentStop.id);
     return idx >= 0 ? idx : 0;
-  }, [preview, currentStop]);
+  }, [preview, currentStop, stops]);
 
   function getGoogleMapsUrl(stop: BarathonStop) {
     const query = encodeURIComponent(`${stop.name} ${stop.address || ""}`);
@@ -402,7 +422,7 @@ export default function JoinBarathonPage() {
               <p className="text-sm text-slate-400 mb-5">
                 Organisé par{" "}
                 <span className="text-amber-400 font-semibold">
-                  {preview.organizer_name}
+                  {preview.creator_username}
                 </span>
               </p>
 
@@ -557,7 +577,7 @@ export default function JoinBarathonPage() {
                 <div className="flex items-center justify-between mb-3">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-                    Étape {currentStopIndex + 1} sur {preview.all_stops.length}
+                    Étape {currentStopIndex + 1} sur {stops.length}
                   </span>
 
                   <span className="text-xs text-slate-400">
@@ -603,12 +623,12 @@ export default function JoinBarathonPage() {
                   <span>Parcours du barathon</span>
                 </h3>
                 <span className="text-xs text-slate-400">
-                  {preview.all_stops.filter((s) => s.is_completed).length} / {preview.all_stops.length} validés
+                  {stops.filter((s) => s.is_completed).length} / {stops.length} validés
                 </span>
               </div>
 
               <div className="flex flex-col gap-3">
-                {preview.all_stops.map((stop, idx) => {
+                {stops.map((stop, idx) => {
                   const isCurrent = currentStop?.id === stop.id;
                   const isDone = stop.is_completed;
 

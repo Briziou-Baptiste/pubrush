@@ -48,6 +48,8 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
     overtimeNotificationId: null,
   });
 
+  const activeStopIndexRef = useRef(state.activeStopIndex);
+  activeStopIndexRef.current = state.activeStopIndex;
   const [timerReady, setTimerReady] = useState(false);
   const hydratedTimerKeyRef = useRef<string | null>(null);
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
@@ -412,6 +414,8 @@ export function useActiveBarathonTracking({ barathon, onStopCompleted }: Params)
       })();
     }
   async function advanceToStop(targetIndex: number) {
+    if (targetIndex === activeStopIndexRef.current) return;
+    activeStopIndexRef.current = targetIndex;
     stopDeadlineRef.current = null;
     if (timerRef.current) {
       clearInterval(timerRef.current);
