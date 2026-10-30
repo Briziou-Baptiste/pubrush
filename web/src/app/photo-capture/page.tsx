@@ -65,6 +65,13 @@ export default function PhotoCapturePage() {
   };
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlCode = params.get("code");
+      if (urlCode && urlCode.trim().length === 10) {
+        setCode(urlCode.trim().toUpperCase());
+      }
+    }
     return () => {
       stopCamera();
     };

@@ -17,6 +17,7 @@ type Props = {
   onInvitePress?: () => void;
   onPhotoPress?: () => void;
   photoPendingCount?: number;
+  onTimerPress?: () => void;
   isSousSolMode?: boolean;
   onSousSolPress?: () => void;
   pendingOfflineActionsCount?: number;
@@ -34,6 +35,7 @@ function ActiveBarathonHeader({
   onInvitePress,
   onPhotoPress,
   photoPendingCount = 0,
+  onTimerPress,
   isSousSolMode,
   onSousSolPress,
   pendingOfflineActionsCount = 0,
@@ -187,9 +189,21 @@ function ActiveBarathonHeader({
       </View>
 
       {/* Chrono avec jauge de progression visuelle */}
-      <View style={styles.timerContainer}>
+      <TouchableOpacity
+        style={styles.timerContainer}
+        activeOpacity={onTimerPress ? 0.75 : 1}
+        onPress={onTimerPress}
+        disabled={!onTimerPress}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <Text style={styles.timerLabel}>Temps au bar</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, marginRight: 8 }}>
+            {onTimerPress && (
+              <Ionicons name="play-circle" size={16} color="#2563EB" />
+            )}
+            <Text style={styles.timerLabel} numberOfLines={1}>
+              {onTimerPress ? 'Chrono en attente (toucher pour lancer)' : 'Temps restant au bar'}
+            </Text>
+          </View>
           <Text
             style={[
               { fontSize: 24, fontWeight: '900', letterSpacing: 0.5 },
@@ -221,7 +235,7 @@ function ActiveBarathonHeader({
             ]}
           />
         </View>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 }
